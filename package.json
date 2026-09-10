@@ -1,0 +1,28 @@
+{
+  "name": "logos",
+  "version": "0.1.0",
+  "description": "클라이언트 코드 미리보기 / DSL 구현 (Pure JS, Node ESM)",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js"
+  },
+  "files": [
+    "index.js",
+    "core",
+    "shapes",
+    "solver",
+    "symbolic",
+    "backend"
+  ],
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  },
+  "dependencies": {
+    "@cortex-js/compute-engine": "^0.27.0"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "license": "MIT"
+}

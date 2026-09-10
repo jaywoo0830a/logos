@@ -1,0 +1,15 @@
+# logos — v24.21.0 LTS Node 테스트 환경
+services:
+  logos:
+    build:
+      context: .
+    image: logos:0.1.0
+    container_name: logos
+    # 로컬 소스를 마운트(실시간 반영)하고, 컨테이너 전용 node_modules 볼륨에 설치 후 테스트
+    command: ["sh", "-c", "npm install --no-audit --no-fund && npm test"]
+    environment:
+      NODE_ENV: development
+      NODE_OPTIONS: ""
+    volumes:
+      - .:/app
+      - /app/node_modules

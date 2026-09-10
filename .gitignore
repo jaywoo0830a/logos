@@ -1,0 +1,46 @@
+# ── Node ───────────────────────────────
+node_modules/
+npm-debug.log*
+*.log
+
+# ── 생성 산출물 (데모/렌더링) ─────────────
+examples/*.svg
+examples/*.png
+examples/*.pdf
+examples/*.tex
+
+# ── 빌드 산출물 / 캐시 ──────────────────
+dist/
+build/
+out/
+tmp/
+coverage/
+*.tsbuildinfo
+.cache/
+
+# ── 환경 변수 / 비밀 ────────────────────
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# ── 도커 생성물 ─────────────────────────
+docker-data/
+.containers/
+
+# ── 렌더링 산출물 (재생성 가능) ─────────
+output/
+*.pid
+
+# ── OS / 편집기 ────────────────────────
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# ── 로그 / 임시 ────────────────────────
+*.tmp
+*.swp
+*~

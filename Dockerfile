@@ -1,0 +1,16 @@
+# logos — 개발/테스트 컨테이너 (v24.21.0 LTS)
+FROM node:24.21.0-bookworm-slim
+
+ENV NODE_ENV=development \
+    NPM_CONFIG_CACHE=/root/.npm
+
+WORKDIR /app
+
+# 의존성 레이어 캐시를 위해 패키지 매니페스트를 먼저 복사
+COPY package.json package-lock.json* ./
+RUN npm install --no-audit --no-fund
+
+# 소스 복사 (.dockerignore 에서 node_modules 제외)
+COPY . .
+
+CMD ["npm", "test"]
