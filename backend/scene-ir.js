@@ -1,6 +1,11 @@
 // Scene IR — 컴파일 결과. 다중 백엔드 진입점.
 import { emitSVG } from './svg.js';
 import { emitTikZ } from './tikz.js';
+import { irToAsymptote } from './asymptote.js';
+import { buildJSXGraphHTML } from './jsxgraph.js';
+import { katexRender, katexify, buildFigureHTML } from './katex.js';
+
+const katexNs = { katexRender, katexify };
 
 const THEME_FONT = { textbook: 'Latin Modern Math', default: 'sans-serif' };
 
@@ -35,6 +40,35 @@ export class SceneIR {
 
   toTikZ(opts = {}) {
     return emitTikZ(this.o.nodes, opts);
+  }
+
+  // ── ADAPT.md 외부엔진 어댑터 백엔드 ──────────────
+  /** Asymptote 소스 생성 (2D) — ADAPT §2·3 */
+  toAsymptote(opts = {}) { return irToAsymptote(this.o.nodes, opts); }
+
+  /** node-tikzjax(WASM)로 TikZ → SVG — ADAPT §4 */
+  async toTikZSVG(opts = {}) {
+    const { irToTikZSVG } = await import('./tikzjax.js');
+    return irToTikZSVG(this, opts);
+  }
+
+  /** JSXGraph 인터랙티브 HTML — ADAPT §2 (선택) */
+  toJSXGraphHTML(opts = {}) { return buildJSXGraphHTML(this.o.nodes, opts); }
+
+  /** KaTeX 조판된 <figure> HTML — ADAPT §4 */
+  toHTML(opts = {}) {
+    const { katexRender, katexify } = katexNs;
+    const rows = [];
+    const renderText = (v) => (typeof v?.toLatex === 'function') ? katexRender(v.toLatex()) : katexify(v);
+    for (const nd of this.o.nodes) {
+      const d = nd.data;
+      if (nd.kind === 'text') {
+        rows.push(`<div class="logos-text" style="position:absolute;left:${d.x}px;top:${d.y}px">${renderText(d.text)}</div>`);
+      } else if (nd.kind === 'point' && d.label) {
+        rows.push(`<div class="logos-label" style="position:absolute;left:${d.x}px;top:${d.y}px">${renderText(d.label)}</div>`);
+      }
+    }
+    return buildFigureHTML(rows);
   }
 
   toJSON() {

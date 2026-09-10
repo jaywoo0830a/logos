@@ -15,6 +15,12 @@ import annotate from './annotate.js';
 import { tex } from './symbolic/tex.js';
 import { Sym } from './symbolic/sym.js';
 import { TAU } from './solver/coords.js';
+// ── ADAPT.md 외부엔진 어댑터 ──────────────────────
+import { SymPyAdapter, SageAdapter, createSymbolicAdapter, defaultAdapter } from './symbolic/adapter.js';
+import irToAsymptote from './backend/asymptote.js';
+import { tikzToSVG } from './backend/tikzjax.js';
+import { irToJSXGraph, buildJSXGraphHTML } from './backend/jsxgraph.js';
+import { katexRender, katexify } from './backend/katex.js';
 
 export const tau = TAU;
 export const pi = Math.PI;
@@ -22,6 +28,15 @@ export const e = Math.E;
 
 export { Scene, scene, node, point, vector, line, segment, curve, circle,
          polygon, triangle, quad, regular, region, transform, annotate, tex, Sym };
+
+// ── ADAPT.md 외부엔진 어댑터 API ───────────────────
+export const adapt = {
+  asymmetric: { SymPyAdapter, SageAdapter, createSymbolicAdapter, defaultAdapter },
+  asymptote: irToAsymptote,
+  tikzjax: tikzToSVG,
+  jsxgraph: { irToJSXGraph, buildJSXGraphHTML },
+  katex: { katexRender, katexify },
+};
 
 function scene() { return new Scene(); }
 scene.cartesian = () => new Scene();
