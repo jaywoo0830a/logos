@@ -9,8 +9,12 @@ import { segment } from './shapes/segment.js';
 import { curve } from './shapes/curve.js';
 import { circle } from './shapes/circle.js';
 import { ellipse } from './shapes/ellipse.js';
+import { parabola } from './shapes/parabola.js';
+import { hyperbola } from './shapes/hyperbola.js';
 import { polygon, triangle, quad, regular } from './shapes/polygon.js';
 import { region } from './shapes/region.js';
+import { sphere, plane } from './shapes/threeD.js';
+import { cylinder, cone, surface, polyhedron } from './shapes/threeD2.js';
 import transform from './transform.js';
 import annotate from './annotate.js';
 import { tex } from './symbolic/tex.js';
@@ -28,7 +32,8 @@ export const pi = Math.PI;
 export const e = Math.E;
 
 export { Scene, scene, node, point, vector, line, segment, curve, circle, ellipse,
-         polygon, triangle, quad, regular, region, transform, annotate, tex, Sym };
+         parabola, hyperbola, polygon, triangle, quad, regular, region,
+         sphere, plane, cylinder, cone, surface, polyhedron, transform, annotate, tex, Sym };
 
 // ── ADAPT.md 외부엔진 어댑터 API ───────────────────
 export const adapt = {
@@ -51,22 +56,15 @@ function ns(name, hint) { return new Proxy({}, { get: (_, k) => (k === '$$' ? tr
 export const ray = todo('ray', '직선(line) 등으로 대체하세요.');
 export const arc = ns('arc', '원호. circle 위에서 표현하세요.');
 export const sector = ns('sector');
-export const parabola = ns('parabola');
-export const hyperbola = ns('hyperbola');
-export const plane = ns('plane');
-export const sphere = ns('sphere');
-export const cylinder = ns('cylinder');
-export const cone = ns('cone');
 export const torus = ns('torus');
-export const surface = ns('surface');
 export const curve3 = ns('curve3');
-export const polyhedron = ns('polyhedron');
 export const cube = ns('cube');
 export const prism = ns('prism');
 export const pyramid = ns('pyramid');
 export const vectorField = ns('vectorField');
 
 export default {
-  scene, point, vector, line, segment, curve, circle, ellipse, polygon, triangle,
-  quad, regular, region, transform, annotate, tex, tau, pi, e,
+  scene, point, vector, line, segment, curve, circle, ellipse, parabola, hyperbola,
+  polygon, triangle, quad, regular, region, sphere, plane, cylinder, cone, surface, polyhedron,
+  transform, annotate, tex, tau, pi, e,
 };

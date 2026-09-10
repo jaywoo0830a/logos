@@ -35,7 +35,7 @@ export class SceneIR {
 
   toSVG() {
     const m = this._map();
-    return emitSVG(this.o.nodes, { ...m, theme: THEME_FONT[this.o.theme] });
+    return emitSVG(this.o.nodes, { ...m, world: this.o.world, theme: THEME_FONT[this.o.theme] });
   }
 
   toTikZ(opts = {}) {

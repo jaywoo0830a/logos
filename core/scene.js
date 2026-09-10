@@ -69,6 +69,7 @@ export class Scene {
     let nodes = [];
     if (conf.grid) nodes = nodes.concat(gridIR(world, conf.grid, themeDef));
     if (conf.polarGrid) nodes = nodes.concat(polarGridIR(world, themeDef));
+    if (conf.sphericalGrid) nodes = nodes.concat(sphericalGridIR(world, project, themeDef));
     if (conf.axes) nodes = nodes.concat(axesIR(world, conf.axes, themeDef));
 
     for (const shape of conf.shapes) {
@@ -147,6 +148,30 @@ function polarGridIR(world, theme) {
   }
   for (let a = 0; a < Math.PI * 2; a += Math.PI / 6) {
     out.push(node('path', { ops: [{ op: 'M', x: 0, y: 0 }, { op: 'L', x: Math.cos(a) * maxR, y: Math.sin(a) * maxR }], z: -10, style: { color, stroke: 0.6 } }));
+  }
+  return out;
+}
+
+/** F2 — 구면격자: 위선 + 경선을 원점 중심 반지름 R 구에 투영 */
+function sphericalGridIR(world, project, theme) {
+  const color = theme.gridColor || '#cbd5e1';
+  const R = 1.6;
+  const out = [];
+  const ring = (pts) => node('path', { ops: pts.map((p, i) => ({ op: i ? 'L' : 'M', x: p[0], y: p[1] })), z: -10, style: { color, stroke: 0.5 } });
+  const projectPts = (pts) => pts.map((p) => project(p));
+  // 위선 (latitude)
+  for (let k = 1; k < 8; k++) {
+    const phi = (Math.PI * k) / 8;
+    const pts = [];
+    for (let i = 0; i <= 48; i++) { const th = (2 * Math.PI * i) / 48; pts.push([R * Math.sin(phi) * Math.cos(th), R * Math.sin(phi) * Math.sin(th), R * Math.cos(phi)]); }
+    out.push(ring(projectPts(pts)));
+  }
+  // 경선 (longitude)
+  for (let k = 0; k < 12; k++) {
+    const th = (Math.PI * k) / 6;
+    const pts = [];
+    for (let i = 0; i <= 48; i++) { const phi = (2 * Math.PI * i) / 48; pts.push([R * Math.sin(phi) * Math.cos(th), R * Math.sin(phi) * Math.sin(th), R * Math.cos(phi)]); }
+    out.push(ring(projectPts(pts)));
   }
   return out;
 }

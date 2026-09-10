@@ -16,7 +16,7 @@ export class Circle extends Drawable {
     return [node('circle', {
       cx, cy, r: c.radius,
       color: c.color, stroke: c.stroke, fill: c.fill, dash: c.dash, opacity: c.opacity,
-      transforms: c.transforms,
+      gradient: c.gradient, transforms: c.transforms,
       label: renderText(c.label),
       style: pickStyle(c),
     })];

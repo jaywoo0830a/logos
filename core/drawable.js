@@ -46,6 +46,8 @@ export class Drawable {
   as(name) { return this.set({ name }); }
   apply(...ts) { return this.set({ transforms: [...(this._conf.transforms || []), ...ts] }); }
   symbolic(s) { return this.set({ sym: s }); }
+  gradient(g) { return this.set({ gradient: g }); }   // I3: { type:'radial'|'linear', stops:[{offset,color}] }
+  clip(r) { return this.set({ clip: r }); }           // I5: 클리핑 영역(Region/Drawable)
 
   get conf() { return this._conf; }
   get order() { return this._order; }
