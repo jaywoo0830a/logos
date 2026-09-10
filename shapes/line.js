@@ -153,18 +153,50 @@ function refDir(l) {
 }
 
 class TangentBuilder {
-  constructor(circle) { this._circle = circle; }
+  constructor(target) { this._target = target; }
+  get _isCircle() {
+    const t = this._target;
+    return !!t && typeof t.center === 'function' && typeof t.radius === 'function';
+  }
+  get _isCurve() {
+    const t = this._target;
+    return !!t && typeof t.eval === 'function' && typeof t.center !== 'function';
+  }
   at(P) {
-    const [cx, cy] = this._circle.center();
+    if (this._isCurve) {
+      const curve = this._target;
+      const x = typeof P === 'number' ? P : P.coords[0];
+      const fx = curve._fn()(x);
+      const h = 1e-5;
+      const fp = (curve._fn()(x + h) - curve._fn()(x - h)) / (2 * h);
+      return new Line({ form: 'point-dir', p: _point(x, Number.isFinite(fx) ? fx : 0), d: [1, Number.isFinite(fp) ? fp : 0] });
+    }
+    // 원
+    const [cx, cy] = this._target.center();
+    const r = this._target.radius();
     const d0 = [P.coords[0] - cx, P.coords[1] - cy];
-    const d1 = perp2(d0);
-    return new Line({ form: 'two-point',
-      a: P,
-      b: _point(P.coords[0] + d1[0], P.coords[1] + d1[1]) });
+    const dist = Math.hypot(d0[0], d0[1]);
+    if (Math.abs(dist - r) < 1e-6) {
+      // P 가 원 위 → 접선
+      const d1 = perp2(d0);
+      return new Line({ form: 'two-point', a: P, b: _point(P.coords[0] + d1[0], P.coords[1] + d1[1]) });
+    }
+    if (dist > r) {
+      // 원 밖 점 P → 접점(아래쪽)을 지나는 접선
+      const u = [d0[0] / dist, d0[1] / dist];
+      const v = perp2(u);
+      const ca = r / dist, sa = Math.sqrt(1 - ca * ca);
+      const Tx = cx + r * (ca * u[0] + sa * v[0]);
+      const Ty = cy + r * (ca * u[1] + sa * v[1]);
+      return new Line({ form: 'two-point', a: P, b: _point(Tx, Ty) });
+    }
+    // P 가 원 안 → 접선 없음 (경고)
+    if (typeof console !== 'undefined') console.warn('[logos] tangent.at(P): P is inside the circle — no tangent.');
+    return new Line({ form: 'horizontal', y: P.coords[1] });
   }
   slope(m) {
-    const [cx, cy] = this._circle.center();
-    const r = this._circle.radius();
+    const [cx, cy] = this._target.center();
+    const r = this._target.radius();
     const s = Math.sqrt(m * m + 1) * r;
     return new Line({ form: 'slope', m, intercept: cy - m * cx + s });
   }

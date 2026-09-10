@@ -1,6 +1,7 @@
 // DSL.md §12 렌더러 파이프라인 — SVG emitter
 // IR 노드(불변)를 받아 SVG 문자열로 방출.
 import { applyTransforms } from '../transform.js';
+import { katexRender } from './katex.js';
 
 const esc = (s) => String(s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -58,20 +59,37 @@ function renderNode(n, m, scale, theme) {
       const [cx, cy] = m(d, d.cx, d.cy);
       return `<circle cx="${cx}" cy="${cy}" r="${d.r * scale}" fill="${d.fill || 'none'}" stroke="${st.stroke}" stroke-width="${st['stroke-width']}" stroke-dasharray="${st['stroke-dasharray'] || 'none'}" opacity="${st.opacity}"/>`;
     }
+    case 'ellipse': {
+      const st = stroke(d.style || d, theme);
+      const [cx, cy] = m(d, d.cx, d.cy);
+      const ang = d.angle != null ? ` transform="rotate(${d.angle * 180 / Math.PI} ${cx} ${cy})"` : '';
+      return `<ellipse cx="${cx}" cy="${cy}" rx="${d.rx * scale}" ry="${d.ry * scale}" fill="${d.fill || 'none'}" stroke="${st.stroke}" stroke-width="${st['stroke-width']}" stroke-dasharray="${st['stroke-dasharray'] || 'none'}" opacity="${st.opacity}"${ang}/>`;
+    }
     case 'point': {
       const st = stroke(d.style || d, theme);
       const [cx, cy] = m(d, d.x, d.y);
       const r = 3.2;
-      const parts = [`<circle cx="${cx}" cy="${cy}" r="${r}" fill="${d.color || d.fill || '#000'}"/>`];
+      const hasStroke = d.stroke != null;
+      const fill = d.color || d.fill || '#000';
+      const op = d.style?.opacity ?? 1;
+      const parts = [`<circle cx="${cx}" cy="${cy}" r="${r}" fill="${fill}"${hasStroke ? ` stroke="${fill}" stroke-width="${d.stroke}"` : ''}${op !== 1 ? ` opacity="${op}"` : ''}/>`];
       if (d.label) {
         const [lx, ly] = m(d, d.x, d.y);
-        parts.push(`<text x="${lx + 6}" y="${ly - 6}" font-size="13" fill="${d.color || '#000'}">${esc(d.label)}</text>`);
+        if (d.labelMath) {
+          parts.push(`<foreignObject x="${lx + 6}" y="${ly - 20}" width="300" height="40"><div xmlns="http://www.w3.org/1999/xhtml">${katexRender(String(d.label))}</div></foreignObject>`);
+        } else {
+          parts.push(`<text x="${lx + 6}" y="${ly - 6}" font-size="13" fill="${d.color || '#000'}">${esc(d.label)}</text>`);
+        }
       }
       return parts.join('\n');
     }
     case 'text': {
       const [x, y] = m(d, d.x, d.y);
       const anchor = d.anchor || 'start';
+      if (d.math) {
+        const katex = katexRender(d.text || '');
+        return `<foreignObject x="${x}" y="${y - 16}" width="400" height="40"><div xmlns="http://www.w3.org/1999/xhtml">${katex}</div></foreignObject>`;
+      }
       return `<text x="${x}" y="${y}" font-size="14" text-anchor="${anchor}" fill="${d.color || '#000'}">${esc(d.text || '')}</text>`;
     }
     case 'fillrect': {

@@ -30,7 +30,9 @@ export function intersectLineCircle(line, circle) {
   const a = d[0] * d[0] + d[1] * d[1];
   const b = 2 * (dx * d[0] + dy * d[1]);
   const cc = dx * dx + dy * dy - r * r;
-  const disc = b * b - 4 * a * cc;
+  const disc0 = b * b - 4 * a * cc;
+  // 부동소수 오차로 인한 근소한 음수는 0 으로 클램프 (접선이 단일 접점)
+  const disc = disc0 < 0 && disc0 > -1e-8 ? 0 : disc0;
   if (disc < 0) return [];
   if (disc < 1e-12) {
     const t = -b / (2 * a);

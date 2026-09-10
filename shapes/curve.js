@@ -67,14 +67,15 @@ export class Curve extends Drawable {
     })];
     // 라벨은 끝점 근처에 배치
     if (c.label) {
+      const L = c.label;
       const last = pts[pts.length - 1];
       const prev = pts[pts.length - 2];
       const ex = (last[0] - prev[0]), ey = (last[1] - prev[1]);
       const el = Math.hypot(ex, ey) || 1;
       out.push(node('text', {
         x: last[0] + (ex / el) * 0.3, y: last[1] + (ey / el) * 0.3 + 0.15,
-        text: renderText(c.label), anchor: 'start',
-        color: c.color,
+        text: renderText(L), anchor: 'start',
+        color: c.color, math: typeof L?.toLatex === 'function',
       }));
     }
     return out;

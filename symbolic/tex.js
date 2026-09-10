@@ -2,7 +2,14 @@
 import { Sym } from './sym.js';
 
 export function tex(strings, ...values) {
-  const latex = strings.reduce((acc, s, i) => acc + s + (values[i] ?? ''), '');
+  // 태그드 템플릿: JS permits invalid escapes → cooked는 \t(탭) 등으로 백슬래시가
+  // 소실된다. LaTeX 백슬래시 보존을 위해 반드시 strings.raw 를 사용한다.
+  const raw = strings.raw || strings;
+  const latex = raw.reduce((acc, s, i) => {
+    const v = values[i];
+    const val = v == null ? '' : (typeof v.toLatex === 'function' ? v.toLatex() : String(v));
+    return acc + s + val;
+  }, '');
   return new Sym(latex);
 }
 

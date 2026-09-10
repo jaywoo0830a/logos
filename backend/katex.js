@@ -2,12 +2,16 @@
 // tex`...` LaTeX 문자열을 HTML(<span>…) 로 조판한다.
 import katex from 'katex';
 
-/** LaTeX → KaTeX HTML 마크업 */
+/** LaTeX → KaTeX 마크업
+ *  기본 output: 'mathml' — 브라우저가 CSS 없이 네이티브 렌더링하므로
+ *  자기완결적 SVG의 <foreignObject>에 안전하다. (HTML+CSS 의존 제거)
+ */
 export function katexRender(latex, opts = {}) {
   return katex.renderToString(latex, {
     throwOnError: false,
     displayMode: opts.displayMode ?? false,
-    output: 'html',
+    output: opts.output ?? 'mathml',
+    strict: false,
   });
 }
 

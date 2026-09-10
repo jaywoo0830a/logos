@@ -52,5 +52,5 @@ test('integral annotate → SVG', () => {
     .compile()
     .toSVG();
   assert.ok(svg.includes('steelblue'), '채우기 색');
-  assert.ok(svg.includes('dx'), '적분 라벨');
+  assert.ok(svg.includes('<foreignObject'), '적분 라벨(KaTeX 수식)');
 });

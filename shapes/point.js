@@ -39,6 +39,7 @@ export class Point extends Drawable {
       x: proj[0], y: proj[1],
       marker: c.marker || 'dot',
       label: renderText(c.label),
+      labelMath: typeof c.label?.toLatex === 'function',
       color: c.color, fill: c.fill, stroke: c.stroke,
       labelOff: c.labelOff,
       transforms: c.transforms,
@@ -86,8 +87,18 @@ point.centroid = (...pts) => {
 /** 세 점 좌표 평균 (중점 일반화) */
 point.center = (A, B, C) => point.centroid(A, B, C);
 
-/** 교점 (line.through 형태) */
-point.intersect = (l1, l2) => lineIntersect(l1, l2);
+/** 교점 (두 직선, 또는 직선 ∩ 원) — K2: 원과 접선의 접점 */
+point.intersect = (a, b) => {
+  const A = a.kind, B = b.kind;
+  if (A === 'circle' && B === 'line') return touchPoint(b, a);
+  if (A === 'line' && B === 'circle') return touchPoint(a, b);
+  return lineIntersect(a, b);
+};
+
+function touchPoint(line, circle) {
+  const all = intersectLineCircle(line, circle);
+  return all && all.length ? all[0] : null;
+}
 
 /** 원과 직선의 교점들 */
 point.intersectAll = (shape1, shape2) => {

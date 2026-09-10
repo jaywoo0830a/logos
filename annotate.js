@@ -11,6 +11,7 @@ annotate.integral = (f) => new IntegralAnno(f);
 annotate.arrow = (A, B) => new ArrowAnno(A, B);
 annotate.dimension = (A, B) => new DimensionAnno(A, B);
 annotate.dot = (P) => new DotAnno(P);
+annotate.tick = (seg) => new TickAnno(seg);
 
 class _Annotate extends Drawable { toIR() { return []; } }
 
@@ -35,6 +36,10 @@ export class AngleAnno extends Drawable {
     const out = [];
 
     if (c.marker === 'right') {
+      const ang = Math.abs(normalizeAngle(aBC - aBA));
+      if (Math.abs(ang - Math.PI / 2) > 1e-6) {
+        if (typeof console !== 'undefined') console.warn(`[logos] rightAngle(): angle is ${(ang * 180 / Math.PI).toFixed(1)}°, not 90°`);
+      }
       const s = rad * 0.6;
       out.push(node('path', {
         ops: [
@@ -45,18 +50,31 @@ export class AngleAnno extends Drawable {
         color: c.color, stroke: c.stroke, style: pickStyle(c),
       }));
     } else {
-      const pts = [];
       const n = 30;
       const start = aBA, spanA = normalizeAngle(aBC - aBA);
-      for (let i = 0; i <= n; i++) {
-        const a = start + spanA * (i / n);
-        pts.push({ op: i === 0 ? 'M' : 'L', x: bx + Math.cos(a) * rad, y: by + Math.sin(a) * rad });
+      const radii = c.arc.double ? [rad, rad * 0.7] : [rad];
+      for (const rr of radii) {
+        const pts = [];
+        for (let i = 0; i <= n; i++) {
+          const a = start + spanA * (i / n);
+          pts.push({ op: i === 0 ? 'M' : 'L', x: bx + Math.cos(a) * rr, y: by + Math.sin(a) * rr });
+        }
+        out.push(node('path', { ops: pts, color: c.color, stroke: c.stroke, style: pickStyle(c) }));
       }
-      out.push(node('path', { ops: pts, color: c.color, stroke: c.stroke, style: pickStyle(c) }));
       if (c.degrees) {
         const mid = start + spanA / 2;
         out.push(node('text', { x: bx + Math.cos(mid) * rad * 1.5, y: by + Math.sin(mid) * rad * 1.5, text: '°', anchor: 'middle' }));
       }
+    }
+    // 라벨 (수식이면 math)
+    if (c.label) {
+      const L = c.label;
+      const mid = normalizeAngle(aBA + normalizeAngle(aBC - aBA) / 2);
+      out.push(node('text', {
+        x: bx + Math.cos(mid) * rad * 1.6, y: by + Math.sin(mid) * rad * 1.6,
+        text: renderText(L), anchor: 'middle', color: c.color,
+        math: typeof L?.toLatex === 'function',
+      }));
     }
     return out;
   }
@@ -71,9 +89,11 @@ export class CaptionAnno extends Drawable {
   constructor(text) { super('annotation', { kind: 'caption', text }); }
   toIR(ctx) {
     const w = ctx.world;
+    const T = this._conf.text;
     return [node('text', {
       x: (w.xmin + w.xmax) / 2, y: w.ymax - (w.ymax - w.ymin) * 0.06,
-      text: renderText(this._conf.text), anchor: 'middle', caption: true, color: this._conf.color,
+      text: renderText(T), anchor: 'middle', caption: true, color: this._conf.color,
+      math: typeof T?.toLatex === 'function',
     })];
   }
 }
@@ -109,7 +129,7 @@ function renderIntegral(c, ctx) {
   if (c.label) {
     const midX = (c.from + c.to) / 2;
     const y = Math.max(fn(c.from), fn(c.to), fn(midX), 0);
-    out.push(node('text', { x: midX, y: y + (w.ymax - w.ymin) * 0.1, text: renderText(c.label), anchor: 'middle' }));
+    out.push(node('text', { x: midX, y: y + (w.ymax - w.ymin) * 0.1, text: renderText(c.label), anchor: 'middle', math: typeof c.label?.toLatex === 'function' }));
   }
   return out;
 }
@@ -161,6 +181,35 @@ export class DotAnno extends Drawable {
   label(l, off) { return this.set({ label: l, labelOff: off }); }
   toIR(ctx) {
     return _point(ctx.world.xmin, ctx.world.ymin).label(this._conf.label).dot().toIR();
+  }
+}
+
+// ── 합동 tick ─────────────────────────────────────
+export class TickAnno extends Drawable {
+  constructor(seg) { super('annotation', { kind: 'tick', seg, count: 1 }); }
+  count(n) { return this.set({ count: n }); }
+  toIR() {
+    const c = this._conf;
+    const A = c.seg.a.coords, B = c.seg.b.coords;
+    const dx = B[0] - A[0], dy = B[1] - A[1];
+    const len = Math.hypot(dx, dy) || 1;
+    const ux = dx / len, uy = dy / len;
+    const nx = -uy, ny = ux;           // 법선
+    const n = Math.max(1, Math.round(c.count));
+    const tickLen = 0.35;
+    const out = [];
+    for (let i = 1; i <= n; i++) {
+      const t = i / (n + 1);           // 변을 (count+1)등분한 마디
+      const px = A[0] + dx * t, py = A[1] + dy * t;
+      out.push(node('path', {
+        ops: [
+          { op: 'M', x: px - nx * tickLen, y: py - ny * tickLen },
+          { op: 'L', x: px + nx * tickLen, y: py + ny * tickLen },
+        ],
+        color: c.color, stroke: c.stroke, style: pickStyle(c),
+      }));
+    }
+    return out;
   }
 }
 
