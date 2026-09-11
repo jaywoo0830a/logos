@@ -472,7 +472,15 @@ function axesIR(world, cfg, theme, area = world) {
   const tcol = theme.tickColor || theme.labelColor || c;
   const spanX = area.xmax - area.xmin;
   const spanY = area.ymax - area.ymin;
-  const padWorld = Math.max(world.xmax - world.xmin, world.ymax - world.ymin) * 0.02;
+  // 눈금 길이(반길이) — 눈금 선분에 **수직인 축**의 범위에 비례해야 한다.
+  //   x축 눈금은 세로 선분이므로 y 범위로, y축 눈금은 가로 선분이므로 x 범위로 잰다.
+  //   예전처럼 max(spanX, spanY) 하나(padWorld)를 양쪽에 쓰면, 가로로 긴 플롯
+  //   (예: x 0..50, y 0..1)에서 세로 눈금이 캔버스 높이의 절반까지 자라
+  //   패널 밖(축 라벨 자리)으로 삐져나온다.
+  //   이렇게 나누면 눈금의 **화면 길이**가 데이터 범위와 무관하게
+  //   캔버스 크기의 2.4%(= 0.012 × 2)로 고정돼 matplotlib 눈금처럼 보인다.
+  const tickHalfX = (world.ymax - world.ymin) * 0.012;   // x축 눈금(세로 선분) 반길이
+  const tickHalfY = (world.xmax - world.xmin) * 0.012;   // y축 눈금(가로 선분) 반길이
 
   const xLabel = (cfg === true || !cfg.x || cfg.x.label === undefined || cfg.x.label === true) ? (cfg && cfg.x && typeof cfg.x.label === 'string' ? cfg.x.label : 'x') : null;
   const yLabel = (cfg === true || !cfg.y || cfg.y.label === undefined || cfg.y.label === true) ? (cfg && cfg.y && typeof cfg.y.label === 'string' ? cfg.y.label : 'y') : null;
@@ -499,7 +507,7 @@ function axesIR(world, cfg, theme, area = world) {
     for (let x = Math.ceil(area.xmin / xStep) * xStep; x <= area.xmax + 1e-9; x += xStep) {
       if (x <= area.xmin + spanX * 0.01 || x >= area.xmax - spanX * 0.01) continue; // 경계 라벨 제외(클립 방지)
       const nearOrigin = Math.abs(x - axisX) < xStep * 1e-6;
-      out.push(node('path', { ops: [{ op: 'M', x, y: axisY - padWorld * 0.6 }, { op: 'L', x, y: axisY + padWorld * 0.6 }], z: -5, style: { color: tcol, stroke: 1 } }));
+      out.push(node('path', { ops: [{ op: 'M', x, y: axisY - tickHalfX }, { op: 'L', x, y: axisY + tickHalfX }], z: -5, style: { color: tcol, stroke: 1 } }));
       // 화면 오프셋은 px(dyPx)로 — world 단위 오프셋 금지(증거 A 재발 방지).
       if (!nearOrigin) out.push(node('text', { x, y: axisY, dxPx: 0, dyPx: 16, text: fmtTick(x), anchor: 'middle', font: 12, italic: false, color: tcol, z: -5 }));
     }
@@ -512,7 +520,7 @@ function axesIR(world, cfg, theme, area = world) {
     for (let y = Math.ceil(area.ymin / yStep) * yStep; y <= area.ymax + 1e-9; y += yStep) {
       if (y <= area.ymin + spanY * 0.01 || y >= area.ymax - spanY * 0.01) continue; // 경계 라벨 제외(클립 방지)
       const nearOrigin = Math.abs(y - axisY) < yStep * 1e-6;
-      out.push(node('path', { ops: [{ op: 'M', x: axisX - padWorld * 0.6, y }, { op: 'L', x: axisX + padWorld * 0.6, y }], z: -5, style: { color: tcol, stroke: 1 } }));
+      out.push(node('path', { ops: [{ op: 'M', x: axisX - tickHalfY, y }, { op: 'L', x: axisX + tickHalfY, y }], z: -5, style: { color: tcol, stroke: 1 } }));
       if (!nearOrigin) out.push(node('text', { x: axisX, y, dxPx: -8, dyPx: 4, text: fmtTick(y), anchor: 'end', font: 12, italic: false, color: tcol, z: -5 }));
     }
   }
