@@ -42,6 +42,36 @@ export function regionRect(region, world) {
 export class Region extends Drawable {
   constructor(conf = {}) { super('region', { ...conf }); }
   label(l, off) { return this.set({ label: l, labelOff: off }); }
+
+  /** auto-framing 용 경계 (P1-2). 알 수 없으면 null. */
+  bounds() {
+    const c = this._conf;
+    if (c.mode === 'riemann' || c.mode === 'below') {
+      const [a, b] = (c.domain && c.domain.length === 2) ? c.domain : [NaN, NaN];
+      if (!(b > a)) return null;
+      const fn = (c.mode === 'below' && c.curve && typeof c.curve.eval === 'function')
+        ? (x) => c.curve.eval(x).cart[1] : this._fn();
+      let ymin = 0, ymax = 0;
+      for (let i = 0; i <= 40; i++) { const y = fn(a + ((b - a) * i) / 40); if (Number.isFinite(y)) { ymin = Math.min(ymin, y); ymax = Math.max(ymax, y); } }
+      return { xmin: a, xmax: b, ymin, ymax };
+    }
+    if (c.mode === 'between') {
+      const [a, b] = (c.domain && c.domain.length === 2) ? c.domain : [NaN, NaN];
+      if (!(b > a)) return null;
+      const fFn = toFn(c.a), gFn = toFn(c.b);
+      let ymin = Infinity, ymax = -Infinity;
+      for (let i = 0; i <= 40; i++) { const x = a + ((b - a) * i) / 40; for (const y of [fFn(x), gFn(x)]) if (Number.isFinite(y)) { ymin = Math.min(ymin, y); ymax = Math.max(ymax, y); } }
+      if (!Number.isFinite(ymin)) return null;
+      return { xmin: a, xmax: b, ymin, ymax };
+    }
+    if (c.mode === 'bar') return { xmin: Math.min(c.x0, c.x1), xmax: Math.max(c.x0, c.x1), ymin: Math.min(0, c.y1), ymax: Math.max(0, c.y1) };
+    if (c.mode === 'inside') {
+      const sh = c.shape;
+      if (sh && typeof sh.bounds === 'function') { const b = sh.bounds(); if (b) return b; }
+      if (sh && typeof sh.center === 'function' && typeof sh.radius === 'function') { const [qx, qy] = sh.center(); const r = sh.radius(); return { xmin: qx - r, xmax: qx + r, ymin: qy - r, ymax: qy + r }; }
+    }
+    return null;
+  }
   _fn() {
     const f = this._conf.fn;
     if (typeof f === 'function') return f;
@@ -130,7 +160,10 @@ export const region = {
   inside(shape) { return new Region({ mode: 'inside', shape, fill: 'steelblue', opacity: 0.4 }); },
   intersect(a, b) { return new Region({ mode: 'intersect', items: [a, b], fill: 'steelblue', opacity: 0.4 }); },
   between(a, b, domain) { return new Region({ mode: 'between', a, b, ...(Array.isArray(domain) ? { domain } : {}) }); },
-  below(curveObj) { return new Region({ mode: 'below', curve: curveObj }); },
+  below(curveObj) {
+    const d = curveObj && curveObj.domain;
+    return new Region({ mode: 'below', curve: curveObj, ...(Array.isArray(d) ? { domain: d } : {}) });
+  },
   bar(x0, x1, y0, y1) { return new Region({ mode: 'bar', x0, x1, y0, y1, fill: 'steelblue', opacity: 0.7 }); },
 };
 

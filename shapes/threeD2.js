@@ -1,7 +1,7 @@
 // 3D 입체 (E2–E4, K3) — 원기둥/원뿔/회전체/다면체
 import { Drawable } from '../core/drawable.js';
 import { node } from '../core/node.js';
-import { project3, polyline, pick } from './threeD.js';
+import { project3, polyline, pick, depthZ } from './threeD.js';
 
 export class Cylinder extends Drawable {
   constructor(conf = {}) { super('cylinder', { ...conf }); }
@@ -70,7 +70,7 @@ export class Polyhedron extends Drawable {
     const c = this._conf;
     const out = [];
     for (const [i, j] of c.edges || []) out.push(polyline([project3(ctx, c.vertices[i]), project3(ctx, c.vertices[j])], c, 0));
-    for (const v of c.vertices || []) { const p = project3(ctx, v); out.push(node('point', { x: p[0], y: p[1], marker: 'dot', style: { color: c.color || '#000' } })); }
+    for (const v of c.vertices || []) { const p = project3(ctx, v); out.push(node('point', { x: p[0], y: p[1], marker: 'dot', z: depthZ(p[2], 1), style: { color: c.color || '#000' } })); }
     return out;
   }
 }

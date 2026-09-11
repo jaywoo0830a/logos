@@ -13,6 +13,10 @@ export class Segment extends Drawable {
     return Math.hypot(B[0] - A[0], B[1] - A[1]);
   }
   label(l, off) { return this.set({ label: l, labelOff: off }); }
+  bounds() {
+    const A = this._conf.a.coords, B = this._conf.b.coords;
+    return { xmin: Math.min(A[0], B[0]), xmax: Math.max(A[0], B[0]), ymin: Math.min(A[1], B[1]), ymax: Math.max(A[1], B[1]) };
+  }
 
   toIR() {
     const c = this._conf;

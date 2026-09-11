@@ -8,6 +8,13 @@ export class Ellipse extends Drawable {
   get semi() { return this._conf.semi; }
 
   label(l, off) { return this.set({ label: l, labelOff: off }); }
+  /** auto-framing 경계 (P1-2) — 회전은 무시한 근사. */
+  bounds() {
+    const c = this._conf;
+    const [cx, cy] = c.center.coords;
+    const [rx, ry] = c.semi;
+    return { xmin: cx - rx, xmax: cx + rx, ymin: cy - ry, ymax: cy + ry };
+  }
 
   toIR(ctx) {
     const c = this._conf;

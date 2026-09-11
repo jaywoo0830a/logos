@@ -17,12 +17,18 @@
   ],
   "scripts": {
     "test": "node --test test/*.test.js",
-    "test:svg": "node --test test/senarios.test.js"
+    "test:svg": "node --test test/senarios.test.js",
+    "snap:update": "UPDATE=1 node --test test/snapshots.test.js",
+    "gallery": "node examples/gallery.js",
+    "test:visual": "node examples/visual.js"
   },
   "dependencies": {
     "@cortex-js/compute-engine": "^0.27.0",
     "katex": "^0.18.7",
     "node-tikzjax": "^1.0.5"
+  },
+  "optionalDependencies": {
+    "@resvg/resvg-js": "^2.6.2"
   },
   "engines": {
     "node": ">=24.0.0"

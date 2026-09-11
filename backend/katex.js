@@ -34,6 +34,41 @@ export function katexify(text) {
   return escapeHtml(raw);
 }
 
+/** LaTeX → 폰트 비의존 유니코드 텍스트 (foreignObject 없는 <text> 백엔드용) */
+export function latexToText(latex) {
+  if (latex == null) return '';
+  let s = String(latex);
+  // 자주 쓰는 명령 → 유니코드
+  const sym = {
+    '\\pi': 'π', '\\theta': 'θ', '\\alpha': 'α', '\\beta': 'β', '\\gamma': 'γ',
+    '\\delta': 'δ', '\\epsilon': 'ε', '\\varepsilon': 'ε', '\\phi': 'φ', '\\varphi': 'φ',
+    '\\infty': '∞', '\\approx': '≈', '\\to': '→', '\\rightarrow': '→', '\\Rightarrow': '⇒',
+    '\\le': '≤', '\\leq': '≤', '\\ge': '≥', '\\geq': '≥', '\\neq': '≠', '\\ne': '≠',
+    '\\pm': '±', '\\times': '×', '\\cdot': '·', '\\perp': '⊥', '\\parallel': '∥',
+    '\\int': '∫', '\\sum': '∑', '\\prod': '∏', '\\partial': '∂', '\\nabla': '∇',
+    '\\sqrt': '√', '\\in': '∈', '\\subset': '⊂', '\\cup': '∪', '\\cap': '∩',
+    '\\degree': '°',
+  };
+  for (const [k, v] of Object.entries(sym)) s = s.split(k).join(v);
+  // \frac{a}{b} → (a)/(b)  (중첩은 반복 치환)
+  let prev;
+  do {
+    prev = s;
+    s = s.replace(/\\frac\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g, '($1)/($2)');
+  } while (s !== prev);
+  // \sqrt{a} → √(a)
+  s = s.replace(/√\s*\{([^{}]*)\}/g, '√($1)');
+  // \lim_{...} \log_{...} 등 아래첨자 → 괄호
+  s = s.replace(/\\lim\s*_\s*\{([^{}]*)\}/g, 'lim($1)');
+  s = s.replace(/\\log\s*_\s*\{([^{}]*)\}/g, 'log($1)');
+  // 남은 명령 제거, 중괄호/달러/여분 공백 정리
+  s = s.replace(/\\[a-zA-Z]+/g, '');
+  s = s.replace(/\^\{([^{}]*)\}/g, '^$1');
+  s = s.replace(/[{}]/g, '').replace(/\$/g, '');
+  s = s.replace(/\\,(?=\S)/g, ' ').replace(/\\/g, ' ');
+  return s.replace(/\s+/g, ' ').trim();
+}
+
 export function escapeHtml(s) {
   return String(s)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')

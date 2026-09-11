@@ -1,6 +1,6 @@
 // DSL.md §12 렌더러 파이프라인 — SVG emitter (clip / gradient / math label)
 import { applyTransforms } from '../transform.js';
-import { katexRender } from './katex.js';
+import { katexRender, latexToText } from './katex.js';
 import { regionRect } from '../shapes/region.js';
 
 const esc = (s) => String(s)
@@ -49,14 +49,16 @@ function diskPath(cx, cy, r, m, d) {
 }
 
 export function emitSVG(nodes, opts) {
-  const { map, scale, W, H, world = null, bg } = opts;
+  const { map, scale, scaleX = scale, scaleY = scale, W, H, world = null, bg } = opts;
+  // 결정성: 렌더 단위로 id 카운터를 리셋한다(모듈 전역 누적 금지).
+  CLIPN = 0; GRADN = 0;
   const t = themed(opts);
+  t.math = opts.math || 'foreignObject';
   const m = transformPt(map);
   const out = [`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" font-family="${esc(t.font)}">`];
-  // 부드러운 배경 그라디언트 (상단 밝음 → 하단 미세하게 어두움)
-  // + 채워진 원을 위한 단일 방사 그라디언트 (출판 느낌의 음영)
-  const circColor = firstFill(nodes) || t.pointColor;
-  out.push(`<defs><linearGradient id="lgbg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${t.bg}"/><stop offset="1" stop-color="${shadeBg(t.bg)}"/></linearGradient><radialGradient id="logoCircleGrad" cx="40%" cy="35%" r="75%"><stop offset="0" stop-color="${lighten(circColor)}"/><stop offset="0.7" stop-color="${circColor}"/><stop offset="1" stop-color="${darken(circColor)}"/></radialGradient></defs>`);
+  // 배경: 상단 밝음 → 하단 미세하게 어두운 선형 그라디언트만 사용한다.
+  // (채워진 원에 무조건 방사 그라디언트를 씌우던 동작은 제거 — 평면 채움은 평면으로)
+  out.push(`<defs><linearGradient id="lgbg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${t.bg}"/><stop offset="1" stop-color="${shadeBg(t.bg)}"/></linearGradient></defs>`);
   out.push(`<rect width="100%" height="100%" fill="url(#lgbg)"/>`);
 
   const clips = new Map();
@@ -85,7 +87,7 @@ export function emitSVG(nodes, opts) {
   for (const n of nodes) {
     const d = n.data;
     const cid = d && d.clip ? idFor(d.clip) : null;
-    const html = renderNode(n, m, scale, t, gradId);
+    const html = renderNode(n, m, scaleX, scaleY, t, gradId);
     if (html) out.push(cid ? `<g clip-path="url(#${cid})">${html}</g>` : html);
   }
   out.push('</svg>');
@@ -100,29 +102,6 @@ function shadeBg(hex) {
   return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
 }
 
-function lighten(hex) {
-  if (!/^#[0-9a-fA-F]{6}$/.test(hex || '')) return hex;
-  const n = parseInt(hex.slice(1), 16);
-  const r = Math.min(255, ((n >> 16) & 255) + 70), g = Math.min(255, ((n >> 8) & 255) + 70), b = Math.min(255, (n & 255) + 70);
-  return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
-}
-
-function darken(hex) {
-  if (!/^#[0-9a-fA-F]{6}$/.test(hex || '')) return hex;
-  const n = parseInt(hex.slice(1), 16);
-  const r = Math.max(0, ((n >> 16) & 255) - 45), g = Math.max(0, ((n >> 8) & 255) - 45), b = Math.max(0, (n & 255) - 45);
-  return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
-}
-
-// 첫 번째 채워진 원/폴리곤의 색 추출 (방사 그라디언트 기준색)
-function firstFill(nodes) {
-  for (const n of nodes) {
-    const d = n.data;
-    if (d && d.fill && d.fill !== 'none' && /^#[0-9a-fA-F]{6}$/.test(d.fill)) return d.fill;
-  }
-  return null;
-}
-
 function transformPt(map) {
   return (d, x, y) => {
     if (d && d.transforms && d.transforms.length) {
@@ -133,7 +112,7 @@ function transformPt(map) {
   };
 }
 
-function renderNode(n, m, scale, t, gradId) {
+function renderNode(n, m, scaleX, scaleY, t, gradId) {
   const d = n.data;
   const st = stroke(d.style || d, t);
   switch (n.kind) {
@@ -154,14 +133,19 @@ function renderNode(n, m, scale, t, gradId) {
       const [cx, cy] = m(d, d.cx, d.cy);
       let fill = d.fill || 'none';
       if (d.gradient && gradId) { const gid = gradId.get(d.gradient); if (gid) fill = `url(#${gid})`; }
-      else if (d.fill && d.fill !== 'none') { fill = `url(#logoCircleGrad)`; }
-      return `<circle cx="${cx}" cy="${cy}" r="${d.r * scale}" fill="${fill}" stroke="${st.stroke}" stroke-width="${st['stroke-width']}" stroke-dasharray="${st.dash || 'none'}" opacity="${st.opacity}"/>`;
+      const rx = d.r * scaleX, ry = d.r * scaleY;
+      const common = `fill="${fill}" stroke="${st.stroke}" stroke-width="${st['stroke-width']}" stroke-dasharray="${st.dash || 'none'}" opacity="${st.opacity}"`;
+      // equal 스케일일 때만 진짜 원, 아니면 타원으로 방출(비등방 스케일 보존).
+      if (Math.abs(rx - ry) < 1e-9) return `<circle cx="${cx}" cy="${cy}" r="${rx}" ${common}/>`;
+      return `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" ${common}/>`;
     }
     case 'fillcircle': {
       const [cx, cy] = m(d, d.cx, d.cy);
       let fill = d.fill;
       if (d.gradient && gradId) { const gid = gradId.get(d.gradient); if (gid) fill = `url(#${gid})`; }
-      return `<circle cx="${cx}" cy="${cy}" r="${d.r * scale}" fill="${fill}" opacity="${d.opacity || 1}" stroke="none"/>`;
+      const rx = d.r * scaleX, ry = d.r * scaleY;
+      if (Math.abs(rx - ry) < 1e-9) return `<circle cx="${cx}" cy="${cy}" r="${rx}" fill="${fill}" opacity="${d.opacity || 1}" stroke="none"/>`;
+      return `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${fill}" opacity="${d.opacity || 1}" stroke="none"/>`;
     }
     case 'clipfill': {
       const cid = 'logosClip' + (++CLIPN);
@@ -170,7 +154,7 @@ function renderNode(n, m, scale, t, gradId) {
     case 'ellipse': {
       const [cx, cy] = m(d, d.cx, d.cy);
       const ang = d.angle != null ? ` transform="rotate(${d.angle * 180 / Math.PI} ${cx} ${cy})"` : '';
-      return `<ellipse cx="${cx}" cy="${cy}" rx="${d.rx * scale}" ry="${d.ry * scale}" fill="${d.fill || 'none'}" stroke="${st.stroke}" stroke-width="${st['stroke-width']}" opacity="${st.opacity}"${ang}/>`;
+      return `<ellipse cx="${cx}" cy="${cy}" rx="${d.rx * scaleX}" ry="${d.ry * scaleY}" fill="${d.fill || 'none'}" stroke="${st.stroke}" stroke-width="${st['stroke-width']}" opacity="${st.opacity}"${ang}/>`;
     }
     case 'point': {
       const [cx, cy] = m(d, d.x, d.y);
@@ -188,14 +172,25 @@ function renderNode(n, m, scale, t, gradId) {
       const parts = [dot];
       if (d.label) {
         const [lx, ly] = m(d, d.x, d.y);
-        if (d.labelMath) parts.push(`<foreignObject x="${lx + 8}" y="${ly - 24}" width="300" height="44"><div xmlns="http://www.w3.org/1999/xhtml">${katexRender(String(d.label))}</div></foreignObject>`);
-        else parts.push(`<text x="${lx + 7}" y="${ly - 7}" font-size="13" font-style="italic" fill="${d.color || t.labelColor}">${esc(d.label)}</text>`);
+        if (d.labelMath) {
+          if (t.math === 'text') parts.push(`<text x="${lx + 8}" y="${ly - 7}" font-size="13" font-style="normal" fill="${d.color || t.labelColor}">${esc(latexToText(String(d.label)))}</text>`);
+          else parts.push(`<foreignObject x="${lx + 8}" y="${ly - 24}" width="300" height="44"><div xmlns="http://www.w3.org/1999/xhtml">${katexRender(String(d.label))}</div></foreignObject>`);
+        } else parts.push(`<text x="${lx + 7}" y="${ly - 7}" font-size="13" font-style="italic" fill="${d.color || t.labelColor}">${esc(d.label)}</text>`);
       }
       return parts.join('\n');
     }
     case 'text': {
-      const [x, y] = m(d, d.x, d.y);
-      if (d.math) return `<foreignObject x="${x}" y="${y - 18}" width="500" height="44"><div xmlns="http://www.w3.org/1999/xhtml">${katexRender(d.text || '')}</div></foreignObject>`;
+      // world 좌표는 map 으로, 화면 오프셋은 px 단위(dxPx/dyPx)로 분리 적용한다.
+      const [wx, wy] = m(d, d.x, d.y);
+      const x = wx + (d.dxPx || 0);
+      const y = wy + (d.dyPx || 0);
+      if (d.math) {
+        if (t.math === 'text') {
+          const fs = d.font || 14;
+          return `<text x="${x}" y="${y}" font-size="${fs}" font-style="normal" text-anchor="${d.anchor || 'start'}" fill="${d.color || t.labelColor}">${esc(latexToText(d.text || ''))}</text>`;
+        }
+        return `<foreignObject x="${x}" y="${y - 18}" width="500" height="44"><div xmlns="http://www.w3.org/1999/xhtml">${katexRender(d.text || '')}</div></foreignObject>`;
+      }
       const fs = d.font || 13.5;
       const fsStyle = d.italic === undefined ? (d.caption ? 'normal' : 'italic') : (d.italic ? 'italic' : 'normal');
       return `<text x="${x}" y="${y}" font-size="${fs}" font-style="${fsStyle}" text-anchor="${d.anchor || 'start'}" fill="${d.color || t.labelColor}">${esc(d.text || '')}</text>`;

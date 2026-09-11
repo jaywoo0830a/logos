@@ -30,8 +30,27 @@ docker-data/
 .containers/
 
 # ── 렌더링 산출물 (재생성 가능) ─────────
+# output/: 갤러리 SVG + output/png/(시각 회귀 PNG) 모두 포함
 output/
 *.pid
+
+# ── tikzjax / LaTeX 임시 산출물 ─────────
+# (node-tikzjax 가 저장소 루트에 떨어뜨리는 t.svg / g2.svg / *.tex 등)
+/*.svg
+/*.png
+/*.pdf
+/*.tex
+/*.aux
+/*.out
+/*.xdv
+
+# ── 시각 회귀(생성물) ────────────────────
+test/visual/
+
+# ── 골든 스냅샷 (로컬/재생성물) ───────────
+# `npm run snap:update` 로 생성. 커밋하지 않는다(대신 리포에는 매니페스트가 없으므로
+# CI에서는 스냅샷 테스트가 skip 된다 — 아래 test/snapshots.test.js 참고).
+test/fixtures/
 
 # ── OS / 편집기 ────────────────────────
 .DS_Store

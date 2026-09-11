@@ -20,22 +20,24 @@ export class SceneIR {
       scale = Math.min(sx, sy);
       ox = (W - xr * scale) / 2;
       oy = (H - yr * scale) / 2;
+      sx = scale; sy = scale;   // equal: 양축 동일 스케일
     } else {
       sx = W / xr; sy = H / yr;
       scale = Math.min(sx, sy);
     }
     const map = (x, y) => [
-      ox + (x - world.xmin) * (equal ? scale : sx),
-      oy + (world.ymax - y) * (equal ? scale : sy),
+      ox + (x - world.xmin) * sx,
+      oy + (world.ymax - y) * sy,
     ];
-    return { map, scale, W, H };
+    return { map, scale, scaleX: sx, scaleY: sy, W, H };
   }
 
-  toSVG() {
+  toSVG(opts = {}) {
     const m = this._map();
     const td = this.o.themeDef || {};
     return emitSVG(this.o.nodes, {
       ...m, world: this.o.world,
+      math: opts.math,
       bg: td.bg || '#ffffff',
       font: td.font || 'sans-serif',
       fontMath: td.fontMath || td.font,
@@ -62,17 +64,20 @@ export class SceneIR {
   /** JSXGraph 인터랙티브 HTML — ADAPT §2 (선택) */
   toJSXGraphHTML(opts = {}) { return buildJSXGraphHTML(this.o.nodes, opts); }
 
-  /** KaTeX 조판된 <figure> HTML — ADAPT §4 */
+  /** KaTeX 조판된 <figure> HTML — ADAPT §4 (좌표는 world→screen 매핑 적용) */
   toHTML(opts = {}) {
     const { katexRender, katexify } = katexNs;
+    const { map } = this._map();
     const rows = [];
     const renderText = (v) => (typeof v?.toLatex === 'function') ? katexRender(v.toLatex()) : katexify(v);
     for (const nd of this.o.nodes) {
       const d = nd.data;
       if (nd.kind === 'text') {
-        rows.push(`<div class="logos-text" style="position:absolute;left:${d.x}px;top:${d.y}px">${renderText(d.text)}</div>`);
+        const [x, y] = map(d.x, d.y);
+        rows.push(`<div class="logos-text" style="position:absolute;left:${(x + (d.dxPx || 0)).toFixed(1)}px;top:${(y + (d.dyPx || 0)).toFixed(1)}px">${renderText(d.text)}</div>`);
       } else if (nd.kind === 'point' && d.label) {
-        rows.push(`<div class="logos-label" style="position:absolute;left:${d.x}px;top:${d.y}px">${renderText(d.label)}</div>`);
+        const [x, y] = map(d.x, d.y);
+        rows.push(`<div class="logos-label" style="position:absolute;left:${x.toFixed(1)}px;top:${y.toFixed(1)}px">${renderText(d.label)}</div>`);
       }
     }
     return buildFigureHTML(rows);
@@ -89,8 +94,17 @@ export class SceneIR {
 
   toReact() { return this.toSVG(); }
 
-  toPNG() {
-    throw new Error('toPNG() requires a raster backend (resvg/node-canvas). Not bundled. Use toSVG() instead.');
+  /**
+   * P0-4: SVG → PNG 래스터화. `@resvg/resvg-js` 가 설치돼 있으면 동작한다.
+   * (없으면 명확히 안내). math 기본값은 폰트 비의존 'text' — foreignObject 는 래스터에서 소실되므로.
+   */
+  async toPNG(opts = {}) {
+    let Resvg;
+    try { ({ Resvg } = await import('@resvg/resvg-js')); }
+    catch { throw new Error("toPNG() 는 @resvg/resvg-js 가 필요합니다. `npm i -D @resvg/resvg-js` 후 사용하세요. (대안: toSVG())"); }
+    const svg = this.toSVG({ math: opts.math || 'text' });
+    const r = new Resvg(svg, { background: opts.background || 'white', fitTo: { mode: 'zoom', value: opts.scale || 1 } });
+    return r.render().asPng();
   }
   toPDF() {
     throw new Error('toPDF() requires pdf-lib. Not bundled. Use toTikZ()/toSVG() instead.');

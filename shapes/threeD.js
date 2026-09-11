@@ -40,14 +40,24 @@ function hslLightAdjust(hex, delta) {
 }
 function lightenHsl(c, d) { return hslLightAdjust(c, d); }
 function darkenHsl(c, d) { return hslLightAdjust(c, -d); }
-export function polyline(pts, c, z, nodeImp = node, pickImp = pick) {
+/** depth(시선거리) → z 키. 뒤(큰 depth)일수록 작은 z → 먼저 그려진다. layer 는 미세 우선순위. */
+export function depthZ(depth, layer = 0) {
+  return -((Number.isFinite(depth) ? depth : 0)) * 0.1 + layer * 1e-3;
+}
+
+export function polyline(pts, c, layer, nodeImp = node, pickImp = pick) {
   const ops = [];
   let started = false;
-  for (const [x, y] of pts) {
+  let ds = 0, dn = 0;
+  for (const p of pts) {
+    const [x, y] = p;
+    if (Number.isFinite(p[2])) { ds += p[2]; dn++; }
     if (!Number.isFinite(x) || !Number.isFinite(y)) { started = false; continue; }
     ops.push({ op: started ? 'L' : 'M', x, y });
     started = true;
   }
+  // P4-1: primitive 별 평균 depth 로 z 를 정해 painter's algorithm 정렬.
+  const z = depthZ(dn ? ds / dn : 0, layer);
   return nodeImp('path', { ops, color: c.color, stroke: c.stroke, dash: c.dash, opacity: c.opacity, z, style: pickImp(c) });
 }
 
@@ -75,7 +85,7 @@ export class Sphere extends Drawable {
       // 구 실루엣: 단색이 아니라 '방사 그라디언트'로 오목-볼록(half-tone) 입체감
       const base = c.fill || '#3b82f6';
       out.push(node('fillcircle', {
-        cx: CP[0], cy: CP[1], r: r * 0.97, fill: base, opacity: c.opacity ?? 0.25, z: -2, style: pick(c),
+        cx: CP[0], cy: CP[1], r: r * 0.97, fill: base, opacity: c.opacity ?? 0.25, z: depthZ(CP[2], 0) - 1, style: pick(c),
         gradient: { type: 'radial', stops: [
           { offset: 0, color: lightenHsl(base, 30) },
           { offset: 0.6, color: base },
@@ -96,7 +106,8 @@ export class Plane extends Drawable {
     const c = this._conf;
     const half = c.half || 2.2;
     const pts = [[-half, -half, 0], [half, -half, 0], [half, half, 0], [-half, half, 0]].map((p) => project3(ctx, p));
-    return [node('polygon', { pts, closed: true, fill: c.fill || '#eee', color: c.color, stroke: c.stroke, opacity: c.opacity ?? 0.4, z: -3, style: pick(c) })];
+    const depth = pts.reduce((a, p) => a + (p[2] || 0), 0) / pts.length;
+    return [node('polygon', { pts, closed: true, fill: c.fill || '#eee', color: c.color, stroke: c.stroke, opacity: c.opacity ?? 0.4, z: depthZ(depth, -1), style: pick(c) })];
   }
 }
 export const plane = {

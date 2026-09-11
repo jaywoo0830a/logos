@@ -106,7 +106,10 @@ export class Scene {
   compile() {
     const conf = this._conf;
     const dim = conf.dim === 'auto' ? guessDim(conf.shapes) : conf.dim;
-    const world = resolveWorld(conf, conf.shapes, dim);
+    let world = resolveWorld(conf, conf.shapes, dim);
+    // 극좌표 그리드는 원점 중심이므로, view 를 원점 대칭 정사각으로 맞춰야
+    // 그리드/각도 라벨이 화면 밖으로 나가지 않는다.
+    if (conf.polarGrid && dim === 2) world = squareWorld(world);
     const themeDef = THEMES[conf.theme] || THEMES.default;
 
     let project = null;
@@ -197,17 +200,34 @@ function resolveWorld(conf, shapes, dim = 2) {
 
 function collect(s) {
   if (s == null) return [];
-  const c = (typeof s.coords === 'function' && s.coords) || (Array.isArray(s.coords) ? s.coords : null);
+  // P1-2: 도형이 bounds() 를 제공하면 최우선으로 사용한다(타원·사각형·영역·음함수 …).
+  if (typeof s.bounds === 'function') {
+    const b = s.bounds();
+    if (b && Number.isFinite(b.xmin) && Number.isFinite(b.xmax) && Number.isFinite(b.ymin) && Number.isFinite(b.ymax)) {
+      return [[b.xmin, b.ymin], [b.xmax, b.ymax]];
+    }
+  }
   if (Array.isArray(s.coords)) return [s.coords];
   if (s.vertices && Array.isArray(s.vertices)) return s.vertices.map((v) => v.coords);
   if (typeof s.sample === 'function') return s.sample();
   if (typeof s.pointDir === 'function') { const { p, d } = s.pointDir(); return [p, [p[0] + d[0], p[1] + d[1]]]; }
-  if (typeof s.center === 'function' && typeof s.radius === 'function') {
-    const c2 = s.center();
-    const r = s.radius();
-    return [[c2[0] - r, c2[1] - r], [c2[0] + r, c2[1] + r]];
-  }
+  const ctr = readCenter(s);
+  const r = readRadius(s);
+  if (ctr && r != null) return [[ctr[0] - r, ctr[1] - r], [ctr[0] + r, ctr[1] + r]];
   return [];
+}
+
+/** center 가 메서드든 getter(Point)든 좌표 배열을 읽는다. */
+function readCenter(s) {
+  const cand = typeof s.center === 'function' ? s.center() : s.center;
+  if (Array.isArray(cand)) return cand;
+  if (cand && Array.isArray(cand.coords)) return cand.coords;
+  return null;
+}
+function readRadius(s) {
+  if (typeof s.radius === 'function') return s.radius();
+  if (typeof s.radius === 'number') return s.radius;
+  return null;
 }
 
 // ── 배경 IR ──────────────────────────────────────
@@ -243,11 +263,18 @@ function gridIR(world, cfg, theme) {
   return out;
 }
 
+function squareWorld(world) {
+  const half = Math.max(Math.abs(world.xmin), Math.abs(world.xmax), Math.abs(world.ymin), Math.abs(world.ymax)) * 1.2;
+  return { xmin: -half, xmax: half, ymin: -half, ymax: half };
+}
+
 function polarGridIR(world, theme) {
   const color = theme.gridColor || '#cbd5e1';
   const axisC = theme.axisColor || '#34495e';
   const tcol = theme.tickColor || axisC;
-  const maxR = Math.hypot(Math.max(Math.abs(world.xmin), Math.abs(world.xmax)), Math.max(Math.abs(world.ymin), Math.abs(world.ymax)));
+  // 원점에서 각 변까지의 최소 거리 = 확실히 보이는 반지름.
+  const fitR = Math.min(Math.max(Math.abs(world.xmin), Math.abs(world.xmax)), Math.max(Math.abs(world.ymin), Math.abs(world.ymax)));
+  const maxR = fitR * 0.9;         // 그리드가 화면 안에 들어오도록
   const step = maxR / 4;
   const out = [];
   const pad = maxR * 0.06;
@@ -261,10 +288,13 @@ function polarGridIR(world, theme) {
     const a = (Math.PI * i) / 6;
     out.push(node('path', { ops: [{ op: 'M', x: 0, y: 0 }, { op: 'L', x: Math.cos(a) * maxR, y: Math.sin(a) * maxR }], z: -10, style: { color, stroke: 0.6 } }));
   }
-  // 각도 라벨 (30°, 60°, ... 330°) — 주요 각만
+  // 각도 라벨 — 0 과 π 만. 화면 오프셋은 px(dyPx)로.
   for (let i = 0; i < 12; i++) {
     const a = (Math.PI * i) / 6;
-    if (i % 6 === 0) { out.push(node('text', { x: Math.cos(a) * (maxR + pad * 2.2), y: Math.sin(a) * (maxR + pad * 2.2) + 4, text: `${i % 6 === 0 ? (i == 0 ? '' : (i === 6 ? 'π' : `${i}0°`)) : ''}`, anchor: 'middle', font: 11, color: tcol, z: -9 })); }
+    if (i % 6 !== 0) continue;
+    const txt = i === 0 ? '0' : 'π';
+    const lr = maxR * 1.06;   // fitR 안쪽
+    out.push(node('text', { x: Math.cos(a) * lr, y: Math.sin(a) * lr, dxPx: 0, dyPx: 4, text: txt, anchor: 'middle', font: 11, color: tcol, z: -9 }));
   }
   // 축 (x, y) — 원점을 지나는 주요 축 강조
   out.push(node('path', { ops: [{ op: 'M', x: -maxR, y: 0 }, { op: 'L', x: maxR, y: 0 }], z: -5, style: { color: axisC, stroke: 1 } }));
@@ -300,7 +330,9 @@ function axesIR(world, cfg, theme) {
   const out = [];
   const c = theme.axisColor || '#444';
   const tcol = theme.tickColor || theme.labelColor || c;
-  const pad = Math.max(world.xmax - world.xmin, world.ymax - world.ymin) * 0.02;
+  const spanX = world.xmax - world.xmin;
+  const spanY = world.ymax - world.ymin;
+  const padWorld = Math.max(spanX, spanY) * 0.02;
 
   const xLabel = (cfg === true || !cfg.x || cfg.x.label === undefined || cfg.x.label === true) ? (cfg && cfg.x && typeof cfg.x.label === 'string' ? cfg.x.label : 'x') : null;
   const yLabel = (cfg === true || !cfg.y || cfg.y.label === undefined || cfg.y.label === true) ? (cfg && cfg.y && typeof cfg.y.label === 'string' ? cfg.y.label : 'y') : null;
@@ -308,35 +340,42 @@ function axesIR(world, cfg, theme) {
   const yStep = niceStep(world.ymin, world.ymax, cfg && cfg.y && cfg.y.tick ? cfg.y.tick : undefined);
   const showTick = (cfg === true || cfg === undefined || cfg === 1 || cfg.x === undefined || cfg.x.ticks === undefined) ? true : !!cfg.x.ticks;
 
-  // 원점 y=0 이 view 안이면 그 높이를 축으로, 아니면 하단 가장자리(보이게)
-  const zeroY = (world.ymin <= 0 && 0 <= world.ymax) ? 0 : world.ymin; // y좌표(사용자좌표)
-  const zeroX = (world.xmin <= 0 && 0 <= world.xmax) ? 0 : world.xmin;
+  // P1-1: 축의 위치를 world 로 정하되, 라벨이 화면 밖으로 나가지 않도록 가장자리에서 안쪽으로 inset.
+  const marginY = spanY * 0.06;
+  const marginX = spanX * 0.06;
+  let axisY = (world.ymin <= 0 && 0 <= world.ymax) ? 0 : (world.ymin + marginY);
+  axisY = Math.min(Math.max(axisY, world.ymin + marginY), world.ymax - marginY);
+  let axisX = (world.xmin <= 0 && 0 <= world.xmax) ? 0 : (world.xmin + marginX);
+  axisX = Math.min(Math.max(axisX, world.xmin + marginX), world.xmax - marginX);
 
-  // ── x 축 (사용자 좌표에서 y = zeroY 인 가로선) ──
-  out.push(node('path', { ops: [{ op: 'M', x: world.xmin, y: zeroY }, { op: 'L', x: world.xmax, y: zeroY }], z: -6, style: { color: c, stroke: 1.1 } }));
+  // ── x 축 (y = axisY 인 가로선) ──
+  out.push(node('path', { ops: [{ op: 'M', x: world.xmin, y: axisY }, { op: 'L', x: world.xmax, y: axisY }], z: -6, style: { color: c, stroke: 1.1 } }));
   if (showTick) {
     for (let x = Math.ceil(world.xmin / xStep) * xStep; x <= world.xmax + 1e-9; x += xStep) {
-      const nearOrigin = Math.abs(x - zeroX) < xStep * 1e-6;
-      out.push(node('path', { ops: [{ op: 'M', x, y: zeroY - pad / 1.5 }, { op: 'L', x, y: zeroY + pad / 1.5 }], z: -5, style: { color: tcol, stroke: 1 } }));
-      if (!nearOrigin) out.push(node('text', { x, y: zeroY - pad * 1.8, text: fmtTick(x), anchor: 'middle', font: 12, color: tcol, z: -5 }));
+      if (x <= world.xmin + spanX * 0.01 || x >= world.xmax - spanX * 0.01) continue; // 경계 라벨 제외(클립 방지)
+      const nearOrigin = Math.abs(x - axisX) < xStep * 1e-6;
+      out.push(node('path', { ops: [{ op: 'M', x, y: axisY - padWorld * 0.6 }, { op: 'L', x, y: axisY + padWorld * 0.6 }], z: -5, style: { color: tcol, stroke: 1 } }));
+      // 화면 오프셋은 px(dyPx)로 — world 단위 오프셋 금지(증거 A 재발 방지).
+      if (!nearOrigin) out.push(node('text', { x, y: axisY, dxPx: 0, dyPx: 16, text: fmtTick(x), anchor: 'middle', font: 12, italic: false, color: tcol, z: -5 }));
     }
   }
-  if (xLabel) out.push(node('text', { x: world.xmax, y: zeroY - pad * 2.9, text: String(xLabel), anchor: 'end', font: 13, italic: true, color: c, z: -4 }));
+  if (xLabel) out.push(node('text', { x: world.xmax, y: axisY, dxPx: 0, dyPx: 18, text: String(xLabel), anchor: 'end', font: 13, italic: true, color: c, z: -4 }));
 
-  // ── y 축 (사용자 좌표에서 x = zeroX 인 세로선) ──
-  out.push(node('path', { ops: [{ op: 'M', x: zeroX, y: world.ymin }, { op: 'L', x: zeroX, y: world.ymax }], z: -6, style: { color: c, stroke: 1.1 } }));
+  // ── y 축 (x = axisX 인 세로선) ──
+  out.push(node('path', { ops: [{ op: 'M', x: axisX, y: world.ymin }, { op: 'L', x: axisX, y: world.ymax }], z: -6, style: { color: c, stroke: 1.1 } }));
   if (showTick) {
     for (let y = Math.ceil(world.ymin / yStep) * yStep; y <= world.ymax + 1e-9; y += yStep) {
-      const nearOrigin = Math.abs(y - zeroY) < yStep * 1e-6;
-      out.push(node('path', { ops: [{ op: 'M', x: zeroX - pad / 1.5, y }, { op: 'L', x: zeroX + pad / 1.5, y }], z: -5, style: { color: tcol, stroke: 1 } }));
-      if (!nearOrigin) out.push(node('text', { x: zeroX - pad * 1.8, y: y + 4, text: fmtTick(y), anchor: 'end', font: 12, color: tcol, z: -5 }));
+      if (y <= world.ymin + spanY * 0.01 || y >= world.ymax - spanY * 0.01) continue; // 경계 라벨 제외(클립 방지)
+      const nearOrigin = Math.abs(y - axisY) < yStep * 1e-6;
+      out.push(node('path', { ops: [{ op: 'M', x: axisX - padWorld * 0.6, y }, { op: 'L', x: axisX + padWorld * 0.6, y }], z: -5, style: { color: tcol, stroke: 1 } }));
+      if (!nearOrigin) out.push(node('text', { x: axisX, y, dxPx: -8, dyPx: 4, text: fmtTick(y), anchor: 'end', font: 12, italic: false, color: tcol, z: -5 }));
     }
   }
-  if (yLabel) out.push(node('text', { x: zeroX - pad * 2.5, y: world.ymax, text: String(yLabel), anchor: 'end', font: 13, italic: true, color: c, z: -4 }));
+  if (yLabel) out.push(node('text', { x: axisX, y: world.ymax, dxPx: -6, dyPx: 0, text: String(yLabel), anchor: 'end', font: 13, italic: true, color: c, z: -4 }));
 
-  // 원점 "0" 은 두 축이 모두 view 안일 때만 표시(깔끔하게 한 번)
+  // 원점 "0" — 두 축이 모두 view 안일 때만.
   if ((world.ymin <= 0 && 0 <= world.ymax) && (world.xmin <= 0 && 0 <= world.xmax) && showTick) {
-    out.push(node('text', { x: zeroX - pad * 2.0, y: zeroY + 12, text: '0', anchor: 'end', font: 12, color: tcol, z: -4 }));
+    out.push(node('text', { x: axisX, y: axisY, dxPx: -6, dyPx: 16, text: '0', anchor: 'end', font: 12, italic: false, color: tcol, z: -4 }));
   }
   return out;
 }
@@ -409,7 +448,12 @@ function makeProjection(camera) {
   const rl = len(r) || 1;
   const rn = [r[0] / rl, r[1] / rl, r[2] / rl];
   const u = cross(rn, fn);
-  return (pos) => [dot(sub(pos, eye), rn), dot(sub(pos, eye), u)];
+  // [screenX, screenY, depth] — depth 는 시선(forward) 방향 거리(클수록 멀다).
+  // 3D 도형은 이 depth 로 painter's algorithm 정렬에 쓴다(P4-1).
+  return (pos) => {
+    const d = sub(pos, eye);
+    return [dot(d, rn), dot(d, u), dot(d, fn)];
+  };
 }
 const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
 const len = (v) => Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);

@@ -5,6 +5,10 @@ import { node } from '../core/node.js';
 export class Rectangle extends Drawable {
   constructor(conf = {}) { super('rectangle', { ...conf }); }
   label(l, o) { return this.set({ label: l, labelOff: o }); }
+  bounds() {
+    const c = this._conf;
+    return { xmin: Math.min(c.x0, c.x1), xmax: Math.max(c.x0, c.x1), ymin: Math.min(0, c.y1), ymax: Math.max(0, c.y1) };
+  }
   toIR() {
     const c = this._conf;
     return [node('fillrect', {
