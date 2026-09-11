@@ -115,6 +115,60 @@ function transformPt(map) {
   };
 }
 
+/** 텍스트 배경 상자 (matplotlib bbox 대응) — 텍스트 폭을 근사 추정. */
+function textBoxSvg(d, x, y) {
+  const fs = d.font || (d.math ? 14 : 13.5);
+  const lines = String(d.text ?? '').split('\n');
+  const wchars = Math.max(...lines.map((l) => l.length), 1);
+  const pad = d.box?.pad ?? 4;
+  const w = wchars * fs * (d.math ? 0.62 : 0.6) + pad * 2 + 4;
+  const h = lines.length * fs * 1.15 + pad * 2;
+  let left = x;
+  if (d.anchor === 'middle') left = x - w / 2;
+  else if (d.anchor === 'end') left = x - w;
+  const top = y - fs * 0.85 - pad;
+  const face = d.box.facecolor || d.box.fill || 'wheat';
+  const alpha = d.box.alpha ?? 0.8;
+  const rx = d.box.round === false ? 0 : 6;
+  const rot = d.rotate ? ` transform="rotate(${d.rotate} ${x} ${y})"` : '';
+  return `<rect x="${left.toFixed(1)}" y="${top.toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" rx="${rx}" fill="${face}" opacity="${alpha}"${rot}/>`;
+}
+
+/** 점 마커 (matplotlib marker 대응: circle/square/triangle/diamond/star/point/plus/cross) */
+function markerSvg(d, cx, cy, base, t) {
+  const shape = d.marker || 'dot';
+  const open = !!d.open;
+  const r = d.size || ((shape === '*' || shape === 'star') ? 5.5 : 3.4);
+  const opv = d.style?.opacity;
+  const opAttr = (opv != null && opv !== 1) ? ` opacity="${opv}"` : '';
+  const fill = open ? t.bg : base;
+  const stroke = open ? ` stroke="${base}" stroke-width="1.7"` : '';
+  const poly = (pts) => `<polygon points="${pts.map((p) => p.map((v) => v.toFixed(2)).join(',')).join(' ')}" fill="${fill}"${open ? ` stroke="${base}" stroke-width="1.5"` : ''}${opAttr}/>`;
+  const f2 = (v) => v.toFixed(2);
+  switch (shape) {
+    case 's': case 'square':
+      return `<rect x="${f2(cx - r)}" y="${f2(cy - r)}" width="${f2(2 * r)}" height="${f2(2 * r)}" fill="${fill}"${stroke}${opAttr}/>`;
+    case '^': case 'triangle':
+      return poly([[cx, cy - r], [cx + r * 1.15, cy + r * 0.9], [cx - r * 1.15, cy + r * 0.9]]);
+    case 'd': case 'diamond':
+      return poly([[cx, cy - r], [cx + r, cy], [cx, cy + r], [cx - r, cy]]);
+    case '*': case 'star': {
+      const pts = [];
+      for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + (i * Math.PI) / 5; const rr = i % 2 ? r * 0.42 : r; pts.push([cx + rr * Math.cos(a), cy + rr * Math.sin(a)]); }
+      return `<polygon points="${pts.map((p) => p.map(f2).join(',')).join(' ')}" fill="${base}"${opAttr}/>`;
+    }
+    case '.': case 'point':
+      return `<circle cx="${cx}" cy="${cy}" r="${Math.max(1.4, r * 0.5).toFixed(2)}" fill="${base}"${opAttr}/>`;
+    case '+': case 'plus':
+      return `<path d="M${f2(cx - r)} ${cy} L${f2(cx + r)} ${cy} M${cx} ${f2(cy - r)} L${cx} ${f2(cy + r)}" stroke="${base}" stroke-width="1.6" fill="none"${opAttr}/>`;
+    case 'x': case 'cross':
+      return `<path d="M${f2(cx - r * 0.8)} ${f2(cy - r * 0.8)} L${f2(cx + r * 0.8)} ${f2(cy + r * 0.8)} M${f2(cx + r * 0.8)} ${f2(cy - r * 0.8)} L${f2(cx - r * 0.8)} ${f2(cy + r * 0.8)}" stroke="${base}" stroke-width="1.6" fill="none"${opAttr}/>`;
+    default:
+      if (d.stroke != null && d.stroke > 1 && !open) return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="#fff" stroke="${base}" stroke-width="1.6"${opAttr}/>`;
+      return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${fill}"${stroke}${opAttr}/>`;
+  }
+}
+
 function renderNode(n, m, scaleX, scaleY, t, gradId) {
   const d = n.data;
   const st = stroke(d.style || d, t);
@@ -161,18 +215,9 @@ function renderNode(n, m, scaleX, scaleY, t, gradId) {
     }
     case 'point': {
       const [cx, cy] = m(d, d.x, d.y);
-      const r = 3.4;
       const base = d.color || d.fill || t.pointColor;
       const op = d.style?.opacity ?? 1;
-      let dot;
-      if (d.open) {
-        dot = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${t.bg}" stroke="${base}" stroke-width="1.7"/>`;
-      } else if (d.stroke != null && d.stroke > 1) {
-        dot = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="#fff" stroke="${base}" stroke-width="1.6"${op !== 1 ? ` opacity="${op}"` : ''}/>`;
-      } else {
-        dot = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${base}"${op !== 1 ? ` opacity="${op}"` : ''}/>`;
-      }
-      const parts = [dot];
+      const parts = [markerSvg(d, cx, cy, base, t)];
       if (d.label) {
         const [lx, ly] = m(d, d.x, d.y);
         const ldx = d.dxPx ?? 7, ldy = d.dyPx ?? -7;
@@ -190,15 +235,16 @@ function renderNode(n, m, scaleX, scaleY, t, gradId) {
       const y = wy + (d.dyPx || 0);
       const bold = d.bold ? ' font-weight="bold"' : '';
       const color = d.color || t.labelColor;
+      const boxStr = d.box ? textBoxSvg(d, x, y) : '';
       if (d.math) {
         if (t.math === 'text') {
           const fs = d.font || 14;
-          return `<text x="${x}" y="${y}" font-size="${fs}" font-style="normal"${bold} text-anchor="${d.anchor || 'start'}" fill="${color}">${esc(latexToText(d.text || ''))}</text>`;
+          return boxStr + `<text x="${x}" y="${y}" font-size="${fs}" font-style="normal"${bold} text-anchor="${d.anchor || 'start'}" fill="${color}">${esc(latexToText(d.text || ''))}</text>`;
         }
         // foreignObject 는 자체 폭을 모르므로 anchor=middle 이면 폭을 추정해 중앙 정렬한다.
         const est = Math.max(40, Math.min(620, String(d.text || '').length * 7.5 + 16));
         const fx = d.anchor === 'middle' ? x - est / 2 : x;
-        return `<foreignObject x="${fx}" y="${y - 18}" width="${est}" height="46"><div xmlns="http://www.w3.org/1999/xhtml">${katexRender(d.text || '')}</div></foreignObject>`;
+        return boxStr + `<foreignObject x="${fx}" y="${y - 18}" width="${est}" height="46"><div xmlns="http://www.w3.org/1999/xhtml">${katexRender(d.text || '')}</div></foreignObject>`;
       }
       const fs = d.font || 13.5;
       const fsStyle = d.italic === undefined ? (d.caption ? 'normal' : 'italic') : (d.italic ? 'italic' : 'normal');
@@ -208,9 +254,9 @@ function renderNode(n, m, scaleX, scaleY, t, gradId) {
       const lines = String(d.text ?? '').split('\n');
       if (lines.length > 1) {
         const tspans = lines.map((ln, i) => `<tspan x="${x}" dy="${i === 0 ? 0 : fs * 1.15}">${esc(ln)}</tspan>`).join('');
-        return `<text x="${x}" y="${y}" ${head}>${tspans}</text>`;
+        return boxStr + `<text x="${x}" y="${y}" ${head}>${tspans}</text>`;
       }
-      return `<text x="${x}" y="${y}" ${head}>${esc(d.text || '')}</text>`;
+      return boxStr + `<text x="${x}" y="${y}" ${head}>${esc(d.text || '')}</text>`;
     }
     case 'rect': {
       // 임의 좌표 사각형 (barh 등). fill + 선택적 테두리.

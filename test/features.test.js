@@ -2,7 +2,33 @@
 // region.betweenX/barH/annulus/wedge · panels · surface.z · vectorField3 · scene.layout
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { scene, point, circle, region, panels, surface, vectorField3 } from '../index.js';
+import { scene, point, circle, region, panels, surface, vectorField3, annotate } from '../index.js';
+
+test('point.marker(): 마커 모양 (square/triangle/diamond/star/point/plus/cross)', () => {
+  const svg = scene().view([-5, 5], [-5, 5]).equal().add(
+    point(-4, 0).marker('square').color('#111111').size(6),
+    point(-2, 0).marker('triangle').color('#222222').size(6),
+    point(0, 0).marker('diamond').color('#333333').size(6),
+    point(2, 0).marker('star').color('#444444').size(8),
+    point(4, 0).marker('point').color('#555555').size(6),
+    point(0, 2).marker('plus').color('#666666').size(6),
+    point(0, -2).marker('cross').color('#777777').size(6),
+  ).compile().toSVG();
+  assert.ok(svg.includes('<rect'), 'square → rect');
+  assert.ok((svg.match(/<polygon/g) || []).length >= 3, 'triangle/diamond/star → polygon');
+  assert.ok(svg.includes('#444444'), 'star 색');
+  assert.ok(!/NaN/.test(svg));
+});
+
+test('annotate.text(): bbox 배경 + 회전', () => {
+  const svg = scene().view([-5, 5], [-5, 5]).add(
+    annotate.text(point(0, 0)).label('Area = 6').anchor('middle').box({ facecolor: 'wheat', alpha: 0.8 }),
+    annotate.text(point(-3, 3)).label('rot').rotate(30),
+  ).compile().toSVG();
+  assert.ok(/<rect[^>]*fill="wheat"[^>]*opacity="0.8"/.test(svg), 'bbox rect');
+  assert.ok(/<text[^>]*transform="rotate\(30 /.test(svg), 'rotated text');
+  assert.ok(!/NaN/.test(svg));
+});
 
 test('region.betweenX / barH / annulus / wedge', () => {
   const svg = scene().view([-5, 5], [-5, 5]).equal().add(

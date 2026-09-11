@@ -225,6 +225,9 @@ export class TextAnno extends Drawable {
   offset(dx, dy) { return this.set({ dxPx: dx, dyPx: dy }); }
   font(f) { return this.set({ font: f }); }
   bold(on = true) { return this.set({ bold: on }); }
+  rotate(deg) { return this.set({ rotate: deg }); }
+  /** 텍스트 배경 상자 (matplotlib bbox). 예: .box({ facecolor:'wheat', alpha:0.8 }) */
+  box(cfg = {}) { return this.set({ box: cfg === true ? {} : cfg }); }
   toIR() {
     const c = this._conf;
     const [x, y] = c.P.coords;
@@ -232,7 +235,7 @@ export class TextAnno extends Drawable {
       x, y, text: renderText(c.text),
       math: typeof c.text?.toLatex === 'function',
       anchor: c.anchor || 'start', dxPx: c.dxPx, dyPx: c.dyPx,
-      font: c.font, bold: c.bold, italic: c.italic, color: c.color, rotate: c.rotate, z: c.z,
+      font: c.font, bold: c.bold, italic: c.italic, color: c.color, rotate: c.rotate, box: c.box, z: c.z,
     })];
   }
 }

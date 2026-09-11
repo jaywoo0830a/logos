@@ -27,6 +27,19 @@ export class Point extends Drawable {
     return this.set({ marker });
   }
 
+  /**
+   * 마커 모양 지정 (matplotlib marker 대응).
+   * @param {'circle'|'square'|'triangle'|'diamond'|'star'|'point'|'o'|'s'|'^'|'*'|'.'} shape
+   * @param {Object} [opts] { open, size }
+   */
+  marker(shape = 'circle', opts = {}) {
+    const set = { marker: shape };
+    if (opts.open !== undefined) set.open = !!opts.open;
+    if (opts.size !== undefined) set.size = opts.size;
+    return this.set(set);
+  }
+  size(n) { return this.set({ size: n }); }
+
   toCartesian() {
     return new Point({ system: 'cartesian', cart: [...this._conf.cart] });
   }
@@ -45,6 +58,7 @@ export class Point extends Drawable {
       x: proj[0], y: proj[1],
       marker: c.marker || 'dot',
       open: c.open,
+      size: c.size,
       label: renderText(c.label),
       labelMath,
       color: c.color, fill: c.fill, stroke: c.stroke,

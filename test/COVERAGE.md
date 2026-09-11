@@ -46,6 +46,8 @@
 | **폰트 (전역)** | **STIX Two Math — 텍스트·수식·축 전부** (`backend/fonts.js`, `assets/STIXTwoMath-Regular.ttf`) |
 | 제목/축라벨/범례 | `scene.title()/xlabel()/ylabel()/legend(loc)` |
 | 임의 텍스트 | `annotate.text(P).label().anchor().offset().font().bold()` |
+| 텍스트 상자/회전 | `annotate.text(...).box({facecolor,alpha})` · `.rotate(deg)` |
+| 점 마커 모양 | `point(x,y).marker('circle'\|'square'\|'triangle'\|'diamond'\|'star'\|'point'\|'plus'\|'cross', {size,open})` |
 | 자동 라벨 배치 | `scene.layout()` → `backend/layout.js`(텍스트 충돌 회피, 축 눈금 제외) |
 | subplots/패널 | `panels([fig1,fig2], { cols, cell, title, tight })` |
 | grid/spine | `grid({ alpha, width, minor })` · `spines({ top:false, right:false })` |
