@@ -19,6 +19,8 @@ import { vectorField } from './shapes/vectorfield.js';
 import { sphere, plane } from './shapes/threeD.js';
 import { cylinder, cone, surface, polyhedron, vectorField3 } from './shapes/threeD2.js';
 import { curve3, arrow3, surfaceParam, axes3, quadrics, circle3, frame3 } from './shapes/threeD3.js';
+import { cmapColor, shade } from './shapes/threeD3.js';
+import { mat, vec, Matrix } from './linalg.js';
 import transform from './transform.js';
 import annotate from './annotate.js';
 import { tex } from './symbolic/tex.js';
@@ -40,6 +42,7 @@ export { Scene, scene, panels, node, point, vector, line, segment, curve, circle
          parabola, hyperbola, polygon, triangle, quad, regular, square, rectangle, region,
          vectorField, vectorField3, sphere, plane, cylinder, cone, surface, polyhedron,
          curve3, arrow3, surfaceParam, axes3, quadrics, circle3, frame3,
+         cmapColor, shade, mat, vec, Matrix,
          transform, annotate, tex, Sym, typography };
 
 // ── 예제/스케치 공용 작성 키트 (kit.js) ─────────────

@@ -49,7 +49,9 @@ export const palette = {
 export function plot2d(xr, yr, { size = [560, 440], grid = { alpha: 0.3 }, axes = true, equal = false } = {}) {
   let sc = new Scene().size(size[0], size[1]).view(xr, yr);
   if (equal) sc = sc.equal();
-  if (axes) sc = sc.axes();
+  // axes 는 true/false 뿐 아니라 설정 객체도 받는다.
+  //   plot2d(xr, yr, { axes: { x: { label: 'u' }, y: { ticks: false } } })
+  if (axes) sc = sc.axes(axes);
   if (grid) sc = sc.grid(grid === true ? true : grid);
   return sc;
 }

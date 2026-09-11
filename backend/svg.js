@@ -189,7 +189,8 @@ function renderNode(n, m, scaleX, scaleY, t, gradId) {
     }
     case 'polygon': {
       const pts = d.pts.map((p) => m(d, p[0], p[1]).join(',')).join(' ');
-      return `<polygon points="${pts}" fill="${d.fill || 'none'}" stroke="${st.stroke}" stroke-width="${st['stroke-width']}" stroke-linejoin="round" opacity="${st.opacity}"/>`;
+      // 점선 다각형(테두리)도 지원 — path/circle 과 동일하게 dasharray 를 방출한다.
+      return `<polygon points="${pts}" fill="${d.fill || 'none'}" stroke="${st.stroke}" stroke-width="${st['stroke-width']}" stroke-dasharray="${st.dash || 'none'}" stroke-linejoin="round" opacity="${st.opacity}"/>`;
     }
     case 'circle': {
       const [cx, cy] = m(d, d.cx, d.cy);
@@ -292,12 +293,14 @@ function renderNode(n, m, scaleX, scaleY, t, gradId) {
       const [x1, y1] = m(d, d.x1, d.y1);
       const [x2, y2] = m(d, d.x2, d.y2);
       const parts = [];
+      // 점선 화살표 (matplotlib linestyle='--' 대응) — vector()/annotate.arrow().dash()
+      const dashAttr = st.dash ? ` stroke-dasharray="${st.dash}"` : '';
       if (!d.headless) {
         const id = 'lgsArrow' + (++CLIPN);
         parts.push(`<defs><marker id="${id}" markerWidth="9" markerHeight="9" refX="6" refY="4" orient="auto-start-reverse"><path d="M0,0 L8,4 L0,8 L2,4 Z" fill="${st.stroke}"/></marker></defs>`);
-        parts.push(`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${st.stroke}" stroke-width="${st['stroke-width']}" marker-end="url(#${id})" opacity="${st.opacity}"/>`);
+        parts.push(`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${st.stroke}" stroke-width="${st['stroke-width']}"${dashAttr} marker-end="url(#${id})" opacity="${st.opacity}"/>`);
       } else {
-        parts.push(`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${st.stroke}" stroke-width="${st['stroke-width']}" opacity="${st.opacity}"/>`);
+        parts.push(`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${st.stroke}" stroke-width="${st['stroke-width']}"${dashAttr} opacity="${st.opacity}"/>`);
       }
       if (d.label) {
         const lx = (x1 + x2) / 2, ly = (y1 + y2) / 2 - 6;

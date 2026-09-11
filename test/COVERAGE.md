@@ -15,10 +15,11 @@
 | **`test/invariants.test.js`** | **P0-2 SVG 무결성 린터, P0-1 결정성, P0-5 기하 불변식** | **신규(Phase 0)** |
 | **`test/snapshots.test.js`** | **P0-3 골든 스냅샷 (`test/fixtures/*.svg`, 로컬 전용·gitignore)** | **신규(Phase 0)** |
 | **`test/backend.test.js`** | **P5-1 TikZ/Asymptote/JSXGraph/KaTeX/PNG 백엔드 정합** | **신규(Phase 5)** |
-| **`test/features.test.js`** | **region.betweenX/barH/annulus/wedge · panels · surface.z(+cmap) · vectorField3 · scene.layout · curve3/arrow3/surfaceParam · 3D camera(elev/azim/aspect) · axes(false) · `axes3/quadrics/circle3/frame3` · `kit`(palette/plot2d/plot3d/subplots/saveFigures) · 타이포그래피(행간·자간)** | **신규(§7)** |
+| **`test/features.test.js`** | **region.betweenX/barH/annulus/wedge · panels · surface.z(+cmap) · vectorField3 · scene.layout · curve3/arrow3/surfaceParam · 3D camera(elev/azim/aspect) · axes(false)/`axes({y:{ticks:false}})` · `axes3/quadrics/circle3/frame3` · `kit`(palette/plot2d/plot3d/subplots/saveFigures) · 타이포그래피(행간·자간) · `linalg`(mat/vec) · `transform.matrix` · 점선(arrow/polygon)** | **신규(§7·6차)** |
 | `test/scenes.js` | 공용 대표 씬(`figures` = SceneIR, `scenes` = SVG) | 공용 |
 | **`examples/mpl_parity_9b.js`** | Session 9B · 2D 기하 **25 figure** 재현 (`npm run parity9b`) | **대표 예제** |
 | **`examples/mpl_parity_9c.js`** | Session 9C · 3D 기하 **35 figure** 재현 (`npm run parity9c`) | **대표 예제** |
+| **`examples/mpl_parity_12a2.js`** | 12A2 · 행렬과 벡터 **20 figure** 재현 (`npm run parity12a2`) | **대표 예제(6차)** |
 
 ## 0911-PLAN Phase ↔ 검증
 

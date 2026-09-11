@@ -77,8 +77,17 @@ kit.plot2d([-3, 3], [-2, 2], { size: [480, 440], grid: false })
 |---|---|---|
 | `size` | `[560, 440]` | 캔버스(= 패널 셀) 크기 |
 | `grid` | `{ alpha: 0.3 }` | `false` 면 그리드 없음, `true`/객체는 `scene.grid()` 로 전달 |
-| `axes` | `true` | 축·눈금 |
+| `axes` | `true` | `false` 면 축 없음, **객체면 `scene.axes(cfg)` 로 그대로 전달** |
 | `equal` | `false` | 등비 스케일 |
+
+`axes` 에 객체를 주면 눈금·라벨을 축별로 제어할 수 있습니다(6차에서 전달되도록 수정).
+
+```js
+// x 축 라벨만 남기고 y 눈금·라벨은 끄기 ← mpl: ax.set_yticks([]) + set_xlabel(...)
+kit.plot2d([-5, 6], [-1, 1], {
+  axes: { x: { label: 'Projected coordinate' }, y: { label: false, ticks: false } },
+});
+```
 
 ### 3.3 `plot3d(opts?)` — 3D 씬 프리셋 (mplot3d 관례)
 
@@ -131,6 +140,49 @@ kit.poly3([[0, 0, 0], [3, 2, 4]], { color: '#000', stroke: 0.8, dash: [4, 3] });
 * `seg` 는 2D 좌표면 `line.through`(**직선**), z 가 있으면 `curve3.through`(선분)로 분기합니다.
   2D 선분은 `segment(A, B)` 를 쓰세요.
 * `poly3` 는 3D 꺾은선(`curve3.through`)입니다.
+
+### 3.7 `linalg` — 행렬·벡터 계산 (`mat` · `vec`)
+
+그림은 `Scene`/도형이 담당하고, **"행렬과 벡터" 계산**은 `linalg.js` 가 담당합니다.
+(`solver/` 와 같은 순수 함수 계층 — 렌더링 규칙을 갖지 않습니다.)
+
+```js
+import { mat, vec } from 'logos';
+
+const A = mat([[2, 1], [0.5, 1.5]]);   // 행의 배열 = 수학 표기 그대로
+A.apply([1, 0]);     // [2, 0.5]   A·x  (= A 의 1열 = 기저벡터 e₁ 의 상)
+A.det;               // 2.5
+A.inv;               // 역행렬 (det=0 이면 예외)
+A.pow(4);            // A⁴ (k=0 → I)
+A.mul(B); A.t(); A.col(1); A.map([[0,0],[1,1]]);
+```
+
+| 팩토리 | 만드는 행렬 |
+|---|---|
+| `mat.identity(n)` | 단위행렬 |
+| `mat.rotation(deg)` | 회전 R(θ) (반시계, 도 단위) |
+| `mat.reflection('x'\|'y'\|'yx'\|deg)` | 반사 |
+| `mat.shear(kx, ky)` | 전단 |
+| `mat.scaling(sx, sy)` | 스케일 |
+
+```js
+vec.add/sub/scale/dot/norm/unit                    // 기본 연산
+vec.project([4, 2], [2, 0.5])                      // b 에 정사영
+vec.reject(a, b)                                   // 수직 성분
+vec.cross([1, 0], [0, 1])                          // [0, 0, 1]  (2D 는 z=0 승격)
+vec.areaOf(a, b) / vec.det2(a, b)                  // |a×b| = 평행사변형 넓이
+vec.angleDeg([3, 1], [1, 3])                       // 53.13
+```
+
+도형에 행렬을 **그대로** 씌우려면 `transform.matrix()`:
+
+```js
+polygon(...).apply(transform.matrix(A));            // = A·x 로 좌표 매핑
+annotate.arrow(point(0,0), point(1,0)).apply(transform.matrix(A));   // 변환된 기저벡터
+```
+
+> `transform.matrix()` 는 배열과 `mat()` 행렬을 **둘 다** 받습니다(6차에서 `Matrix` 지원 추가).
+> 그림 예시는 [`examples/mpl_parity_12a2.js`](examples/mpl_parity_12a2.js) 참고.
 
 ---
 
@@ -189,6 +241,18 @@ scene().dim(3).axes(false)
 | matplotlib | logos |
 |---|---|
 | `add_subplot(projection='3d')` | `scene().dim(3)` / `kit.plot3d()` |
+| `ax.view_init(elev, azim)` | `camera({ elev, azim })` |
+| `ax.set_box_aspect([4,4,3])` | `camera({ aspect: [1,1,0.75] })` |
+| `ax.set_axis_off()` + 화살표 3개 | `.axes(false)` + `axes3()` |
+| `ax.set_xlim/ylim/zlim` | `frame3([x0,x1],[y0,y1],[z0,z1])` |
+| `ax.plot(x,y,z)` | `curve3.parametric(f).on([t0,t1])` / `curve3.through([P,…])` |
+| `ax.quiver(...)` | `arrow3(from, to)` |
+| `ax.plot_wireframe` | `quadrics.*.wire(nu, nv)` |
+| `ax.plot_surface(cmap=…)` | `quadrics.*.solid(nu, nv).cmap('viridis')` |
+| `Poly3DCollection([face])` | `surfaceParam(...).solid(1, 1)` (이중선형 패치 1장) |
+| `ax.text(x, y, z, s)` | `annotate.text(point(x, y, z))` (자동 투영) |
+| `fig.suptitle` / subplots | `subplots([...], { cols, title })` |
+
 ---
 
 ## 5. 타이포그래피 — 행간과 자간
@@ -230,10 +294,28 @@ annotate.text(point(1, 1)).label('벌려 쓰기').letterSpacing(1.2)  // 자간(
 |---|---|---|---|
 | `examples/mpl_parity_9b.js` | Session 9B · **2D 기하 25 figure** (`example1.py` 재현) | `npm run parity9b` | `output/parity9b/` |
 | `examples/mpl_parity_9c.js` | Session 9C · **3D 기하 35 figure** (`example2.py` 재현) | `npm run parity9c` | `output/parity9c/` |
-| 둘 다 | — | `npm run examples` | `*/*.svg`, `*/*.png`, `*/index.html` |
+| `examples/mpl_parity_12a2.js` | 12A2 · **행렬과 벡터 20 figure** (`example3.py` 재현) | `npm run parity12a2` | `output/parity12a2/` |
+| 셋 다 | — | `npm run examples` | `*/*.svg`, `*/*.png`, `*/index.html` |
 
-두 스크립트는 라이브러리의 **회귀 기준**입니다. 즉 “matplotlib 급 그림을 정말 그릴 수 있는가”를
+세 스크립트는 라이브러리의 **회귀 기준**입니다. 즉 “matplotlib 급 그림을 정말 그릴 수 있는가”를
 사람이 눈으로(갤러리) 그리고 기계가(`npm test`) 확인합니다.
+
+`12A2` 는 행렬 그림이라 `mat`/`vec`/`transform.matrix` 사용 예가 집중되어 있습니다 —
+“계산은 `linalg`, 그리기는 `Scene`” 이라는 분리도 이 예제에서 가장 잘 보입니다.
+
+```js
+// 예: 12A2 의 한 figure — A 의 상(image)과 행렬식을 한 번에
+function matrixTransformation2d() {
+  const A = mat([[2, 1], [0.5, 1.5]]);
+  const quad = A.map(UNIT);                       // 단위정사각형 → 평행사변형
+  const right = s2([-0.5, 4], [-0.5, 3.5])
+    .title(`Parallelogram (After A), det=${A.det.toFixed(1)}`)
+    .add(polyOf(quad, { fill: RED, color: RED_D, opacity: 0.35 }),
+         arrowAt([0, 0], A.col(0), { color: RED, stroke: 2.5 }),   // A·e₁
+         arrowAt([0, 0], A.col(1), { color: BLUE, stroke: 2.5 })); // A·e₂
+  ...
+}
+```
 
 읽는 순서 추천:
 
@@ -286,9 +368,40 @@ KaTeX 는 SVG `foreignObject` 로 들어가는데 resvg 래스터에서는 사�
 `scene.layout()` 을 켜면 텍스트 충돌을 그리디하게 회피합니다(기본 꺼짐).
 `annotate.text(...).offset(dx, dy)` 로 픽셀 단위 미세 조정도 가능합니다.
 
+**Q. y 눈금만 끄고 싶어요.**
+`axes({ y: { ticks: false } })` (6차에서 추가 — mpl `ax.set_yticks([])` 대응).
+`x` 도 같은 방식으로 끌 수 있고, `label: false` 는 축 **라벨**만 끕니다.
+`kit.plot2d(xr, yr, { axes: {...} })` 로도 그대로 전달됩니다.
+
+**Q. 점선 화살표/테두리 다각형이 필요해요.**
+`.dash([6, 4])` 를 쓰면 됩니다 — `annotate.arrow` · `vector` · `polygon` · `segment` ·
+`curve` 전부 `stroke-dasharray` 로 나갑니다(6차에서 화살표·다각형 보완).
+
+**Q. 행렬을 도형에 바로 적용할 수 있나요?**
+`transform.matrix(A)` 를 `.apply()` 하세요. 배열·`mat()` 행렬 둘 다 받습니다.
+좌표를 손으로(`A.apply(p)`) 옮겨 새 도형을 만드는 쪽이 프레이밍이 더 정확하지만,
+강조 도형(변환된 정사각형·기저벡터)에는 `.apply()` 가 짧고 읽기 좋습니다.
+
 ---
 
-## 8. 이번 리팩터링에서 달라진 점 (2026-09-11, 5차 요청)
+## 8. 이력 — 무엇이 언제 바뀌었나
+
+### 8.1 6차 요청 (2026-09-11) — 행렬과 벡터 예제(12A2) + 선형대수 계산 계층
+
+* **예제 추가**: `examples/mpl_parity_12a2.js` (`example3.py` 재현, **20 figure**).
+  회전/반사/전단/합성/역행렬 · 내적·정사영·외적 · 3D 부피 · 연립방정식 ·
+  행렬 거듭제곱 · 차원 축소 · 격자 변형.
+* **`linalg.js` 신설**: `mat()` (apply·det·inv·pow·mul·t·col·map + identity/rotation/
+  shear/scaling/reflection) 와 `vec` (add·sub·scale·dot·norm·unit·project·reject·
+  cross·angleDeg·det2·areaOf). `index.js` 에서 `mat`·`vec`·`Matrix` export.
+* **`transform.matrix()` 확장**: 배열뿐 아니라 `mat()` 이 만든 `Matrix` 도 받는다.
+* **화살표·다각형 점선**: `arrow` 노드와 `polygon` 노드가 `stroke-dasharray` 를 방출
+  (path/circle 만 지원하던 비대칭 해소).
+* **`axes({ y: { ticks: false } })`**: y 눈금을 축별로 끌 수 있다.
+* **`kit.plot2d` 버그 수정**: `axes` 옵션에 **객체**를 주면 무시되던 것을 그대로 전달.
+* **검증**: `npm test` **160 pass / 0 fail**, `npm run examples` 25+35+20 figure 생성.
+
+### 8.2 5차 요청 (2026-09-11) — 예제 정리 · `kit.js` 신설
 
 * **예제 정리**: 대표 예제 2개(`mpl_parity_9b.js`, `mpl_parity_9c.js`)만 남기고
   `adapters.js`·`book.js`·`gallery.js`·`interface.js`·`mpl_parity.js`·`v02.js`·`visual.js` 삭제.
@@ -301,15 +414,4 @@ KaTeX 는 SVG `foreignObject` 로 들어가는데 resvg 래스터에서는 사�
 * **타이포그래피**: `TYPE = { lineHeight: 1.32, letterSpacing: 0.01 }` +
   `Drawable.lineHeight()/letterSpacing()` (기본 행간 1.15 → 1.32).
 * **문서**: 이 `KIT.md` 신설, `README.md` 신설, `0911-PLAN.md` §7 · `test/COVERAGE.md` 갱신.
-
-| `ax.view_init(elev, azim)` | `camera({ elev, azim })` |
-| `ax.set_box_aspect([4,4,3])` | `camera({ aspect: [1,1,0.75] })` |
-| `ax.set_axis_off()` + 화살표 3개 | `.axes(false)` + `axes3()` |
-| `ax.set_xlim/ylim/zlim` | `frame3([x0,x1],[y0,y1],[z0,z1])` |
-| `ax.plot(x,y,z)` | `curve3.parametric(f).on([t0,t1])` / `curve3.through([P,…])` |
-| `ax.quiver(...)` | `arrow3(from, to)` |
-| `ax.plot_wireframe` | `quadrics.*.wire(nu, nv)` |
-| `ax.plot_surface(cmap=…)` | `quadrics.*.solid(nu, nv).cmap('viridis')` |
-| `ax.text(x, y, z, s)` | `annotate.text(point(x, y, z))` (자동 투영) |
-| `fig.suptitle` / subplots | `subplots([...], { cols, title })` |
 

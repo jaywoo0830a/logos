@@ -3,6 +3,7 @@
 
 import { rotate2 } from './solver/intersect.js';
 import { point as _point } from './shapes/point.js';
+import { mat, Matrix } from './linalg.js';
 
 function make(applyFn, meta = {}) {
   return { apply: applyFn, meta };
@@ -68,11 +69,15 @@ export const transform = {
     const c = center.coords;
     return make((p) => [c[0] + (p[0] - c[0]) * k, c[1] + (p[1] - c[1]) * k]);
   },
-  matrix(m) {
-    return make((p) => {
-      const [x, y] = p;
-      return [m[0][0] * x + m[0][1] * y, m[1][0] * x + m[1][1] * y];
-    }, { kind: 'matrix' });
+  /**
+   * 임의의 **행렬(선형변환)** — `transform.matrix([[2,1],[0.5,1.5]])` (또는 `transform.matrix(mat(A))`).
+   * 도형에 `.apply(transform.matrix(A))` 로 붙이면 좌표가 `A·x` 로 매핑된다.
+   * (2×2 · 3×3 · 2×3 등 n×m 모두 가능 — 점 차원과 맞아야 한다)
+   * @param {number[][]|Matrix} M 행의 배열 또는 `mat()` 이 만든 행렬
+   */
+  matrix(M) {
+    const A = M instanceof Matrix ? M : mat(M);
+    return make((p) => A.apply(p), { kind: 'matrix', A });
   },
   compose(...ts) {
     return make((p, dim) => ts.reduce((acc, t) => t.apply(acc, dim), p), { kind: 'compose' });

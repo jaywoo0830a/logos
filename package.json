@@ -22,7 +22,8 @@
     "snap:update": "UPDATE=1 node --test test/snapshots.test.js",
     "parity9b": "node examples/mpl_parity_9b.js",
     "parity9c": "node examples/mpl_parity_9c.js",
-    "examples": "node examples/mpl_parity_9b.js && node examples/mpl_parity_9c.js",
+    "parity12a2": "node examples/mpl_parity_12a2.js",
+    "examples": "node examples/mpl_parity_9b.js && node examples/mpl_parity_9c.js && node examples/mpl_parity_12a2.js",
     "serve": "node server.js"
   },
   "dependencies": {

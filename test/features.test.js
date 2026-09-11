@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { scene, point, circle, region, panels, surface, vectorField3, annotate, curve3, arrow3, surfaceParam, tau,
-         axes3, quadrics, circle3, frame3, kit, typography } from '../index.js';
+         axes3, quadrics, circle3, frame3, kit, typography, mat, vec, Matrix, transform, polygon, line, segment } from '../index.js';
 import { mkdtempSync, rmSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -263,4 +263,83 @@ test('타이포그래피: 행간/자간 (TYPE + lineHeight/letterSpacing)', () =
   ).compile().toSVG();
   assert.ok(custom.includes('dy="20"'), 'lineHeight(2) 오버라이드');
   assert.ok(/<text[^>]*letter-spacing="1.5"/.test(custom), 'letterSpacing(px) 속성');
+});
+
+test('linalg.mat: apply/det/inv/pow/t() — 행렬과 벡터 (12A2)', () => {
+  const A = mat([[2, 1], [0.5, 1.5]]);
+  assert.ok(A instanceof Matrix);
+  assert.deepEqual(A.apply([1, 0]), [2, 0.5], 'A·e₁ = A 의 1열');
+  assert.deepEqual(A.col(1), [1, 1.5], '열 벡터');
+  assert.equal(A.det, 2.5);
+  assert.deepEqual(mat([[2, 1], [1, 3]]).inv.toArray(), [[0.6, -0.2], [-0.2, 0.4]]);
+  assert.deepEqual(mat.identity(2).pow(5).toArray(), [[1, 0], [0, 1]], 'A⁰ = I');
+  assert.deepEqual(A.mul(mat.identity(2)).toArray(), A.toArray(), 'A·I = A');
+  assert.deepEqual(A.t().toArray(), [[2, 0.5], [1, 1.5]]);
+  assert.deepEqual(A.map([[0, 0], [1, 1]]), [[0, 0], [3, 2]], '점 배열 변환');
+  // 3×3 행렬식 = 부피 배율
+  const B = mat([[2, 0.5, 0.3], [0.2, 1.8, 0.3], [0.2, 0.1, 1.5]]);
+  assert.equal(Number(B.det.toFixed(4)), 5.118);
+  assert.equal(Number(B.inv.mul(B).at(0, 0).toFixed(9)), 1);
+  assert.throws(() => mat([[1, 0], [0, 0]]).inv, /특이 행렬/, 'det=0 → 역행렬 없음');
+  assert.throws(() => mat([[1, 2, 3], [4, 5, 6]]).det, /정사각/, '비정방 행렬식 거부');
+  // 생성 프리셋
+  assert.deepEqual(mat.rotation(90).apply([2, 0.5]).map((v) => Number(v.toFixed(9))), [-0.5, 2]);
+  assert.deepEqual(mat.reflection('y').toArray(), [[-1, 0], [0, 1]]);
+  assert.deepEqual(mat.shear(1.5, 0).toArray(), [[1, 1.5], [0, 1]]);
+  assert.deepEqual(mat.scaling(3, 2).toArray(), [[3, 0], [0, 2]]);
+});
+
+test('linalg.vec: dot/norm/unit/project/cross/areaOf/angleDeg', () => {
+  assert.equal(vec.norm([3, 4]), 5);
+  assert.deepEqual(vec.unit([3, 4]), [0.6, 0.8]);
+  assert.equal(vec.dot([3, 1], [1, 3]), 6);
+  assert.equal(vec.angleDeg([3, 1], [1, 3]).toFixed(2), '53.13');
+  assert.deepEqual(vec.project([4, 2], [2, 0.5]).map((v) => Number(v.toFixed(3))), [4.235, 1.059]);
+  assert.deepEqual(vec.reject([4, 2], [2, 0.5]).map((v) => Number(v.toFixed(3))), [-0.235, 0.941]);
+  assert.deepEqual(vec.cross([1, 0], [0, 1]), [0, 0, 1], '2D 입력은 z=0 로 승격');
+  assert.equal(vec.areaOf([3, 1], [1, 2.5]), 6.5, '|a×b| = 평행사변형 넓이');
+  assert.equal(vec.det2([3, 1], [1, 2.5]), 6.5, 'det2 = 부호 있는 넓이');
+  assert.throws(() => vec.unit([0, 0]), /영벡터/);
+});
+
+test('transform.matrix(): 배열/Matrix 둘 다 + 도형 .apply()', () => {
+  assert.deepEqual(transform.matrix([[2, 1], [0.5, 1.5]]).apply([1, 0]), [2, 0.5]);
+  assert.deepEqual(transform.matrix(mat([[2, 1], [0.5, 1.5]])).apply([0, 1]), [1, 1.5]);
+  const svg = scene().view([-1, 4], [-1, 4]).add(
+    polygon(point(0, 0), point(1, 0), point(1, 1), point(0, 1)).apply(transform.matrix([[2, 1], [0.5, 1.5]])),
+  ).compile().toSVG();
+  const manual = scene().view([-1, 4], [-1, 4]).add(
+    polygon(point(0, 0), point(2, 0.5), point(3, 2), point(1, 1.5)),
+  ).compile().toSVG();
+  assert.equal(svg, manual, '변환된 꼭짓점 좌표 방출');
+  assert.ok(!/NaN/.test(svg));
+});
+
+test('axes({ y: { ticks: false } }) — y 눈금 끄기 (set_yticks([]))', () => {
+  // 눈금 글자는 x 는 가운데 정렬(middle), y 는 오른쪽 정렬(end) — 정렬로 구분해 센다.
+  const ticks = (svg, anchor) => [...svg.matchAll(new RegExp(`font-size="12"[^>]*text-anchor="${anchor}"[^>]*>([^<]+)<`, 'g'))].map((m) => m[1]);
+  const xTicks = (svg) => ticks(svg, 'middle');
+  const yTicks = (svg) => ticks(svg, 'end');
+  const mk = (cfg) => scene().size(400, 400).view([-3, 3], [-3, 3]).axes(cfg).compile().toSVG();
+  const both = mk(true), noY = mk({ y: { ticks: false } }), noX = mk({ x: { ticks: false, label: false }, y: { ticks: false } });
+  assert.ok(xTicks(both).length > 0 && yTicks(both).length > 0, '기본은 x·y 눈금 모두');
+  assert.equal(yTicks(noY).length, 0, 'y 눈금 제거');
+  assert.ok(xTicks(noY).length > 0, 'x 눈금은 그대로');
+  assert.equal(xTicks(noX).length + yTicks(noX).length, 0, 'x·y 눈금 모두 제거');
+  // kit.plot2d 도 같은 설정을 그대로 넘긴다
+  const viaKit = kit.plot2d([-3, 3], [-3, 3], { size: [400, 400], axes: { y: { ticks: false } } }).compile().toSVG();
+  assert.equal(yTicks(viaKit).length, 0, 'plot2d(axes 설정) 전달');
+});
+
+test('점선 화살표/다각형: stroke-dasharray 방출', () => {
+  const svg = scene().view([-5, 5], [-5, 5]).add(
+    annotate.arrow(point(0, 0), point(3, 2)).dash([6, 4]),
+    polygon(point(-4, -4), point(-2, -4), point(-2, -2)).dash([5, 4]).fill('none'),
+    segment(point(0, -4), point(3, -1)).dash([2, 3]),
+  ).compile().toSVG();
+  assert.ok(/<line[^>]*stroke-dasharray="6 4"/.test(svg), '화살표 점선');
+  assert.ok(/<polygon[^>]*stroke-dasharray="5 4"/.test(svg), '다각형 점선 테두리');
+  assert.ok(/<path[^>]*stroke-dasharray="2 3"/.test(svg), '선분 점선');
+  const plain = scene().view([-5, 5], [-5, 5]).add(annotate.arrow(point(0, 0), point(1, 1))).compile().toSVG();
+  assert.ok(!/<line[^>]*stroke-dasharray/.test(plain), '기본 화살표는 실선');
 });

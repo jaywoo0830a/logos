@@ -409,6 +409,7 @@ import { scene, point, vector, line, segment, ray,
          polyhedron, cube, prism, pyramid,
          region, vectorField,
          transform, annotate, tex, kit,         // kit = 그림 작성 키트
+         mat, vec,                              // 행렬/벡터 수치 (linalg)
          tau, pi, e } from 'logos';
 ```
 
@@ -417,7 +418,11 @@ import { scene, point, vector, line, segment, ray,
 - **`axes3` / `quadrics` / `circle3` / `frame3`** — 3D 도우미(mplot3d 대응)
 - **`kit`** — 예제 작성 키트: `palette` · `plot2d` · `plot3d` · `subplots` ·
   `saveFigure` · `saveFigures` · `writeGallery` · `seg` · `poly3`
-- **`transform`** — 변환
+- **`mat` / `vec`** — 행렬·벡터 **계산** (linalg.js): `mat([[a,b],[c,d]])` 의
+  `apply/det/inv/pow/mul/t/col/map` + `mat.rotation/reflection/shear/scaling`,
+  `vec.dot/norm/unit/project/cross/areaOf/angleDeg`. 도형에 행렬을 씌우려면
+  `transform.matrix(A)` + `.apply()`.
+- **`transform`** — 변환 (회전·평행이동·반사·스케일·**행렬**)
 - **`annotate`** — 주석
 - **`tex`** — 심볼릭 수식 (LaTeX 그대로)
 

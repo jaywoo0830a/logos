@@ -471,6 +471,9 @@ function axesIR(world, cfg, theme) {
   const xStep = niceStep(world.xmin, world.xmax, cfg && cfg.x && cfg.x.tick ? cfg.x.tick : undefined);
   const yStep = niceStep(world.ymin, world.ymax, cfg && cfg.y && cfg.y.tick ? cfg.y.tick : undefined);
   const showTick = (cfg === true || cfg === undefined || cfg === 1 || cfg.x === undefined || cfg.x.ticks === undefined) ? true : !!cfg.x.ticks;
+  // y 눈금도 개별로 끌 수 있다 ← matplotlib `ax.set_yticks([])` 대응
+  //   `.axes({ x: { label: 'Projected coordinate' }, y: { ticks: false } })`
+  const showYTick = (cfg === true || cfg === undefined || cfg === 1 || cfg.y === undefined || cfg.y.ticks === undefined) ? true : !!cfg.y.ticks;
 
   // P1-1: 축의 위치를 world 로 정하되, 라벨이 화면 밖으로 나가지 않도록 가장자리에서 안쪽으로 inset.
   const marginY = spanY * 0.06;
@@ -495,7 +498,7 @@ function axesIR(world, cfg, theme) {
 
   // ── y 축 (x = axisX 인 세로선) ──
   out.push(node('path', { ops: [{ op: 'M', x: axisX, y: world.ymin }, { op: 'L', x: axisX, y: world.ymax }], z: -6, style: { color: c, stroke: 1.1 } }));
-  if (showTick) {
+  if (showYTick) {
     for (let y = Math.ceil(world.ymin / yStep) * yStep; y <= world.ymax + 1e-9; y += yStep) {
       if (y <= world.ymin + spanY * 0.01 || y >= world.ymax - spanY * 0.01) continue; // 경계 라벨 제외(클립 방지)
       const nearOrigin = Math.abs(y - axisY) < yStep * 1e-6;
@@ -506,7 +509,7 @@ function axesIR(world, cfg, theme) {
   if (yLabel) out.push(node('text', { x: axisX, y: world.ymax, dxPx: -6, dyPx: 0, text: String(yLabel), anchor: 'end', font: 13, italic: true, color: c, z: -4 }));
 
   // 원점 "0" — 두 축이 모두 view 안일 때만.
-  if ((world.ymin <= 0 && 0 <= world.ymax) && (world.xmin <= 0 && 0 <= world.xmax) && showTick) {
+  if ((world.ymin <= 0 && 0 <= world.ymax) && (world.xmin <= 0 && 0 <= world.xmax) && showTick && showYTick) {
     out.push(node('text', { x: axisX, y: axisY, dxPx: -6, dyPx: 16, text: '0', anchor: 'end', font: 12, italic: false, color: tcol, z: -4 }));
   }
   return out;
