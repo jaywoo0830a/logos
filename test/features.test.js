@@ -370,6 +370,27 @@ test('annotate.angle: 이름 지정형 — 꼭짓점 실수 방지', () => {
   assert.throws(() => annotate.angle(A, [0, 0], B), /점\(point\)이 필요/, '좌표 배열을 위치형에 넘기면 명확히 실패');
 });
 
+test('annotate.angle rightAngle: 표식 두 변의 끝이 각의 두 광선 위에 놓인다', () => {
+  const A = point(3, 1), O = point(0, 0), B = point(-1, 3);   // A ⊥ B → 진짜 직각
+  const ctx = { world: { xmin: -5, xmax: 5, ymin: -5, ymax: 5 } };
+  const [mark] = annotate.angle({ from: A, vertex: O, to: B }).arc({ radius: 0.5 }).rightAngle().toIR(ctx);
+  assert.equal(mark.kind, 'path', '직각 표식은 path 하나');
+  const [m, corner, end] = mark.data.ops.map((o) => [o.x, o.y]);
+  const s = 0.5 * 0.6;                                        // 변 길이 = radius · 0.6
+  // 각 변의 자유단은 꼭짓점에서 두 광선 방향으로 정확히 s 만큼 떨어진 점(=광선 위)
+  for (const [p, Q] of [[m, A], [end, B]]) {
+    assert.ok(Math.abs(Math.hypot(p[0], p[1]) - s) < 1e-9, '변 길이 = radius·0.6');
+    assert.ok(Math.abs(p[0] * Q.coords[1] - p[1] * Q.coords[0]) < 1e-9, '자유단은 광선 위(외적 0)');
+    assert.ok(p[0] * Q.coords[0] + p[1] * Q.coords[1] > 0, '자유단은 광선이 뻗는 쪽(+방향)');
+  }
+  // 모서리는 두 자유단의 합 → 각의 **안쪽**에 놓인다(허공으로 삐져나가지 않음)
+  assert.ok(Math.abs(corner[0] - (m[0] + end[0])) < 1e-9 && Math.abs(corner[1] - (m[1] + end[1])) < 1e-9,
+    '모서리 = 자유단 두 개의 합');
+  // 광선이 90°가 아니면 경고만 하고 그대로 그린다(예외 아님)
+  const [mark2] = annotate.angle({ from: A, vertex: O, to: A }).rightAngle().toIR(ctx);
+  assert.equal(mark2.kind, 'path');
+});
+
 test('axes3: 축 화살표 촉 기본값 0.06 (ratio 로 조절)', () => {
   const def = axes3({ length: 5 });
   assert.equal(def.length, 3);

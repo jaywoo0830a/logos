@@ -338,7 +338,8 @@ triangle(A, B, C).apply(transform.rotate(Math.PI/4).about(O));
 ```js
 annotate.angle(A, B, C).arc({ radius: 22, double: true }).label('θ').degrees()
 annotate.angle({ from: A, vertex: B, to: C }).arc({ radius: 22 })   // 같은 각 — 이름 지정형
-annotate.angle(A, B, C).rightAngle()
+annotate.angle(A, B, C).rightAngle()          // 꼭짓점 B 에 두 광선이 그려져 있어야 표식이 제자리
+// (발이 화살표 끝을 넘어가는 정사영 등은 안 그려진 쪽 선을 연장해 '모서리'로 만든 뒤 표시)
 annotate.dimension(A, B).offset(24).label('5').units('cm')
 annotate.tick(segment(A, B)).count(2)
 annotate.arrow(A, B).label('v')

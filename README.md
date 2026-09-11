@@ -123,7 +123,8 @@ output/             렌더 산출물(재생성 가능, git 추적 제외)
 `kit.plot2d` 의 `axes` 객체 옵션 버그 수정.
 후속 수정 — 각도 표식이 엉뚱한 곳에 그려지던 문제를 고치고 이름 지정형
 `annotate.angle({ from, vertex, to })` 를 추가, 3D 축 화살표 촉(`axes3` 의 `ratio`) 기본값을
-0.12 → 0.06 으로 줄였습니다. 자세한 내용은 [`KIT.md §8`](KIT.md) 참고.
+0.12 → 0.06 으로 줄였습니다. 정사영 그림(11번)의 직각 표식이 빈 공간에 떠 보이던 것은
+발(foot) 너머로 b 의 연장선을 그어 고쳤습니다. 자세한 내용은 [`KIT.md §8`](KIT.md) 참고.
 
 **5차** — 조잡했던 옛 예제(`adapters.js` `book.js` `gallery.js` `interface.js` `mpl_parity.js`
 `v02.js` `visual.js`)을 삭제하고, 공통 부분을 `kit.js` 로 승격했습니다.

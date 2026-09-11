@@ -401,11 +401,18 @@ function vectorProjection() {
   const proj = vec.project(a, b), perp = vec.reject(a, b);
   const beyond = vec.add(proj, vec.unit(b));       // 정사영 끝에서 b 방향으로 1 만큼 (직각 표시용)
   return s2([-0.5, 5], [-0.5, 3.5]).title('Vector Projection: Shadow of a onto b').add(
+    // mpl 대비: 정사영 발(foot)이 b 화살표 끝보다 멀리 있다(|b|≈2.06 < |proj|≈4.37).
+    // 그래서 b 선은 발 너머로 이어지지 않고, mpl 원본의 직각 표식은 두 선 사이가 아니라
+    // **빈 공간에 떠 있는** 것처럼 보인다(교과서 그림은 이때 b 의 연장선을 함께 그린다).
+    // b 의 연장선을 가장 먼저(다른 도형 아래에) 그어 발 너머 구간만 보이게 하고,
+    // 발을 '두 선이 만나는 모서리'로 만든다.
+    segment(P(b), P(vec.add(proj, vec.scale(vec.unit(b), 0.45)))).color(BLUE).stroke(1).dash([3, 3]).opacity(0.5),
     arrowAt([0, 0], a, { color: RED, stroke: 3 }),
     arrowAt([0, 0], b, { color: BLUE, stroke: 2.5 }),
     arrowAt([0, 0], proj, { color: GREEN, stroke: 3 }),
     segment(P(proj), P(a)).color(CHOC).stroke(2).dash([6, 4]),
     arrowAt(proj, vec.add(proj, perp), { color: CHOC, stroke: 2 }),
+    // 직각 표식은 발(proj)에서 수직성분(proj→a)과 b 선(연장선) 사이 — 두 선이 모두 그려진 안쪽.
     annotate.angle({ from: a, vertex: proj, to: beyond }).arc({ radius: 0.35 }).rightAngle().color(INK).stroke(1.2),
     labelAt([2.1, 1.2], 'a', { color: RED, font: 13, bold: true }),
     labelAt([0.8, 0.55], 'b', { color: BLUE, font: 13, bold: true }),
