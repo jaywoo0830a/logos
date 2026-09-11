@@ -7,7 +7,7 @@ function pickStyle(c) {
   for (const k of ['color', 'stroke', 'fill', 'dash', 'opacity']) if (c[k] !== undefined) s[k] = c[k];
   return s;
 }
-function toFn(f) { return typeof f === 'function' ? f : (f && f.toFunction ? f.toFunction('x') : (() => f)); }
+function toFn(f) { return typeof f === 'function' ? f : (f && f.toFunction ? f.toFunction('x') : (f && typeof f.eval === 'function' ? (x) => f.eval(x).cart[1] : (() => f))); }
 
 /** between(두 수평선) 영역을 사각 클립 rect 로 → {xmin,ymin,xmax,ymax} 또는 null */
 function horizontalStrip(a, b, world) {
@@ -98,15 +98,28 @@ export class Region extends Drawable {
     if (c.mode === 'between') {
       const strip = horizontalStrip(c.a, c.b, w);
       if (strip) return [node('cliprect', { ...strip, fill: c.fill, style: pickStyle(c) })];
-      // 일반 between (두 함수 사이)
+      // 일반 between (두 곡선/함수 사이)
       const fFn = toFn(c.a), gFn = toFn(c.b);
-      const [a, b] = c.domain || [w.xmin, w.xmax];
+      const [a, b] = (c.domain && c.domain.length === 2) ? c.domain : [w.xmin, w.xmax];
       const n = 200;
       const ops = [{ op: 'M', x: a, y: fFn(a) }];
       for (let i = 1; i <= n; i++) ops.push({ op: 'L', x: a + ((b - a) * i) / n, y: fFn(a + ((b - a) * i) / n) });
-      const ops2 = [];
-      for (let i = n; i >= 0; i--) ops2.push({ op: 'L', x: a + ((b - a) * i) / n, y: gFn(a + ((b - a) * i) / n) });
+      const ops2 = [{ op: 'L', x: b, y: gFn(b) }];
+      for (let i = n - 1; i >= 0; i--) ops2.push({ op: 'L', x: a + ((b - a) * i) / n, y: gFn(a + ((b - a) * i) / n) });
       return [node('fillpath', { ops: [...ops, ...ops2, { op: 'Z' }], fill: c.fill || 'steelblue', opacity: c.opacity || 0.4, style: pickStyle(c) })];
+    }
+    if (c.mode === 'below') {
+      // 곡선 아래(x축 y=0) 음영
+      const fn = c.curve && typeof c.curve.eval === 'function' ? (x) => c.curve.eval(x).cart[1] : toFn(c.fn || c.curve);
+      const [a, b] = (c.domain && c.domain.length === 2) ? c.domain : [w.xmin, w.xmax];
+      const n = 200;
+      const ops = [{ op: 'M', x: a, y: 0 }];
+      for (let i = 0; i <= n; i++) { const x = a + ((b - a) * i) / n; const y = fn(x); ops.push({ op: 'L', x, y }); }
+      ops.push({ op: 'L', x: b, y: 0 }, { op: 'Z' });
+      return [node('fillpath', { ops, fill: c.fill || 'steelblue', opacity: c.opacity || 0.4, style: pickStyle(c) })];
+    }
+    if (c.mode === 'bar') {
+      return [node('fillrect', { x: Math.min(c.x0, c.x1), y1: c.y1, w: Math.abs(c.x1 - c.x0), fill: c.fill || 'steelblue', opacity: c.opacity || 0.7, style: pickStyle(c) })];
     }
     return [];
   }
@@ -117,6 +130,8 @@ export const region = {
   inside(shape) { return new Region({ mode: 'inside', shape, fill: 'steelblue', opacity: 0.4 }); },
   intersect(a, b) { return new Region({ mode: 'intersect', items: [a, b], fill: 'steelblue', opacity: 0.4 }); },
   between(a, b, domain) { return new Region({ mode: 'between', a, b, ...(Array.isArray(domain) ? { domain } : {}) }); },
+  below(curveObj) { return new Region({ mode: 'below', curve: curveObj }); },
+  bar(x0, x1, y0, y1) { return new Region({ mode: 'bar', x0, x1, y0, y1, fill: 'steelblue', opacity: 0.7 }); },
 };
 
 Object.assign(Region.prototype, {

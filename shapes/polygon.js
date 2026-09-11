@@ -63,4 +63,16 @@ export const regular = {
   polygon: polygon.regular,
 };
 
+// 1.md #24 — square.on(segment(A,B)): 변을 한 변으로 하는 정사각형
+export const square = {
+  on(seg) {
+    const A = seg.a.coords, B = seg.b.coords;
+    const dx = B[0] - A[0], dy = B[1] - A[1];
+    // AB 를 한 변으로, 왼쪽(perp)으로 정사각형
+    const C = _point(B[0] - dy, B[1] + dx);
+    const D = _point(A[0] - dy, A[1] + dx);
+    return new Polygon({ vertices: [A && _point(A[0], A[1]), B && _point(B[0], B[1]), C, D], fill: 'none' });
+  },
+};
+
 export default polygon;

@@ -36,7 +36,8 @@ test('A4 여러 스타일 매핑', () => {
     point(3, 3).dot().opacity(0.4),
   ).compile().toSVG();
   assert.ok(svg.includes('#e11'), 'fill color');
-  assert.ok(svg.includes('stroke-width="3"'), 'stroke-width');
+  assert.ok(svg.includes('#0a0'), 'stroke(3) 점의 스트로크 색');
+  assert.ok(/\<circle[^>]*stroke-width="1.6"/.test(svg), '테두리 점 스트로크');
   assert.ok(svg.includes('opacity="0.4"'), 'opacity');
 });
 

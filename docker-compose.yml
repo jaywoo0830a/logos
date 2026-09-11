@@ -1,11 +1,25 @@
-# logos — v24.21.0 LTS Node 테스트 환경
+# logos — v24.21.0 LTS Node — 테스트 / 갤러리 서버
 services:
-  logos:
+  # 갤러리 정적 서버 — http://localhost:18080/ 에서 output/ 를 서빙
+  web:
     build:
       context: .
     image: logos:0.1.0
-    container_name: logos
-    # 로컬 소스를 마운트(실시간 반영)하고, 컨테이너 전용 node_modules 볼륨에 설치 후 테스트
+    container_name: logos-web
+    command: ["sh", "-c", "npm install --no-audit --no-fund >/dev/null 2>&1; node examples/gallery.js; node server.js"]
+    environment:
+      NODE_ENV: development
+      PORT: "18080"
+    ports:
+      - "18080:18080"
+    volumes:
+      - .:/app
+      - /app/node_modules
+
+  # 테스트 실행기
+  logos:
+    image: logos:0.1.0
+    container_name: logos-test
     command: ["sh", "-c", "npm install --no-audit --no-fund && npm test"]
     environment:
       NODE_ENV: development

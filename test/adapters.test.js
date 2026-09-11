@@ -14,7 +14,7 @@ test('Asymptote: IR → .asy 소스 (2D)', () => {
   assert.ok(asy.includes('import graph;'), 'graph import');
   assert.ok(asy.includes('dot(('), '점 마커');
   assert.ok(asy.includes('circle(('), '원');
-  assert.ok(asy.includes('label("' ), '라벨');
+  assert.ok(asy.includes('label("$A$"'), '라벨(문자열 $..$)');
 });
 
 test('Asymptote: compileAsymptote — CLI 미설치 시 명확한 에러', async () => {

@@ -8,6 +8,38 @@ export function pick(c) {
   return s;
 }
 export const project3 = (ctx, p) => (ctx.project ? ctx.project(p) : [p[0], p[1]]);
+
+/** hex(#rrggbb 및 이름 기본색) → 밝기 ±delta% 한 6자리 hex */
+function hslLightAdjust(hex, delta) {
+  if (!/^#[0-9a-fA-F]{6}$/.test(hex || '')) return hex;
+  const n = parseInt(hex.slice(1), 16);
+  let r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+  r /= 255; g /= 255; b /= 255;
+  const mx = Math.max(r, g, b), mn = Math.min(r, g, b);
+  let h = 0, s = 0, l = (mx + mn) / 2;
+  const d = mx - mn;
+  if (d > 0) {
+    s = d / (1 - Math.abs(2 * l - 1));
+    if (mx === r) h = ((g - b) / d) % 6;
+    else if (mx === g) h = (b - r) / d + 2;
+    else h = (r - g) / d + 4;
+    h *= 60; if (h < 0) h += 360;
+  }
+  l = Math.max(0, Math.min(1, l + delta / 100));
+  const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+  const p = 2 * l - q;
+  const hue2rgb = (t0) => {
+    let t = t0; if (t < 0) t += 1; if (t > 1) t -= 1;
+    if (t < 1 / 6) return p + (q - p) * 6 * t;
+    if (t < 1 / 2) return q;
+    if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+    return p;
+  };
+  const to = (f) => Math.round(Math.min(255, Math.max(0, f * 255)));
+  return `#${((to(hue2rgb(h / 360 + 1 / 3)) << 16) | (to(hue2rgb(h / 360)) << 8) | to(hue2rgb(h / 360 - 1 / 3))).toString(16).padStart(6, '0')}`;
+}
+function lightenHsl(c, d) { return hslLightAdjust(c, d); }
+function darkenHsl(c, d) { return hslLightAdjust(c, -d); }
 export function polyline(pts, c, z, nodeImp = node, pickImp = pick) {
   const ops = [];
   let started = false;
@@ -39,7 +71,18 @@ export class Sphere extends Drawable {
       }
       out.push(polyline(pts, c, -1));
     }
-    if (c.opacity != null || c.fill) out.push(node('fillcircle', { cx: CP[0], cy: CP[1], r: r * 0.97, fill: c.fill || '#3b82f6', opacity: c.opacity ?? 0.25, z: -2, style: pick(c) }));
+    if (c.opacity != null || c.fill) {
+      // 구 실루엣: 단색이 아니라 '방사 그라디언트'로 오목-볼록(half-tone) 입체감
+      const base = c.fill || '#3b82f6';
+      out.push(node('fillcircle', {
+        cx: CP[0], cy: CP[1], r: r * 0.97, fill: base, opacity: c.opacity ?? 0.25, z: -2, style: pick(c),
+        gradient: { type: 'radial', stops: [
+          { offset: 0, color: lightenHsl(base, 30) },
+          { offset: 0.6, color: base },
+          { offset: 1, color: darkenHsl(base, 28) },
+        ] },
+      }));
+    }
     return out;
   }
 }

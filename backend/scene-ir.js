@@ -7,8 +7,6 @@ import { katexRender, katexify, buildFigureHTML } from './katex.js';
 
 const katexNs = { katexRender, katexify };
 
-const THEME_FONT = { textbook: 'Latin Modern Math', default: 'sans-serif' };
-
 export class SceneIR {
   constructor(o) { this.o = o; }
 
@@ -35,7 +33,16 @@ export class SceneIR {
 
   toSVG() {
     const m = this._map();
-    return emitSVG(this.o.nodes, { ...m, world: this.o.world, theme: THEME_FONT[this.o.theme] });
+    const td = this.o.themeDef || {};
+    return emitSVG(this.o.nodes, {
+      ...m, world: this.o.world,
+      bg: td.bg || '#ffffff',
+      font: td.font || 'sans-serif',
+      fontMath: td.fontMath || td.font,
+      axisColor: td.axisColor, gridColor: td.gridColor,
+      labelColor: td.labelColor, pointColor: td.pointColor,
+      strokeDefault: td.strokeDefault,
+    });
   }
 
   toTikZ(opts = {}) {

@@ -21,7 +21,11 @@ export class Point extends Drawable {
   dim() { return this._conf.cart.length; }
 
   label(l, off) { return this.set({ label: l, labelOff: off }); }
-  dot(marker = 'dot') { return this.set({ marker }); }
+  dot(marker = 'dot') {
+    // dot({ open:true }) — 열린 점(빈 원 마커)
+    if (marker && typeof marker === 'object') return this.set({ marker: 'dot', open: !!marker.open });
+    return this.set({ marker });
+  }
 
   toCartesian() {
     return new Point({ system: 'cartesian', cart: [...this._conf.cart] });
@@ -38,6 +42,7 @@ export class Point extends Drawable {
     return [node('point', {
       x: proj[0], y: proj[1],
       marker: c.marker || 'dot',
+      open: c.open,
       label: renderText(c.label),
       labelMath: typeof c.label?.toLatex === 'function',
       color: c.color, fill: c.fill, stroke: c.stroke,
@@ -140,5 +145,37 @@ point.incenter = (tri) => {
   const [A, B, C] = tri.vertices;
   return triangleCenter(A, B, C);
 };
+
+/** 외심: 세 수직이등분선의 교차 (원점에서 세 꼭짓점까지 거리 동일) */
+point.circumcenter = (A, B, C) => {
+  const ax = A.coords[0], ay = A.coords[1];
+  const bx = B.coords[0], by = B.coords[1];
+  const cx = C.coords[0], cy = C.coords[1];
+  const d = 2 * (ax * (by - cy) + bx * (cy - ay) + cx * (ay - by));
+  if (Math.abs(d) < 1e-12) return point((ax + bx + cx) / 3, (ay + by + cy) / 3);
+  const ux = ((ax * ax + ay * ay) * (by - cy) + (bx * bx + by * by) * (cy - ay) + (cx * cx + cy * cy) * (ay - by)) / d;
+  const uy = ((ax * ax + ay * ay) * (cx - bx) + (bx * bx + by * by) * (ax - cx) + (cx * cx + cy * cy) * (bx - ax)) / d;
+  return point(ux, uy);
+};
+
+/** 수심: (외심 + 무게중심 → 오일러선) — 세 수선의 교차 */
+point.orthocenter = (A, B, C) => {
+  // H = A + B + C - 2*O (2D 중심)
+  const O = point.circumcenter(A, B, C);
+  return point(
+    A.coords[0] + B.coords[0] + C.coords[0] - 2 * O.coords[0],
+    A.coords[1] + B.coords[1] + C.coords[1] - 2 * O.coords[1],
+  );
+};
+
+/** 수선의 발 — point.foot(P).onto(line) */
+point.foot = (P) => ({
+  onto(line) {
+    const { p, d } = line.pointDir();
+    const px = P.coords[0] - p[0], py = P.coords[1] - p[1];
+    const t = (px * d[0] + py * d[1]) / (d[0] * d[0] + d[1] * d[1]);
+    return point(p[0] + t * d[0], p[1] + t * d[1]);
+  },
+});
 
 export { TAU };

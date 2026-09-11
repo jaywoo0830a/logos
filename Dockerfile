@@ -23,4 +23,6 @@ RUN npm install --no-audit --no-fund
 # 소스 복사 (.dockerignore 에서 node_modules 제외)
 COPY . .
 
+EXPOSE 18080
+
 CMD ["npm", "test"]
