@@ -189,7 +189,8 @@ export const surfaceParam = (fn) => new ParamSurface({ fn });
  * @param {string}   [o.color='#808080'] 축 색
  * @param {number}   [o.width=1]         축 굵기
  * @param {string[]} [o.labels=['x','y','z']] 축 라벨(null 이면 생략)
- * @param {number}   [o.ratio]           머리 길이 비율(기본 0.12)
+ * @param {number}   [o.ratio=0.06]      머리 길이 비율. 축은 길어서 기본값을 `arrow3`(0.12)보다
+ *                                       작게 잡는다(머리만 커 보이는 것 방지). `null` 이면 0.12.
  * @param {number}   [o.labelFont=12]    라벨 글자 크기
  * @returns {Arrow3[]} `.add(...)` 에 펼칠 수 있는 도형 배열
  * @example
@@ -197,7 +198,7 @@ export const surfaceParam = (fn) => new ParamSurface({ fn });
  *     .add(...axes3({ length: 4, color: '#808080', width: 0.8 }));
  */
 export function axes3({ origin = [0, 0, 0], length = 5, color = '#808080', width = 1,
-  labels = ['x', 'y', 'z'], ratio, labelFont = 12, labelOffset } = {}) {
+  labels = ['x', 'y', 'z'], ratio = 0.06, labelFont = 12, labelOffset } = {}) {
   const dirs = [[length, 0, 0], [0, length, 0], [0, 0, length]];
   return dirs.map((d, i) => {
     const tip = [origin[0] + d[0], origin[1] + d[1], origin[2] + d[2]];

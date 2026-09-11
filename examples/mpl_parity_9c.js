@@ -95,9 +95,10 @@ const s2 = (xr, yr) => plot2d(xr, yr, { size: PCELL3, equal: true });
 // ── 1. 3D Coordinate System ──
 function coordSys3d() {
   return plot3d({ elev: 25, azim: -50 }).title('3D Coordinate System').add(
-    arrow3([0, 0, 0], [5, 0, 0]).color(R).stroke(2).label('x'),
-    arrow3([0, 0, 0], [0, 5, 0]).color(G).stroke(2).label('y'),
-    arrow3([0, 0, 0], [0, 0, 5]).color(B).stroke(2).label('z'),
+    // 축 화살표는 길이가 길어 머리를 작게(axes3 기본과 동일한 0.06) — 촉만 커 보이는 것 방지
+    arrow3([0, 0, 0], [5, 0, 0]).color(R).stroke(2).ratio(0.06).label('x'),
+    arrow3([0, 0, 0], [0, 5, 0]).color(G).stroke(2).ratio(0.06).label('y'),
+    arrow3([0, 0, 0], [0, 0, 5]).color(B).stroke(2).ratio(0.06).label('z'),
     planeZ(() => 0, [0, 4], [0, 4]).solid(6, 6).color(GRAY).opacity(0.1),
     srf((u, v) => [u, 0, v], [0, 4], [0, 4]).solid(6, 6).color(GRAY).opacity(0.1),
     srf((u, v) => [0, u, v], [0, 4], [0, 4]).solid(6, 6).color(GRAY).opacity(0.1),

@@ -343,3 +343,41 @@ test('점선 화살표/다각형: stroke-dasharray 방출', () => {
   const plain = scene().view([-5, 5], [-5, 5]).add(annotate.arrow(point(0, 0), point(1, 1))).compile().toSVG();
   assert.ok(!/<line[^>]*stroke-dasharray/.test(plain), '기본 화살표는 실선');
 });
+
+test('annotate.angle: 이름 지정형 — 꼭짓점 실수 방지', () => {
+  const A = point(3, 1), O = point(0, 0), B = point(1, 3);
+  const named = scene().view([-1, 4], [-1, 4]).add(
+    annotate.angle({ from: A, vertex: O, to: B }).arc({ radius: 0.6 }),
+  ).compile().toSVG();
+  const positional = scene().view([-1, 4], [-1, 4]).add(
+    annotate.angle(A, O, B).arc({ radius: 0.6 }),
+  ).compile().toSVG();
+  assert.equal(named, positional, '이름형 == 위치형(B 가 꼭짓점)');
+
+  // [x, y] 좌표 배열도 허용
+  const arrays = scene().view([-1, 4], [-1, 4]).add(
+    annotate.angle({ from: [3, 1], vertex: [0, 0], to: [1, 3] }).arc({ radius: 0.6 }),
+  ).compile().toSVG();
+  assert.equal(arrays, named, '좌표 배열 허용');
+
+  // 꼭짓점을 첫 인자로 넘기면 다른 곳에 그려진다 → 실수를 즉시 알아채도록 문서/이름형 제공
+  const wrong = scene().view([-1, 4], [-1, 4]).add(
+    annotate.angle(O, A, B).arc({ radius: 0.6 }),
+  ).compile().toSVG();
+  assert.notEqual(wrong, named, '위치형은 순서에 민감(가운데가 꼭짓점)');
+
+  assert.throws(() => annotate.angle({ from: A, to: B }), /세 점/, '이름형 필수 키 검사');
+  assert.throws(() => annotate.angle(A, [0, 0], B), /점\(point\)이 필요/, '좌표 배열을 위치형에 넘기면 명확히 실패');
+});
+
+test('axes3: 축 화살표 촉 기본값 0.06 (ratio 로 조절)', () => {
+  const def = axes3({ length: 5 });
+  assert.equal(def.length, 3);
+  assert.equal(def[0]._conf.ratio, 0.06, '축은 작은 촉이 기본');
+  assert.equal(axes3({ length: 5, ratio: 0.02 })[0]._conf.ratio, 0.02, 'ratio 지정');
+  assert.equal(axes3({ length: 5, ratio: null })[0]._conf.ratio, undefined, 'null 이면 arrow3 기본(0.12)');
+  assert.equal(arrow3([0, 0, 0], [1, 0, 0])._conf.ratio, undefined, 'arrow3 자체 기본은 그대로');
+  const svg = scene().dim(3).camera({ elev: 20, azim: -50 }).axes(false)
+    .add(...axes3({ length: 3 })).compile().toSVG();
+  assert.ok(!/NaN/.test(svg));
+});

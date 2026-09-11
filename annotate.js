@@ -5,7 +5,32 @@ import { norm2, perp2 } from './solver/coords.js';
 import { point as _point } from './shapes/point.js';
 
 export function annotate() { return new _Annotate(); }
-annotate.angle = (A, B, C) => new AngleAnno(A, B, C);
+/**
+ * 각도 표식 ∠ABC — **가운데 인자가 각의 꼭짓점**이다.
+ *
+ * ```js
+ * annotate.angle(A, B, C)                 // B 가 꼭짓점 (∠ABC)
+ * annotate.angle({ from, vertex, to })    // 이름으로 지정 — 순서 헷갈림 방지, [x,y] 도 허용
+ * ```
+ * 꼭짓점을 첫 인자로 넣는 실수(=`annotate.angle(O, A, B)`)는 호가 엉뚱한 곳(점 A)에
+ * 그려지므로, 헷갈리면 **이름 있는 형태**를 쓰세요.
+ */
+annotate.angle = (A, B, C) => {
+  if (A && A.coords === undefined) {                 // { from, vertex, to } 형태
+    const vertex = A.vertex ?? A.at, from = A.from, to = A.to;
+    if (!from || !vertex || !to) {
+      throw new Error('annotate.angle({ from, vertex, to }): 세 점이 필요합니다.');
+    }
+    return new AngleAnno(asPoint(from), asPoint(vertex), asPoint(to));
+  }
+  return new AngleAnno(A, B, C);
+};
+/** 점 또는 `[x, y]` 를 point 로 정규화 */
+function asPoint(p) {
+  if (p && Array.isArray(p.coords)) return p;
+  if (Array.isArray(p) && p.length >= 2) return _point(...p);
+  throw new Error('annotate.angle: 점(point) 또는 [x, y] 좌표가 필요합니다.');
+}
 annotate.caption = (text) => new CaptionAnno(text);
 annotate.integral = (f) => new IntegralAnno(f);
 annotate.arrow = (A, B) => new ArrowAnno(A, B);
@@ -19,6 +44,12 @@ class _Annotate extends Drawable { toIR() { return []; } }
 // ── 각도 ─────────────────────────────────────────
 export class AngleAnno extends Drawable {
   constructor(A, B, C) {
+    // 흔한 실수(점이 아닌 값 전달)를 조용히 이상한 그림으로 만들지 않고 즉시 알려준다.
+    for (const [name, P] of [['A', A], ['B', B], ['C', C]]) {
+      if (!P || !Array.isArray(P.coords)) {
+        throw new Error(`annotate.angle(A, B, C): ${name} 자리에 점(point)이 필요합니다 (가운데 B 가 각의 꼭짓점).`);
+      }
+    }
     super('annotation', { kind: 'angle', A, B, C, arc: { radius: null, double: false }, marker: 'arc' });
   }
   arc(opts = {}) { return this.set({ arc: { ...this._conf.arc, ...opts }, marker: 'arc' }); }

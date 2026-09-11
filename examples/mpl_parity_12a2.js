@@ -19,7 +19,9 @@
 //                 (np.append(a,0) 같은 차원 승격은 linalg.vec 가 알아서 한다)
 //   · 단위정사각형  `UNIT` + `A.map(UNIT)` → `polygon(...)` ← ax.fill(...)
 //   · 변화 화살표  `annotate.arrow(A, B).dash([6,4])` ← ax.arrow(..., linestyle='--')
-//   · 각도 호      `annotate.angle(O, A, B).arc({ radius })` ← patches.Arc
+//   · 각도 호      `annotate.angle({ from, vertex, to }).arc({ radius })` ← patches.Arc
+//                 (위치 인자 형태 `annotate.angle(A, B, C)` 는 **가운데 B 가 꼭짓점** —
+//                  순서를 헷갈리면 호가 엉뚱한 점에 그려지므로 이 예제는 이름 형태를 쓴다)
 //   · 여러 패널    `subplots([...], { cols })` ← plt.subplots(rows, cols)
 //   · 3D          `plot3d({ elev, azim })` + `axes3()` + `frame3()` ← projection='3d'+view_init
 //                 3D 면은 `surfaceParam(...).solid(1,1)` ← Poly3DCollection
@@ -276,7 +278,9 @@ function rotationMatrix() {
       segment(P([0, 0]), P(vR)).color(c).stroke(i === 0 ? 3 : 2)
         .label(i === 0 ? `Original v = (${v0[0]}, ${v0[1]})` : `${th}°`),
       P(vR).marker('circle').color(c).size(i === 0 ? 8 : 6),
-      annotate.angle(P([0, 0]), P(v0), P(vR)).arc({ radius: vec.norm(v0) }).color(c).stroke(1.5).dash([4, 3]),
+      // mpl: Arc((0,0), 2|v0|, 2|v0|, theta1=∠v0, theta2=∠vR) — 꼭짓점은 원점
+      annotate.angle({ from: v0, vertex: [0, 0], to: vR }).arc({ radius: vec.norm(v0) })
+        .color(c).stroke(1.5).dash([4, 3]),
     );
   });
   return s2([-3, 3], [-3, 3]).title('Rotation Matrix R(θ): Preserves Length, Changes Direction')
@@ -378,8 +382,8 @@ function dotProductAngle() {
   return s2([-0.5, 4], [-0.5, 4]).title('Dot Product = |a||b|cos θ — Measures Angle').add(
     arrowAt([0, 0], a, { color: RED, stroke: 3 }),
     arrowAt([0, 0], b, { color: BLUE, stroke: 3 }),
-    // 두 벡터 사이의 각 호 ← patches.Arc(diameter 1.2)
-    annotate.angle(P([0, 0]), P(a), P(b)).arc({ radius: 0.6 }).color(PURPLE).stroke(2.5),
+    // 두 벡터 사이의 각 호 ← patches.Arc(diameter 1.2). 꼭짓점은 원점(이름으로 지정).
+    annotate.angle({ from: a, vertex: [0, 0], to: b }).arc({ radius: 0.6 }).color(PURPLE).stroke(2.5),
     labelAt([0.55, 0.55], `θ≈${theta.toFixed(1)}°`, { color: PURPLE, font: 11, bold: true }),
     arrowAt([0, 0], perp, { color: GRAY, stroke: 1.5, dash: [3, 3], opacity: 0.5 }),
     labelAt([perp[0] / 2 - 0.3, perp[1] / 2], '⊥ to a', { color: GRAY, font: 9 }),
@@ -402,7 +406,7 @@ function vectorProjection() {
     arrowAt([0, 0], proj, { color: GREEN, stroke: 3 }),
     segment(P(proj), P(a)).color(CHOC).stroke(2).dash([6, 4]),
     arrowAt(proj, vec.add(proj, perp), { color: CHOC, stroke: 2 }),
-    annotate.angle(P(a), P(proj), P(beyond)).arc({ radius: 0.35 }).rightAngle().color(INK).stroke(1.2),
+    annotate.angle({ from: a, vertex: proj, to: beyond }).arc({ radius: 0.35 }).rightAngle().color(INK).stroke(1.2),
     labelAt([2.1, 1.2], 'a', { color: RED, font: 13, bold: true }),
     labelAt([0.8, 0.55], 'b', { color: BLUE, font: 13, bold: true }),
     labelAt([proj[0] / 2 - 0.3, proj[1] / 2 - 0.3], 'proj', { color: GREEN, font: 11, bold: true }),
@@ -425,7 +429,8 @@ function crossProduct3d() {
     arrow3([0, 0, 0], b).color(BLUE).stroke(3).label('b=(0,1,0)'),
     arrow3([0, 0, 0], c).color(GREEN).stroke(3.5).label('a×b=(0,0,1)'),
     frame3([-0.2, 1.5], [-0.2, 1.5], [-0.2, 1.5]),
-    annotate.text(point(0, 0, 1.2)).label('R.H. Rule:\nThumb = a×b').color(GREEN).font(10).bold(),
+    // 라벨이 a×b 화살표 라벨과 겹치지 않도록 살짝 오른쪽 위로 (mpl 은 (0,0,1.2))
+    annotate.text(point(0.45, 0.3, 1.25)).label('R.H. Rule:\nThumb = a×b').color(GREEN).font(10).bold(),
   ).compile();
 }
 

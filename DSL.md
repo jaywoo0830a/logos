@@ -337,6 +337,7 @@ triangle(A, B, C).apply(transform.rotate(Math.PI/4).about(O));
 
 ```js
 annotate.angle(A, B, C).arc({ radius: 22, double: true }).label('θ').degrees()
+annotate.angle({ from: A, vertex: B, to: C }).arc({ radius: 22 })   // 같은 각 — 이름 지정형
 annotate.angle(A, B, C).rightAngle()
 annotate.dimension(A, B).offset(24).label('5').units('cm')
 annotate.tick(segment(A, B)).count(2)

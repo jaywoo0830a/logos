@@ -120,7 +120,10 @@ output/             렌더 산출물(재생성 가능, git 추적 제외)
 **6차** — `example3.py`(12A2 행렬과 벡터) 재현 예제 `examples/mpl_parity_12a2.js`(**20 figure**) 추가,
 계산 계층 `linalg.js`(`mat`·`vec`) 신설, `transform.matrix()` 가 `mat()` 행렬도 받도록 확장,
 `arrow`/`polygon` 노드의 점선(`stroke-dasharray`) 보완, `axes({ y: { ticks: false } })` 추가,
-`kit.plot2d` 의 `axes` 객체 옵션 버그 수정. 자세한 내용은 [`KIT.md §8`](KIT.md) 참고.
+`kit.plot2d` 의 `axes` 객체 옵션 버그 수정.
+후속 수정 — 각도 표식이 엉뚱한 곳에 그려지던 문제를 고치고 이름 지정형
+`annotate.angle({ from, vertex, to })` 를 추가, 3D 축 화살표 촉(`axes3` 의 `ratio`) 기본값을
+0.12 → 0.06 으로 줄였습니다. 자세한 내용은 [`KIT.md §8`](KIT.md) 참고.
 
 **5차** — 조잡했던 옛 예제(`adapters.js` `book.js` `gallery.js` `interface.js` `mpl_parity.js`
 `v02.js` `visual.js`)을 삭제하고, 공통 부분을 `kit.js` 로 승격했습니다.
