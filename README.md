@@ -33,6 +33,7 @@ await kit.saveFigures([['radius', () => fig, '원 위의 점과 반지름']],
 | [`SENARIOS.md`](SENARIOS.md) | 검증 시나리오 A–L (초·중·고 / 미적분 / 3D) |
 | [`ADAPT.md`](ADAPT.md) | 외부엔진 어댑터 — SymPy · Asymptote · TikZJax · JSXGraph · KaTeX |
 | [`PLUGIN.md`](PLUGIN.md) | **플러그인(체이너블 확장) 아키텍처** — 코어 수정 없이 기능을 붙이는 8가지 확장 지점 |
+| [`WORKFLOW.md`](WORKFLOW.md) | **워크플로우(도커+배시, 리눅스 전용)** — 설치 → 작성 → 실행 → 렌더 4단계, CLI/스크립트 레퍼런스 |
 | [`0911-PLAN.md`](0911-PLAN.md) | 작업 계획·이력(무엇을 왜 바꿨는지) |
 | [`test/COVERAGE.md`](test/COVERAGE.md) | 테스트 커버리지 매트릭스 |
 
@@ -42,17 +43,21 @@ await kit.saveFigures([['radius', () => fig, '원 위의 점과 반지름']],
 
 ```bash
 npm install
-npm test              # 전체 테스트 (185개)
-npm run examples      # 대표 예제 5개 + 플러그인 데모 → output/parity11a, parity11b, parity9b, parity9c, parity12a2, parity12a1, plugin-demo
+npm test              # 전체 테스트 (194개)
+npm run examples      # 대표 예제 5개 + 플러그인 데모 → output/…
+npm run workflow      # 워크플로우 4단계(도커+배시) → examples/workflow/out
 npm run serve         # http://localhost:18080/  (렌더 갤러리)
 ```
 
 | 스크립트 | 설명 |
 |---|---|
-| `npm test` | 단위 + 시나리오 + 불변식 + 스냅샷 + 백엔드 + 플러그인 (총 185) |
+| `npm test` | 단위 + 시나리오 + 불변식 + 스냅샷 + 백엔드 + 플러그인 + CLI (총 194) |
 | `npm run parity11ab` | 삼각함수 **31 figure**(11A 19 + 11B 12) 재현 — `output/parity11a`, `output/parity11b` |
 | `npm run parity9b` / `parity9c` / `parity12a2` / `parity12a1` | 2D 기하 25 / 3D 기하 35 / 행렬과 벡터 20 / 복소수 12 figure 재현 |
 | `npm run plugin-demo` | **플러그인 데모 4 figure**(코어 수정 0 — `ray`·`arc.circular`·`hatch` 노드·체이닝 확장) — `output/plugin-demo` |
+| `npm run workflow` | **워크플로우 4단계**(도커+배시 · 리눅스) — `examples/workflow/sketches` → `examples/workflow/out` ([`WORKFLOW.md`](WORKFLOW.md)) |
+| `npm run render` | `bash scripts/render.sh` (스케치 폴더 → 원하는 출력 디렉토리) |
+| `npm run serve:out` | `bash scripts/serve.sh out 18080` (렌더 결과를 브라우저로) |
 | `npm run examples` | 위 여섯을 연속 실행 |
 | `npm run snap:update` | 골든 SVG 스냅샷 재생성(`test/fixtures/`, 로컬 전용) |
 | `npm run serve` | `output/` 정적 서버(갤러리 + SVG/PNG) |
@@ -106,6 +111,9 @@ open output/parity12a1/index.html    # 12개 갤러리 (복소수)
 
 ```
 index.js            공개 API 진입점 (scene/shapes/annotate/tex/kit/use/plugins …)
+bin/logos.mjs       CLI — new(뼈대) · render(스케치 폴더 → 출력 디렉토리) · serve · list
+scripts/            배시 워크플로우(리눅스) — install.sh · render.sh · serve.sh · build-image.sh
+Dockerfile.render   렌더 전용 슬림 이미지(폰트+resvg · /opt/logos · ENTRYPOINT = logos)
 kit.js              예제 작성 키트 (palette·plot2d·plot3d·subplots·saveFigures…)
 plugin_demo.js →    플러그인 데모 (examples/) · plugins/geometry-extras.js (코어 수정 0 확장 예시)
 linalg.js           행렬 · 벡터 수치 도우미 (mat · vec) — 행렬과 벡터 그림의 계산
@@ -136,11 +144,22 @@ output/             렌더 산출물(재생성 가능, git 추적 제외)
 | 시나리오 | SENARIOS A–L(48) + 1.md(50) + `example1/2/3/4/5.py` 재현(25+35+20+12+31) |
 | 백엔드 정합 | TikZ/Asymptote/JSXGraph/KaTeX/PNG |
 | 확장성 | 플러그인 8종(빌더·체이닝·IR 노드·테마·훅·래핑·정적·되돌리기) + 미등록 안내 + 원복 격리 |
+| 워크플로우 | CLI(`new`/`render`/`serve`) + 배시·도커 4단계(설치 → 작성 → 실행 → 렌더) — 임시 프로젝트 실제 실행 |
 | 스냅샷 | 골든 SVG 문자열 비교(`npm run snap:update`) |
 
 ---
 
 ## 6. 정리 이력 (2026-09-11)
+
+**10차** — **워크플로우(도커+배시, 리눅스 전용)** 를 넣었습니다 — “패키지 설치 → 지정 폴더에 코드 작성
+→ 배시 스크립트 실행 → 원하는 디렉토리에 렌더”. `bin/logos.mjs` CLI(`new` 뼈대 생성 ·
+`render` 스케치 폴더 → 출력 디렉토리 · `serve` · `list` · `--json`/`--dry-run`/`--clean`)와
+`scripts/` 4종(`install.sh` · `render.sh` · `serve.sh` · `build-image.sh`, 공통 `lib/common.sh`),
+`Dockerfile.render`(슬림 · 폰트+resvg · `/opt/logos` · ENTRYPOINT = `logos`), 예제 프로젝트
+`examples/workflow/`(스케치 3개 → 7 figure), 테스트 `test/cli.test.js`(8개)를 추가했습니다.
+도커 실행은 `-u $(id -u):$(id -g)` 로 산출물 소유권을 유지하고, 컨테이너 안에서
+`node_modules/logos → /opt/logos` 심링크로 “패키지 설치”를 오프라인 재현합니다.
+산출물은 `<out>/{*.svg, *.png, index.html, manifest.json}`. 자세한 내용은 [`WORKFLOW.md`](WORKFLOW.md) 참고.
 
 **9차** — **플러그인(체이너블 확장) 아키텍처** `core/plugin.js` 신설. 기능이 없거나 부족할 때
 코어를 고치는 대신 `use(plugin)` 한 줄로 붙입니다 — ① 체이닝 메서드(`extend`/`chain`)

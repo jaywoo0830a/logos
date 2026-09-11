@@ -202,8 +202,8 @@ hint: 코어를 고치지 말고 플러그인으로 추가하세요:
 
 ```js
 import { scene, point, use, plugins } from 'logos';
-import geometryExtras from './plugins/geometry-extras.js';
-
+import geometryExtras from 'logos/plugins/geometry-extras.js';   // 패키지 동봉 플러그인(subpath export)
+// 저장소 안에서 쓸 때는 상대 경로도 가능: './plugins/geometry-extras.js'
 use(geometryExtras, { watermark: true, stampTitle: false });
 
 scene().equal().theme('chalk')

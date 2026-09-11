@@ -43,12 +43,29 @@ export function stixFontFile() {
   return existsSync(p) ? p : null;
 }
 
-/** resvg 옵션의 font 구성. */
+/**
+ * resvg 래스터용 **시스템 폰트 폴더** 후보.
+ *
+ * 왜 필요한가 — resvg 의 `loadSystemFonts`(기본 true) 만으로는 리눅스 컨테이너에서
+ * 시스템 폰트가 로드되지 않는 경우가 있다(fontconfig 미설치 환경). 그 상태에서는 CJK 라벨이
+ * □(tofu)로 깨진다. `fontDirs` 를 주면 resvg 가 그 폴더를 직접 스캔해 **글리프 폴백**이 살아난다.
+ *  · 컨테이너 이미지(Dockerfile.render)는 `fonts-nanum`(한글) + DejaVu/Liberation 을 넣어 둔다.
+ */
+export const SYSTEM_FONT_DIRS = [
+  '/usr/share/fonts',
+  '/usr/local/share/fonts',
+  join(process.env.HOME || '', '.fonts'),
+  join(process.env.HOME || '', '.local', 'share', 'fonts'),
+];
+
+/** resvg 옵션의 font 구성 — STIX(수식) + 시스템 폰트(폴백: 한글 등). */
 export function resvgFontOptions() {
   const f = stixFontFile();
+  const dirs = SYSTEM_FONT_DIRS.filter((d) => d && existsSync(d));
   return {
     font: {
       ...(f ? { fontFiles: [f] } : {}),
+      ...(dirs.length ? { fontDirs: [...new Set(dirs)] } : {}),
       defaultFontFamily: STIX_FAMILY,
       sansSerifFamily: STIX_FAMILY,
       serifFamily: STIX_FAMILY,
@@ -56,4 +73,4 @@ export function resvgFontOptions() {
   };
 }
 
-export default { STIX_FAMILY, STIX_STACK, STIX_LINK, TYPE, svgFontStyle, stixFontFile, resvgFontOptions };
+export default { STIX_FAMILY, STIX_STACK, STIX_LINK, TYPE, svgFontStyle, stixFontFile, resvgFontOptions, SYSTEM_FONT_DIRS };

@@ -7,8 +7,8 @@ ENV NODE_ENV=development \
 WORKDIR /app
 
 # ADAPT.md 외부엔진: SymPy(심볼릭 폴백) + Asymptote(2D/3D 출판 SVG/PDF)
-RUN --mount=type=cache,target=/var/lib/apt/lists \
-    apt-get update && apt-get install -y --no-install-recommends \
+#   (BuildKit 의 cache mount 를 쓰지 않는다 — buildx 없는 환경에서도 빌드되도록)
+RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 \
     python3-sympy \
     asymptote \

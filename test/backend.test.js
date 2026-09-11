@@ -1,10 +1,12 @@
 // 0911-PLAN Phase 5-1 — 출력 백엔드(TikZ / Asymptote / JSXGraph / KaTeX / PNG) 정합 검증
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { existsSync } from 'node:fs';
 import {
   scene, point, circle, curve, tex, pi,
   adapt,
 } from '../index.js';
+import { resvgFontOptions, STIX_FAMILY } from '../backend/fonts.js';
 
 test('TikZ: standalone 구조와 도형 포함', () => {
   const out = scene().view([-2, 2], [-2, 2]).add(
@@ -68,6 +70,21 @@ test('PNG: resvg 있으면 실제 래스터, 없으면 명확한 에러', async 
   } catch (e) {
     assert.match(String(e.message), /resvg/, '래스터 백엔드 안내');
   }
+});
+
+test('PNG: resvg 폰트 옵션에 시스템 폰트 dirs 포함 (CJK 라벨 tofu 방지)', async () => {
+  const o = resvgFontOptions();
+  assert.ok(o.font, 'font 옵션');
+  assert.equal(o.font.defaultFontFamily, STIX_FAMILY, '기본(수식) 폰트는 STIX');
+  assert.ok(Array.isArray(o.font.fontFiles) && o.font.fontFiles.length, 'STIX 파일 포함');
+  // /usr/share/fonts 가 있는 환경(리눅스)에서는 반드시 fontDirs 로 넘겨야
+  // resvg 가 시스템 글리프 폴백(한글 등)을 찾는다 — 없으면 PNG 라벨이 □ 로 깨진다.
+  if (existsSync('/usr/share/fonts')) {
+    assert.ok((o.font.fontDirs || []).includes('/usr/share/fonts'), 'fontDirs 에 /usr/share/fonts');
+  }
+  // 한글 라벨도 SVG 로는 그대로 나간다(래스터 폴백의 전제)
+  const svg = scene().view([0, 2], [0, 2]).add(point(1, 1).label('한글 라벨')).compile().toSVG({ math: 'text' });
+  assert.ok(svg.includes('한글 라벨'), 'CJK 라벨 텍스트 보존');
 });
 
 test('adapt 네임스페이스 노출 (ADAPT.md)', () => {

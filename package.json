@@ -4,8 +4,13 @@
   "description": "클라이언트 코드 미리보기 / DSL 구현 (Pure JS, Node ESM)",
   "type": "module",
   "main": "index.js",
+  "bin": {
+    "logos": "bin/logos.mjs"
+  },
   "exports": {
-    ".": "./index.js"
+    ".": "./index.js",
+    "./plugins/*.js": "./plugins/*.js",
+    "./package.json": "./package.json"
   },
   "files": [
     "index.js",
@@ -14,7 +19,20 @@
     "solver",
     "symbolic",
     "backend",
-    "assets"
+    "assets",
+    "bin",
+    "plugins",
+    "scripts",
+    "kit.js",
+    "linalg.js",
+    "complex.js",
+    "annotate.js",
+    "transform.js",
+    "sprite.js",
+    "server.js",
+    "WORKFLOW.md",
+    "PLUGIN.md",
+    "KIT.md"
   ],
   "scripts": {
     "test": "node --test test/*.test.js",
@@ -26,6 +44,9 @@
     "parity12a2": "node examples/mpl_parity_12a2.js",
     "parity12a1": "node examples/mpl_parity_12a1.js",
     "plugin-demo": "node examples/plugin_demo.js",
+    "render": "bash scripts/render.sh",
+    "serve:out": "bash scripts/serve.sh out 18080",
+    "workflow": "bash scripts/install.sh --docker && bash scripts/render.sh -p examples/workflow -s sketches -o out",
     "examples": "node examples/mpl_parity_11ab.js && node examples/mpl_parity_9b.js && node examples/mpl_parity_9c.js && node examples/mpl_parity_12a2.js && node examples/mpl_parity_12a1.js && node examples/plugin_demo.js",
     "serve": "node server.js"
   },

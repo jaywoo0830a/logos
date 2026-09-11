@@ -2,6 +2,7 @@ node_modules
 .git
 .gitignore
 Dockerfile
+Dockerfile.render
 docker-compose.yml
 docker-compose.*.yml
 .dockerignore
@@ -15,3 +16,7 @@ tmp
 .env
 .env.*
 !.env.example
+# 생성 산출물(렌더 결과)은 이미지에 넣지 않는다
+output
+test/fixtures
+test/visual
