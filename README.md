@@ -1,4 +1,8 @@
-# `logos` — 수학 그림을 코드로 쓰는 DSL
+# `@jaywoo0830a/logos` — 수학 그림을 코드로 쓰는 DSL
+
+[![npm](https://img.shields.io/npm/v/@jaywoo0830a/logos.svg)](https://www.npmjs.com/package/@jaywoo0830a/logos)
+[![license](https://img.shields.io/npm/l/@jaywoo0830a/logos.svg)](LICENSE)
+![node](https://img.shields.io/node/v/@jaywoo0830a/logos.svg)
 
 > "선생님이 칠판에 그리듯이, 저자는 원고지에 쓰듯이."
 >
@@ -6,7 +10,7 @@
 > Asymptote · JSXGraph 로 나옵니다. 순수 JavaScript(Node ESM), 3D 기하 포함.
 
 ```js
-import { scene, point, circle, kit } from './index.js';
+import { scene, point, circle, kit } from '@jaywoo0830a/logos';
 
 const fig = kit.plot2d([-3, 3], [-3, 3], { equal: true })
   .title('원 위의 점과 반지름')
@@ -36,12 +40,40 @@ await kit.saveFigures([['radius', () => fig, '원 위의 점과 반지름']],
 | [`WORKFLOW.md`](WORKFLOW.md) | **워크플로우(도커+배시, 리눅스 전용)** — 설치 → 작성 → 실행 → 렌더 4단계, CLI/스크립트 레퍼런스 |
 | [`0911-PLAN.md`](0911-PLAN.md) | 작업 계획·이력(무엇을 왜 바꿨는지) |
 | [`test/COVERAGE.md`](test/COVERAGE.md) | 테스트 커버리지 매트릭스 |
+| [`CHANGELOG.md`](CHANGELOG.md) | 버전별 변경 이력 (Keep a Changelog) |
+| [`LICENSE`](LICENSE) | MIT |
 
 ---
 
 ## 2. 설치 · 실행
 
+### 2.1 라이브러리로 쓰기 (npm · 권장)
+
 ```bash
+npm install @jaywoo0830a/logos         # Node ≥ 24 · ESM 전용 (CommonJS require 불가)
+npx logos new sketches                 # 스케치 뼈대 생성 (sketch.js + package.json)
+npx logos render sketches --out out    # → out/{*.svg, *.png, index.html, manifest.json}
+npx logos render sketches --out out --scale 2 --no-png --clean
+```
+
+```js
+// sketches/sketch.js — 폴더 안의 *.js 를 전부 렌더합니다
+import { kit, point, circle } from '@jaywoo0830a/logos';
+
+export const figures = [
+  ['radius', () => kit.plot2d([-3, 3], [-3, 3], { equal: true })
+    .add(circle.center(point(0, 0)).radius(2), point(2, 0).dot().label('P'))],
+];
+```
+
+* PNG 출력은 선택입니다 — `@resvg/resvg-js`(선택 의존성)가 설치돼 있으면 자동으로 켜집니다
+  (`--no-png` 로 끌 수 있습니다). SVG 는 의존성 없이 항상 나옵니다.
+* 플러그인은 `@jaywoo0830a/logos/plugins/geometry-extras.js` 처럼 하위 경로로 가져옵니다.
+
+### 2.2 리포지토리에서 (개발 · 예제 재현 · 도커 워크플로)
+
+```bash
+git clone https://github.com/jaywoo0830a/logos.git && cd logos
 npm install
 npm test              # 전체 테스트 (194개)
 npm run examples      # 대표 예제 5개 + 플러그인 데모 → output/…
@@ -65,6 +97,10 @@ npm run serve         # http://localhost:18080/  (렌더 갤러리)
 
 Docker(선택): `docker compose up web` → 같은 갤러리 서버,
 `docker compose run --rm logos` → 컨테이너 안에서 `npm test`.
+
+npm 설치 사용자도 패키지에 `scripts/` · `Dockerfile.render` 가 함께 오므로 4단계 워크플로를
+그대로 쓸 수 있습니다 — `bash "$(npm root)/@jaywoo0830a/logos/scripts/render.sh" -p . -s sketches -o out`
+([`WORKFLOW.md`](WORKFLOW.md)).
 
 ---
 
@@ -151,6 +187,16 @@ output/             렌더 산출물(재생성 가능, git 추적 제외)
 
 ## 6. 정리 이력 (2026-09-11)
 
+**11차** — **npm 배포 준비**(스코프 패키지 `@jaywoo0830a/logos`). npm 의 `logos` 는 이미 선점되어
+(`logos@1.0.4`) 스코프로 배포합니다. `package.json` 메타데이터(영문 설명 · keywords · author ·
+repository/bugs/homepage · `publishConfig.access=public` · `prepublishOnly: npm test` ·
+`prepack`(비스코프 이름 배포 차단))와 `LICENSE`(MIT) · `CHANGELOG.md`(Keep a Changelog),
+`exports`(`kit.js`·`linalg.js`·`core/*.js`·`backend/*.js` …)와 `files` 화이트리스트를 보강했습니다.
+이름 하드코딩을 걷어내 `bin/logos.mjs` 가 `package.json` 의 name 으로 뼈대(`new`)의 import 경로 ·
+의존성 키 · 안내문을 만들고, `scripts/`·`render.sh`(컨테이너) · `test/cli.test.js` 의 심링크 경로도
+패키지 이름 기준입니다. **실제 tarball 설치**(`npm i ./…tgz` → `npx logos new/render`)로
+SVG+PNG+갤러리+manifest 까지 검증했습니다(68 files · 719 kB). 자세한 절차는 [`README.md §7`](README.md).
+
 **10차** — **워크플로우(도커+배시, 리눅스 전용)** 를 넣었습니다 — “패키지 설치 → 지정 폴더에 코드 작성
 → 배시 스크립트 실행 → 원하는 디렉토리에 렌더”. `bin/logos.mjs` CLI(`new` 뼈대 생성 ·
 `render` 스케치 폴더 → 출력 디렉토리 · `serve` · `list` · `--json`/`--dry-run`/`--clean`)와
@@ -206,4 +252,21 @@ mpl 원본을 **2×2 4컷 단계별**(① z → ② 실축 대칭 → ③ 반지
 
 ## License
 
-MIT
+[MIT](LICENSE) © 2026 jaywoo0830a
+
+---
+
+## 7. 배포 (메인테이너)
+
+```bash
+npm login                        # @jaywoo0830a 스코프를 소유한 계정
+npm test                         # prepublishOnly 가 자동 실행
+npm pack --dry-run               # tarball 포함 파일 미리보기 (files 화이트리스트)
+npm version patch                # 버전 · 태그 (CHANGELOG.md 도 함께 갱신)
+npm publish                      # publishConfig.access=public (스코프 패키지 공개 배포)
+```
+
+- 이름이 `@jaywoo0830a/logos` 인 이유 — npm 의 `logos` 는 이미 선점되어 있습니다.
+- `prepack` 훅이 스코프 이름이 아닌 상태에서의 배포를 차단합니다.
+- 배포 전 체크리스트: `README.md` 상단 예시 import 경로 · `CHANGELOG.md` 최신 항목 ·
+  `files` 에 새 디렉토리 포함 여부 · `npm pack --dry-run` 파일 수.

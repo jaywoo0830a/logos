@@ -25,7 +25,7 @@
 > `kit` 없이 `Scene`/`panels`/`SceneIR` 만 써도 출력은 완전히 같습니다.
 
 ```js
-import { scene, point, circle, kit } from 'logos';
+import { scene, point, circle, kit } from '@jaywoo0830a/logos';
 const { plot2d, subplots, saveFigures, palette } = kit;
 ```
 
@@ -147,7 +147,7 @@ kit.poly3([[0, 0, 0], [3, 2, 4]], { color: '#000', stroke: 0.8, dash: [4, 3] });
 (`solver/` 와 같은 순수 함수 계층 — 렌더링 규칙을 갖지 않습니다.)
 
 ```js
-import { mat, vec } from 'logos';
+import { mat, vec } from '@jaywoo0830a/logos';
 
 const A = mat([[2, 1], [0.5, 1.5]]);   // 행의 배열 = 수학 표기 그대로
 A.apply([1, 0]);     // [2, 0.5]   A·x  (= A 의 1열 = 기저벡터 e₁ 의 상)
@@ -190,7 +190,7 @@ annotate.arrow(point(0,0), point(1,0)).apply(transform.matrix(A));   // 변환�
 복소평면 그림의 `|z|`·`arg z`·`z̄`·`z₁z₂`·`1/z`·`zⁿ`·n제곱근이 전부 여기 있습니다.
 
 ```js
-import { cplx } from 'logos';
+import { cplx } from '@jaywoo0830a/logos';
 
 const z = cplx(3, 2);            // 3+2i — 복소평면의 점 (3, 2)
 z.abs;                           // 3.6055…   ← abs(z)
@@ -299,7 +299,7 @@ scene().dim(3).axes(false)
 SVG 의 모든 텍스트는 `backend/fonts.js` 의 **`TYPE` 토큰**을 기본값으로 씁니다.
 
 ```js
-import { typography } from 'logos';
+import { typography } from '@jaywoo0830a/logos';
 typography = { lineHeight: 1.32, letterSpacing: 0.01 };
 ```
 

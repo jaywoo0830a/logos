@@ -296,7 +296,7 @@ export function unknownFeature(name, hint = '') {
   const e = new PluginError(
     `logos: '${name}' 은 코어에 없습니다.${hint ? ` (${hint})` : ''}`,
     `코어를 고치지 말고 플러그인으로 추가하세요:\n` +
-    `  import { use } from 'logos';\n` +
+    `  import { use } from '@jaywoo0830a/logos';\n` +
     `  use({ name: 'my-extras', install(api) {\n` +
     `    api.define('${name}', (...args) => new MyShape(...args), { ctor: MyShape });\n` +
     `    api.node('mynode', { svg: (n, ctx) => '<path .../>' });\n` +
@@ -466,7 +466,7 @@ PLUGIN_NS.static = (target, name, fn) => installStatic('inline', target, name, f
 
 /**
  * `plugins.<name>` 으로 등록된 빌더를 부를 수 있게 하는 Proxy.
- * (`import { plugins } from 'logos'; plugins.ray(O, P)` — 코어 export 목록 수정 불필요)
+ * (`import { plugins } from '@jaywoo0830a/logos'; plugins.ray(O, P)` — 코어 export 목록 수정 불필요)
  */
 export const plugins = new Proxy(PLUGIN_NS, {
   get(t, k) {

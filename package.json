@@ -1,7 +1,7 @@
 {
-  "name": "logos",
+  "name": "@jaywoo0830a/logos",
   "version": "0.1.0",
-  "description": "클라이언트 코드 미리보기 / DSL 구현 (Pure JS, Node ESM)",
+  "description": "Matplotlib-parity math figure DSL in pure JavaScript (Node ESM) — one chainable scene emits SVG, PNG, TikZ, Asymptote and JSXGraph.",
   "type": "module",
   "main": "index.js",
   "bin": {
@@ -9,6 +9,18 @@
   },
   "exports": {
     ".": "./index.js",
+    "./kit.js": "./kit.js",
+    "./linalg.js": "./linalg.js",
+    "./complex.js": "./complex.js",
+    "./annotate.js": "./annotate.js",
+    "./transform.js": "./transform.js",
+    "./sprite.js": "./sprite.js",
+    "./server.js": "./server.js",
+    "./core/*.js": "./core/*.js",
+    "./shapes/*.js": "./shapes/*.js",
+    "./solver/*.js": "./solver/*.js",
+    "./symbolic/*.js": "./symbolic/*.js",
+    "./backend/*.js": "./backend/*.js",
     "./plugins/*.js": "./plugins/*.js",
     "./package.json": "./package.json"
   },
@@ -30,12 +42,24 @@
     "transform.js",
     "sprite.js",
     "server.js",
-    "WORKFLOW.md",
+    "Dockerfile",
+    "Dockerfile.render",
+    "docker-compose.yml",
+    "examples/workflow/sketches",
+    "examples/workflow/README.md",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md",
+    "KIT.md",
     "PLUGIN.md",
-    "KIT.md"
+    "WORKFLOW.md",
+    "DSL.md",
+    "INTERFACE.md"
   ],
   "scripts": {
     "test": "node --test test/*.test.js",
+    "prepublishOnly": "npm test",
+    "prepack": "node -e \"const p=require('./package.json');if(!/^@[a-z0-9-]+\\//.test(p.name))throw new Error('publishable name required: '+p.name)\"",
     "test:svg": "node --test test/senarios.test.js",
     "snap:update": "UPDATE=1 node --test test/snapshots.test.js",
     "parity11ab": "node examples/mpl_parity_11ab.js",
@@ -61,5 +85,37 @@
   "engines": {
     "node": ">=24.0.0"
   },
-  "license": "MIT"
+  "keywords": [
+    "math",
+    "mathematics",
+    "figure",
+    "plot",
+    "graph",
+    "geometry",
+    "matplotlib",
+    "dsl",
+    "svg",
+    "png",
+    "tikz",
+    "asymptote",
+    "jsxgraph",
+    "katex",
+    "latex",
+    "teaching",
+    "textbook",
+    "3d"
+  ],
+  "author": "jaywoo0830a",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jaywoo0830a/logos.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jaywoo0830a/logos/issues"
+  },
+  "homepage": "https://github.com/jaywoo0830a/logos#readme",
+  "publishConfig": {
+    "access": "public"
+  }
 }

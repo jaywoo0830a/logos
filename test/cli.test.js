@@ -19,24 +19,24 @@ function cli(args, opts = {}) {
   return { status: r.status, stdout: r.stdout || '', stderr: r.stderr || '' };
 }
 
-/** 임시 스케치 프로젝트 — node_modules/logos 심링크까지(=패키지 설치 상태) */
+/** 임시 스케치 프로젝트 — node_modules/@jaywoo0830a/logos 심링크까지(=패키지 설치 상태) */
 function project(sketches = {}) {
   const dir = mkdtempSync(join(tmpdir(), 'logos-cli-'));
   mkdirSync(join(dir, 'sketches'), { recursive: true });
-  mkdirSync(join(dir, 'node_modules'), { recursive: true });
-  symlinkSync(REPO, join(dir, 'node_modules', 'logos'));
+  mkdirSync(join(dir, 'node_modules', '@jaywoo0830a'), { recursive: true });
+  symlinkSync(REPO, join(dir, 'node_modules', '@jaywoo0830a', 'logos'));
   for (const [name, body] of Object.entries(sketches)) writeFileSync(join(dir, 'sketches', name), body);
   return dir;
 }
 
 const SKETCH_ONE = `
-import { scene, point } from 'logos';
+import { scene, point } from '@jaywoo0830a/logos';
 export const title = '한 장';
 export default scene().view([0, 2], [0, 2]).add(point(1, 1).dot());
 `;
 
 const SKETCH_MANY = `
-import { scene, point } from 'logos';
+import { scene, point } from '@jaywoo0830a/logos';
 export const figures = {
   'many-a': () => scene().view([0, 2], [0, 2]).add(point(0.5, 0.5).dot()),
   'many-b': scene().view([0, 2], [0, 2]).add(point(1.5, 1.5).dot()),
@@ -44,13 +44,13 @@ export const figures = {
 `;
 
 const SKETCH_ARRAY = `
-import { scene, point } from 'logos';
+import { scene, point } from '@jaywoo0830a/logos';
 export const figures = [['arr-first', () => scene().view([0, 1], [0, 1]).add(point(0.5, 0.5)), '첫째']];
 `;
 
 const SKETCH_PLUGIN = `
-import { scene, point, use, plugins } from 'logos';
-import extras from 'logos/plugins/geometry-extras.js';
+import { scene, point, use, plugins } from '@jaywoo0830a/logos';
+import extras from '@jaywoo0830a/logos/plugins/geometry-extras.js';
 use(extras, { watermark: false });
 export default scene().view([-2, 2], [-2, 2]).equal().add(plugins.ray(point(0, 0), point(1, 1)));
 `;
@@ -72,6 +72,13 @@ test('cli: --help / --version / 알 수 없는 명령', () => {
   const badOpt = cli(['render', '--wat']);
   assert.equal(badOpt.status, 2);
   assert.match(badOpt.stderr, /알 수 없는 옵션/);
+
+  // 하위 명령 뒤의 --help 도 도움말(오류 아님)
+  for (const c of [['render', '--help'], ['new', '-h'], ['serve', '--help']]) {
+    const h = cli(c);
+    assert.equal(h.status, 0, `${c.join(' ')} → 0`);
+    assert.match(h.stdout, /사용법/);
+  }
 });
 
 test('cli new: 스케치 폴더 뼈대 생성(패키지 의존성 포함)', () => {
@@ -83,9 +90,9 @@ test('cli new: 스케치 폴더 뼈대 생성(패키지 의존성 포함)', () =
       assert.ok(existsSync(join(dir, 'sketches', f)), `${f} 생성`);
     }
     const pkg = JSON.parse(readFileSync(join(dir, 'sketches', 'package.json'), 'utf8'));
-    assert.ok(pkg.dependencies.logos, 'logos 의존성');
+    assert.ok(pkg.dependencies['@jaywoo0830a/logos'], '패키지 의존성');
     assert.equal(pkg.type, 'module');
-    assert.match(readFileSync(join(dir, 'sketches', 'sketch.js'), 'utf8'), /from 'logos'/);
+    assert.match(readFileSync(join(dir, 'sketches', 'sketch.js'), 'utf8'), /from '@jaywoo0830a\/logos'/);
     // 두 번째 호출은 기존 파일을 덮어쓰지 않는다
     writeFileSync(join(dir, 'sketches', 'sketch.js'), '// 사용자 편집');
     const r2 = cli(['new', join(dir, 'sketches')]);

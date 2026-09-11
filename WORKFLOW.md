@@ -1,8 +1,24 @@
-# `logos` — 워크플로우 (Docker + Bash · 리눅스 전용)
+# `@jaywoo0830a/logos` — 워크플로우 (Docker + Bash · 리눅스 전용)
 
 > **패키지 설치 → 지정한 폴더에 코드 작성 → 배시 스크립트 실행 → 원하는 디렉토리에 렌더.**
 > 호스트에는 `bash` + `docker` 만 있으면 되고, Node/폰트/래스터라이저는 **이미지 안**에서 해결합니다.
 > **리눅스만 지원합니다**(`uname -s` 가 `Linux` 가 아니면 즉시 중단 · 강제하려면 `LOGOS_FORCE_OS=1`).
+
+설치 경로는 두 가지입니다 — **A. npm 패키지**(내 프로젝트에 의존성으로) / **B. 리포지토리 클론**(개발·예제).
+
+```bash
+# A. npm 으로 설치한 경우 (권장) ─ 스크립트는 패키지 안에 함께 옵니다
+npm install @jaywoo0830a/logos
+LOGO=pkg bash "$(npm root)/@jaywoo0830a/logos/scripts/render.sh" -p . -s sketches -o out
+npx logos render sketches --out out            # 스크립트 없이 CLI 만으로도 렌더 (도커 아님)
+
+# B. 리포지토리를 클론한 경우
+bash scripts/render.sh -p . -s sketches -o out
+```
+
+아래 예시는 편의상 **B(클론)** 기준으로 `bash scripts/…` 표기를 씁니다.
+npm 설치(A)에서는 같은 자리에
+`bash "$(npm root)/@jaywoo0830a/logos/scripts/…"`, CLI 는 `node bin/logos.mjs` → `npx logos` 입니다.
 
 ```
 ① 패키지 설치          bash scripts/install.sh --docker
@@ -51,7 +67,7 @@ my-project/
     hello.js
     gallery.js
   out/                 ← ④ 산출물 (원하는 위치 · -o 로 지정, 절대경로도 가능)
-  package.json         ← logos new 가 만들어 준다("logos" 의존성 포함)
+  package.json         ← logos new 가 만들어 준다(패키지 의존성 포함)
 ```
 
 `-s/-o` 는 **상대 경로면 프로젝트 루트(`-p`) 기준**입니다. 프로젝트 밖으로 내보내려면
@@ -66,7 +82,7 @@ bash scripts/render.sh -p ~/my-book -s figs -o /tmp/report --scale 2
 ## 3. 스케치 계약 (파일 하나 = 그림 1장 이상)
 
 ```js
-import { scene, point, curve, annotate, tex, panels } from 'logos';
+import { scene, point, curve, annotate, tex, panels } from '@jaywoo0830a/logos';
 
 // (선택) 갤러리에 보일 이름
 export const title = '단위원과 각';
@@ -99,8 +115,8 @@ export const figures = [['fig-c', () => panels([a, b], { cols: 2 }), '두 장 �
 패키지에 동봉된 플러그인은 subpath 로 바로 씁니다.
 
 ```js
-import { use, plugins } from 'logos';
-import extras from 'logos/plugins/geometry-extras.js';   // ray · arc.circular · hatch …
+import { use, plugins } from '@jaywoo0830a/logos';
+import extras from '@jaywoo0830a/logos/plugins/geometry-extras.js';   // ray · arc.circular · hatch …
 use(extras, { watermark: true });
 ```
 
@@ -182,7 +198,7 @@ bash scripts/build-image.sh [--render|--dev|--both] [--force]
 
 ## 6. 자주 겪는 것 (FAQ)
 
-**Q. `Cannot find package 'logos'` 가 난다** — 스케치 폴더에 패키지가 연결되지 않았습니다.
+**Q. `Cannot find package '@jaywoo0830a/logos'` 가 난다** — 스케치 폴더에 패키지가 연결되지 않았습니다.
 `bash scripts/install.sh --project <폴더>` 또는 `--local` 로 실행하세요. (CLI 도 같은 안내를 출력합니다.)
 
 **Q. PNG 가 안 나온다** — `@resvg/resvg-js` 가 없거나 플랫폼 바이너리가 없을 때입니다.
@@ -196,7 +212,10 @@ SVG 는 정상 생성되고 경고만 남습니다. 이미지에는 포함되어
 `Dockerfile.render` 는 `fonts-nanum`(한글)을 포함합니다. 이미지가 오래됐다면
 `bash scripts/render.sh --build` 로 다시 빌드하세요. (SVG 는 폰트 폴백이 브라우저에 맡겨지므로 원래 정상입니다.)
 
-**Q. 빌드를 다시 하고 싶다** — `bash scripts/render.sh --build`,
+**Q. 빌드를 다시 하고 싶다** — `bash scripts/render.sh --build`, `bash scripts/install.sh --docker --force`,
+`LOGOS_BUILDKIT=1`(캐시 활용) 중 아무거나. 패키지 **이름/버전이 바뀌면** 이미지가 stale 이 되어
+스케치 `import` 가 깨지는데, 이미지 라벨(`logos.pkg`·`logos.version`)을 현재 패키지와 비교해
+**자동으로 다시 빌드**합니다(그래서 이름을 바꿔도 그냥 실행하면 됩니다).
 또는 `bash scripts/build-image.sh --render --force`.
 
 **Q. 호스트에 Node 가 없다** — 그대로 두세요. `--docker`(기본)만 쓰면 됩니다.

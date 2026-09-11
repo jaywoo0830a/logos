@@ -10,7 +10,7 @@
 //   · 각도는 **도(degree)** — `transform.rotate`·`linalg.vec.angleDeg` 와 같은 단위
 //
 // 사용
-//   import { cplx } from 'logos';
+//   import { cplx } from '@jaywoo0830a/logos';
 //   const z = cplx(3, 2);                 // 3+2i
 //   z.abs;                                // → 3.6055…   (|z|)
 //   z.argDeg;                             // → 33.69…    (arg z)

@@ -4,7 +4,7 @@
 //
 // 스케치 계약(CLI): `export default` 하나면 충분하다.
 //   Scene | SceneIR | 팩토리 함수  — 무엇이든 된다. 이름/제목은 선택.
-import { scene, point, circle, segment, curve, annotate, tex } from 'logos';
+import { scene, point, circle, segment, curve, annotate, tex } from '@jaywoo0830a/logos';
 
 export const title = '단위원과 각';
 

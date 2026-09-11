@@ -12,7 +12,7 @@
 ## 1. 30초 예제
 
 ```js
-import { point, use } from 'logos';
+import { point, use } from '@jaywoo0830a/logos';
 
 use({ name: 'my-slope', install(api) {
   api.chain('drawable', { slope: (conf, m) => ({ slopeM: m }) });   // 새 체이닝 메서드
@@ -148,7 +148,7 @@ myNs.riemann = (f) => …;                            // areas.riemann(...)
 ## 5. 조회 · 디버깅
 
 ```js
-import { plugins, plugin } from 'logos';
+import { plugins, plugin } from '@jaywoo0830a/logos';
 
 plugins.list();        // ['geometry-extras', …]      설치된 플러그인
 plugins.has('x');      // 설치 여부
@@ -172,7 +172,7 @@ plugins.ray(…)         // 코어 export 목록을 고치지 않고도 호출 �
 ```
 PluginError: logos: 'ray' 은 코어에 없습니다. (직선(line) 등으로 대체할 수 있습니다.)
 hint: 코어를 고치지 말고 플러그인으로 추가하세요:
-  import { use } from 'logos';
+  import { use } from '@jaywoo0830a/logos';
   use({ name: 'my-extras', install(api) {
     api.define('ray', (...args) => new MyShape(...args), { ctor: MyShape });
     api.node('mynode', { svg: (n, ctx) => '<path .../>' });
@@ -201,8 +201,8 @@ hint: 코어를 고치지 말고 플러그인으로 추가하세요:
 | ⑧ 래핑 | `api.around('scene','title', …)` | `scene.title('t')` → `[draft] t` (옵션 `stampTitle`) |
 
 ```js
-import { scene, point, use, plugins } from 'logos';
-import geometryExtras from 'logos/plugins/geometry-extras.js';   // 패키지 동봉 플러그인(subpath export)
+import { scene, point, use, plugins } from '@jaywoo0830a/logos';
+import geometryExtras from '@jaywoo0830a/logos/plugins/geometry-extras.js';   // 패키지 동봉 플러그인(subpath export)
 // 저장소 안에서 쓸 때는 상대 경로도 가능: './plugins/geometry-extras.js'
 use(geometryExtras, { watermark: true, stampTitle: false });
 

@@ -3,6 +3,10 @@ node_modules/
 npm-debug.log*
 *.log
 
+# ── npm 배포 (실수 커밋 방지) ────────────
+*.tgz
+.npmrc
+
 # ── 생성 산출물 (데모/렌더링) ─────────────
 examples/*.svg
 examples/*.png

@@ -69,7 +69,7 @@ export { renderText } from './core/drawable.js';
 
 // ── 예제/스케치 공용 작성 키트 (kit.js) ─────────────
 //   palette · plot2d · plot3d · subplots · saveFigure · saveFigures · writeGallery · seg · poly3
-//   사용: `import { kit } from 'logos'; const { plot3d, palette } = kit;`
+//   사용: `import { kit } from '@jaywoo0830a/logos'; const { plot3d, palette } = kit;`
 export * as kit from './kit.js';
 
 // ── ADAPT.md 외부엔진 어댑터 API ───────────────────

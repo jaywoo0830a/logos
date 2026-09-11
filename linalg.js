@@ -11,7 +11,7 @@
 //   · 각도는 **도(degree)** — 화면/교재 표기와 맞춘다(`transform.rotate` 도 도 단위)
 //
 // 사용
-//   import { mat, vec } from 'logos';
+//   import { mat, vec } from '@jaywoo0830a/logos';
 //   const A = mat([[2, 1], [0.5, 1.5]]);
 //   A.apply([1, 0]);     // → [2, 0.5]      (기저 벡터의 상)
 //   A.det;               // → 2.5

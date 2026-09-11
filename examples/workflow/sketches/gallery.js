@@ -2,7 +2,7 @@
 //
 //   `export const figures = { 이름: 그림 | () => 그림, … }`
 //   → CLI 가 파일 하나에서 여러 figure 를 뽑아 같은 출력 폴더에 담는다(갤러리에도 모두 표시).
-import { scene, point, curve, polygon, region, annotate, panels, tex, tau } from 'logos';
+import { scene, point, curve, polygon, region, annotate, panels, tex, tau } from '@jaywoo0830a/logos';
 
 /** ① 함수값 — f(x) = x³ − 3x */
 const cubic = () => scene()

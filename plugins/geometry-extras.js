@@ -13,7 +13,7 @@
 //   ⑧ 기존 메서드 래핑 scene.title 앞에 [draft]        api.around('scene', 'title', …)
 //
 // 사용법
-//   import { scene, point, use } from 'logos';
+//   import { scene, point, use } from '@jaywoo0830a/logos';
 //   import geometryExtras from './plugins/geometry-extras.js';
 //   use(geometryExtras, { stampTitle: true });        // 옵션은 install(api, opts) 로 전달
 //   scene().add(ray(point(0, 0), point(2, 1))).compile().toSVG();

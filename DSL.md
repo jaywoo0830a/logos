@@ -30,7 +30,7 @@
 좌표계는 **씬에 붙는 속성**이 아니라 **점이 스스로 아는 속성**이다. 이게 핵심.
 
 ```js
-import { point, scene } from 'logos';
+import { point, scene } from '@jaywoo0830a/logos';
 
 // ── Cartesian ────────────────────────────
 point(1, 2)                              // 2D
@@ -134,7 +134,7 @@ circle.center(O).radius(1).on(plane.normal(vector(1,1,1)));
 그것도 코어 파일 수정 없이 된다 → [`PLUGIN.md`](PLUGIN.md).
 
 ```js
-import { point, use } from 'logos';
+import { point, use } from '@jaywoo0830a/logos';
 
 use({ name: 'my-extras', install(api) {
   api.chain('drawable', { slope: (conf, m) => ({ slopeM: m }) });   // 모든 도형에 .slope()
@@ -577,7 +577,7 @@ function toJson(v) {
 
 ```js
 import { scene, point, line, segment, curve, circle,
-         annotate, region, tex, tau } from 'logos';
+         annotate, region, tex, tau } from '@jaywoo0830a/logos';
 
 // ── 심볼릭 ─────────────────────────────
 const f  = tex`x^{2} - 1`;
@@ -627,7 +627,7 @@ console.log(fig.toTikZ({ standalone: true }));
 ## 9. 전체 예제 — 3D (구와 평면의 교)
 
 ```js
-import { scene, point, plane, sphere, curve3, vector } from 'logos';
+import { scene, point, plane, sphere, curve3, vector } from '@jaywoo0830a/logos';
 
 const S  = sphere.center(point.origin()).radius(1).opacity(0.25);
 const pl = plane.coordinate('xy').color('#999').opacity(0.5);
@@ -659,7 +659,7 @@ fig.toSVG();
 ## 10. 전체 예제 — 극좌표 장미
 
 ```js
-import { scene, curve, annotate, tau, tex } from 'logos';
+import { scene, curve, annotate, tau, tex } from '@jaywoo0830a/logos';
 
 const rose = curve.polar(θ => Math.cos(3 * θ)).on([0, tau]);
 

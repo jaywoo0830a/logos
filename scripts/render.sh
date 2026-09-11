@@ -146,11 +146,13 @@ else
       set -e
       # ① 패키지 연결 (깨진 링크/미설치일 때만) — 이미지 안의 /opt/logos 를 가리킨다.
       #    우리가 만든 링크만 렌더 후 제거해 프로젝트를 깨끗하게 유지한다(깨진 심링크 잔재 방지).
+      PKG_NAME="$(node -p "require(\"/opt/logos/package.json\").name")"
+      PKG_LINK="node_modules/$PKG_NAME"
       LINKED=0
-      if [ ! -e node_modules/logos/index.js ]; then
-        rm -rf node_modules/logos
-        mkdir -p node_modules
-        ln -sfn /opt/logos node_modules/logos
+      if [ ! -e "$PKG_LINK/index.js" ]; then
+        rm -rf "$PKG_LINK"
+        mkdir -p "$(dirname "$PKG_LINK")"
+        ln -sfn /opt/logos "$PKG_LINK"
         LINKED=1
       fi
       # ② 다른 의존성이 필요하면(--install) 설치
@@ -163,7 +165,8 @@ else
       STATUS=$?
       set -e
       if [ "$LINKED" = "1" ]; then
-        rm -f node_modules/logos
+        rm -f "$PKG_LINK"
+        rmdir "$(dirname "$PKG_LINK")" 2>/dev/null || true
         rmdir node_modules 2>/dev/null || true
       fi
       exit $STATUS

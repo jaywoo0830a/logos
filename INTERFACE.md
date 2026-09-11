@@ -8,7 +8,7 @@
 ## 1. 첫 만남 — 점 하나 찍기
 
 ```js
-import { scene, point } from 'logos';
+import { scene, point } from '@jaywoo0830a/logos';
 
 const A = point(1, 2).label('A').dot();
 
@@ -27,7 +27,7 @@ scene()
 ## 2. 중학교 — 삼각형의 내심
 
 ```js
-import { scene, point, triangle, circle, segment, annotate } from 'logos';
+import { scene, point, triangle, circle, segment, annotate } from '@jaywoo0830a/logos';
 
 const A = point(0, 0).label('A').dot();
 const B = point(5, 0).label('B').dot();
@@ -64,7 +64,7 @@ scene()
 ## 3. 고등학교 — 원과 접선
 
 ```js
-import { scene, point, circle, line, segment, annotate, tex } from 'logos';
+import { scene, point, circle, line, segment, annotate, tex } from '@jaywoo0830a/logos';
 
 const O = point.origin().label('O').dot();
 const P = point(5, 0).label('P').dot();
@@ -102,7 +102,7 @@ scene()
 ## 4. 미적분 — 함수와 접선, 그리고 적분
 
 ```js
-import { scene, point, line, curve, annotate, region, tex, tau } from 'logos';
+import { scene, point, line, curve, annotate, region, tex, tau } from '@jaywoo0830a/logos';
 
 const f  = tex`x^{2} - 1`;
 const df = f.diff('x').simplify();        // 2x
@@ -142,7 +142,7 @@ scene()
 ## 5. 극좌표 — 장미 곡선
 
 ```js
-import { scene, curve, annotate, tau, tex } from 'logos';
+import { scene, curve, annotate, tau, tex } from '@jaywoo0830a/logos';
 
 scene()
   .equal()
@@ -166,7 +166,7 @@ scene()
 ## 6. 3D — 구와 평면의 교
 
 ```js
-import { scene, point, sphere, plane, curve3, vector, tex } from 'logos';
+import { scene, point, sphere, plane, curve3, vector, tex } from '@jaywoo0830a/logos';
 
 const O = point.origin();
 const S = sphere.center(O).radius(1).opacity(0.25).color('#3b82f6');
@@ -198,7 +198,7 @@ scene()
 ## 7. 3D — 회전체
 
 ```js
-import { scene, curve, line, surface, annotate, tex, pi } from 'logos';
+import { scene, curve, line, surface, annotate, tex, pi } from '@jaywoo0830a/logos';
 
 const f  = tex`\sqrt{x}`;
 const c  = curve.fn(f).on([0, 4]);
@@ -227,7 +227,7 @@ scene()
 ## 8. 심볼릭 방정식 풀이
 
 ```js
-import { tex, scene, point, curve, annotate } from 'logos';
+import { tex, scene, point, curve, annotate } from '@jaywoo0830a/logos';
 
 const eq = tex`x^{2} - 5x + 6 = 0`;
 const roots = eq.solve('x');        // [2, 3]
@@ -256,7 +256,7 @@ scene()
 ## 9. 조건부 제약 — 검증까지
 
 ```js
-import { scene, point, line, segment, annotate } from 'logos';
+import { scene, point, line, segment, annotate } from '@jaywoo0830a/logos';
 
 const A = point(0, 0);
 const B = point(4, 0);
@@ -287,7 +287,7 @@ scene()
 import {
   scene, point, triangle, circle, line, curve, region,
   annotate, transform, tex, tau
-} from 'logos';
+} from '@jaywoo0830a/logos';
 
 // ─── 1) 원의 정의와 접선 ─────────────────────
 const fig1 = scene()
@@ -411,7 +411,7 @@ import { scene, point, vector, line, segment, ray,
          transform, annotate, tex, kit,         // kit = 그림 작성 키트
          mat, vec,                              // 행렬/벡터 수치 (linalg)
          cplx, Complex,                         // 복소수 수치 (complex)
-         tau, pi, e } from 'logos';
+         tau, pi, e } from '@jaywoo0830a/logos';
 ```
 
 - **`scene()`** — 캔버스
@@ -464,7 +464,7 @@ annotate.angle(O, P, /* 접선 방향 */).rightAngle(),
 그림을 그리다 보면 DSL 에 없는 것이 나옵니다. 그때 `core/` 를 고치는 대신 **플러그인 한 줄**을 씁니다.
 
 ```js
-import { scene, point, circle, use, plugins } from 'logos';
+import { scene, point, circle, use, plugins } from '@jaywoo0830a/logos';
 import geometryExtras from './plugins/geometry-extras.js';
 
 use(geometryExtras, { watermark: true });      // ← 이 한 줄이 전부

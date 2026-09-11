@@ -19,8 +19,10 @@ import { basename, dirname, extname, join, resolve, relative } from 'node:path';
 import { pathToFileURL, fileURLToPath } from 'node:url';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const PKG_ROOT = resolve(HERE, '..');            // 패키지 루트(설치본이면 node_modules/logos/)
-const VERSION = readJson(join(PKG_ROOT, 'package.json'))?.version || '0.0.0';
+const PKG_ROOT = resolve(HERE, '..');            // 패키지 루트(설치본이면 node_modules/@…/logos/)
+const PKG_JSON = readJson(join(PKG_ROOT, 'package.json')) || {};
+const PKG_NAME = PKG_JSON.name || 'logos';       // 배포 이름 — 스코프 포함(@scope/name)
+const VERSION = PKG_JSON.version || '0.0.0';
 
 /** JSON 파일을 안전하게 읽는다(없거나 깨지면 null) */
 function readJson(p) {
@@ -180,9 +182,11 @@ async function cmdRender(argv) {
       mod = await import(pathToFileURL(file).href);
     } catch (e) {
       let msg = e.message;
-      // ‘logos’ 를 못 찾는 흔한 실수 — 설치/심볼릭 링크 안내를 덧붙인다
-      if (/Cannot find package 'logos'/.test(msg) || /ERR_MODULE_NOT_FOUND/.test(e.code || '')) {
-        msg += `\n    → 스케치 폴더에서 먼저 설치하세요:  npm install   (또는 npm link logos)`;
+      // 패키지를 못 찾는 흔한 실수 — 설치 안내를 덧붙인다
+      const esc = PKG_NAME.replace(/[/\\^$*+?.()|[\]{}]/g, '\\$&');
+      const missing = new RegExp(`Cannot find (package|module) ['"](@?${esc}|logos)['"]`).test(msg);
+      if (missing || /ERR_MODULE_NOT_FOUND/.test(e.code || '')) {
+        msg += `\n    → 스케치가 '${PKG_NAME}' 를 못 찾았습니다. 먼저 설치하세요:  npm install ${PKG_NAME}`;
       }
       fail(`${rel}: 불러오기 실패 — ${msg}`);
       figures.push({ name: basename(file, extname(file)), title: rel, src: rel, error: msg });
@@ -229,6 +233,7 @@ async function cmdRender(argv) {
   const manifest = {
     generatedAt: new Date().toISOString(),
     logos: VERSION,
+    package: PKG_NAME,
     src: relative(process.cwd(), srcDir) || '.',
     out: relative(process.cwd(), outDir) || '.',
     formats: ['svg', ...(opts.png ? ['png'] : [])],
@@ -252,8 +257,8 @@ async function cmdRender(argv) {
 
 // ── new 명령 — 스케치 폴더 뼈대 ──────────────────────────────
 const SKETCH_TEMPLATE = `// sketches/sketch.js — logos 스케치 한 장
-//   렌더:  bash scripts/render.sh -s . -o out      (또는  npx logos render . -o out)
-import { scene, point, circle, segment, annotate, tex } from 'logos';
+//   렌더:  npx logos render . -o out      (또는  npm run render)
+import { scene, point, circle, segment, annotate, tex } from '${PKG_NAME}';
 
 export const title = '첫 그림';   // 갤러리에 표시될 이름(선택)
 
@@ -273,22 +278,26 @@ export default scene()
 const README_TEMPLATE = (dir) => `# ${dir} — logos 스케치
 
 \`\`\`bash
-# ① 패키지 설치
+# ① 패키지 설치 (상위 프로젝트에 이미 있으면 생략)
 npm install
 
-# ② (선택) 도커 이미지 준비 — 리눅스 전용
-bash scripts/install.sh --docker
+# ② 렌더 — 산출물은 out/ 로
+npx logos render . -o out          # 또는 npm run render
 
-# ③ 렌더 — 산출물은 out/ 로
-bash scripts/render.sh -s . -o out
+# ③ 결과 보기
+npx logos serve out 18080          # http://localhost:18080/
+\`\`\`
 
-# ④ 결과 보기
-bash scripts/serve.sh out 18080      # http://localhost:18080/
+도커로 렌더하면 호스트에 Node/폰트/래스터라이저가 없어도 됩니다(리눅스 전용).
+
+\`\`\`bash
+bash "$(npm root)/${PKG_NAME}/scripts/render.sh" -p . -s . -o out
 \`\`\`
 
 스케치 파일은 \`export default\` 로 그림 하나를 내보내거나,
 \`export const figures = { 이름: 그림, … }\` 로 여러 장을 낼 수 있습니다.
-자세한 규칙은 [\`WORKFLOW.md\`](https://github.com/) / 패키지의 \`logos --help\` 참고.
+자세한 규칙은 [\`WORKFLOW.md\`](https://github.com/jaywoo0830a/logos/blob/main/WORKFLOW.md) 와
+\`npx logos --help\` 를 보세요.
 `;
 
 function cmdNew(argv) {
@@ -309,7 +318,7 @@ function cmdNew(argv) {
       private: true,
       type: 'module',
       scripts: { render: 'logos render . --out out', serve: `logos serve out` },
-      dependencies: { logos: dep },
+      dependencies: { [PKG_NAME]: dep },
     }, null, 2)}\n`,
     '.gitignore': 'node_modules/\nout/\n',
     'README.md': README_TEMPLATE(basename(dir)),
@@ -322,7 +331,8 @@ function cmdNew(argv) {
     wrote.push(f);
   }
   ok(`${pretty(dir)} 뼈대 생성 (${wrote.join(', ')})`);
-  log(`${C.dim}  다음: cd ${pretty(dir)} && npm install && bash scripts/render.sh -s . -o out${C.off}`);
+  log(`${C.dim}  다음: cd ${pretty(dir)} && npm install && npx logos render . -o out${C.off}`);
+  log(`${C.dim}  (도커 · 리눅스) bash "$(npm root)/${PKG_NAME}/scripts/render.sh" -p . -s . -o out${C.off}`);
   return 0;
 }
 
@@ -381,7 +391,10 @@ ${C.bold}도커/배시 워크플로우${C.off} (리눅스 전용)
 
 // ── 진입점 ─────────────────────────────────────────────────
 async function main() {
-  const [cmd, ...rest] = process.argv.slice(2);
+  const argv = process.argv.slice(2);
+  const [cmd, ...rest] = argv;
+  // 하위 명령 뒤의 --help/-h 도 도움말로 (예: `logos render --help`)
+  if (rest.includes('--help') || rest.includes('-h')) { usage(); return 0; }
   switch (cmd) {
     case 'render': case 'r': return cmdRender(rest);
     case 'new': case 'init': return cmdNew(rest);

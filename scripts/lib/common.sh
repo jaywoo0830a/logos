@@ -28,6 +28,10 @@ step() { printf '\n%s\n' "${C_BOLD}${*}$C_OFF"; }
 _common_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd -- "${_common_dir}/../.." && pwd)"
 export REPO_ROOT
+# 패키지 배포 이름(스코프 포함) — 심링크 경로 계산에 쓴다
+PKG_NAME="$(node -p "require('${REPO_ROOT}/package.json').name" 2>/dev/null || echo logos)"
+PKG_VERSION="$(node -p "require('${REPO_ROOT}/package.json').version" 2>/dev/null || echo 0.0.0)"
+export PKG_NAME PKG_VERSION
 
 # 절대경로 정규화(존재하지 않아도 됨)
 abspath() {
@@ -72,32 +76,57 @@ BUILDER_IMAGE="${LOGOS_BUILDER_IMAGE:-logos-builder:0.1.0}"
 
 image_exists() { docker image inspect "$1" >/dev/null 2>&1; }
 
+# 이미지 라벨 읽기 — 없으면 빈 문자열
+image_label() {   # image_label <ref> <key>
+  docker image inspect -f "{{ index .Config.Labels \"$2\" }}" "$1" 2>/dev/null || true
+}
+
+# 이미지가 **지금 이 패키지**(이름·버전)로 빌드됐나 — 이름을 바꾸면 stale 이미지가
+# 남아 스케치 import 가 깨지므로, 라벨이 다르면 자동으로 다시 빌드한다.
+image_is_current() {   # image_is_current <ref>
+  local ref="$1"
+  image_exists "$ref" || return 1
+  [[ "$(image_label "$ref" logos.pkg)" == "$PKG_NAME" \
+     && "$(image_label "$ref" logos.version)" == "$PKG_VERSION" ]]
+}
+
 ensure_image() {   # ensure_image <ref> <dockerfile> [--force]
   local ref="$1" dockerfile="$2" force="${3:-}"
-  image_exists "$ref" && [[ "$force" != "--force" ]] && return 0
+  if image_exists "$ref" && [[ "$force" != "--force" ]]; then
+    if image_is_current "$ref"; then return 0; fi
+    dim "이미지가 다른 패키지 버전($(image_label "$ref" logos.pkg || echo '?')@$(image_label "$ref" logos.version || echo '?'))으로 빌드됨 — 다시 빌드: $ref"
+  fi
   info "도커 이미지 빌드: $ref  (Dockerfile: ${dockerfile##*/})"
   # LOGOS_BUILDKIT=1 이면 BuildKit 을 쓴다(캐시에 유리 · buildx 필요).
   # 기본은 어디서나 동작하는 레거시 빌더.
   if [[ "${LOGOS_BUILDKIT:-0}" = "1" ]]; then
-    DOCKER_BUILDKIT=1 docker build -f "$dockerfile" -t "$ref" "$REPO_ROOT" || die "이미지 빌드 실패: $ref"
+    DOCKER_BUILDKIT=1 docker build -f "$dockerfile" \
+      --label "logos.pkg=$PKG_NAME" --label "logos.version=$PKG_VERSION" \
+      -t "$ref" "$REPO_ROOT" || die "이미지 빌드 실패: $ref"
   else
-    docker build -f "$dockerfile" -t "$ref" "$REPO_ROOT" || die "이미지 빌드 실패: $ref"
+    docker build -f "$dockerfile" \
+      --label "logos.pkg=$PKG_NAME" --label "logos.version=$PKG_VERSION" \
+      -t "$ref" "$REPO_ROOT" || die "이미지 빌드 실패: $ref"
   fi
-  ok "이미지 준비 완료: $ref"
+  ok "이미지 준비 완료: $ref  ($PKG_NAME@$PKG_VERSION)"
 }
 
-# ── 패키지 설치(스케치 폴더에 logos 연결) ──────────────────
-#   npm 의 `file:` 의존성과 같은 결과를 네트워크 없이 만든다(node_modules/logos → 패키지 루트).
-#   패키지 **안쪽** 폴더는 Node 의 self-reference 로 이미 `logos` 를 찾으므로 건드리지 않는다.
+# ── 패키지 설치(스케치 폴더에 패키지 연결) ──────────────────
+#   npm 의 `file:` 의존성과 같은 결과를 네트워크 없이 만든다
+#   (node_modules/@scope/logos → 패키지 루트).
+#   패키지 **안쪽** 폴더는 Node 의 self-reference 로 이미 패키지를 찾으므로 건드리지 않는다.
 link_package() {   # link_package <project> <package_root>
   local project="$1" pkg="$2"
+  local name linkdir
+  name="$(node -e "process.stdout.write(require('${pkg}/package.json').name)" 2>/dev/null || echo "$PKG_NAME")"
   if [[ "$project" == "$pkg" ]] || is_inside "$pkg" "$project"; then
-    dim "패키지 내부 실행 — self-reference 로 'logos' 를 찾습니다(연결 생략)"
+    dim "패키지 내부 실행 — self-reference 로 '$name' 를 찾습니다(연결 생략)"
     return 0
   fi
-  mkdir -p "$project/node_modules"
-  ln -sfn "$pkg" "$project/node_modules/logos"
-  ok "패키지 연결: $project/node_modules/logos → $pkg"
+  linkdir="$project/node_modules/$name"          # 스코프면 @scope/ 하위 디렉토리까지 만든다
+  mkdir -p "$(dirname "$linkdir")"
+  ln -sfn "$pkg" "$linkdir"
+  ok "패키지 연결: $linkdir → $pkg"
 }
 
 # 프로젝트 package.json 의 name (없으면 폴더명)

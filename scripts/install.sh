@@ -58,7 +58,7 @@ fi
 step "[2/3] 스케치 프로젝트 준비"
 PROJECT="${PROJECT:-$PWD}"
 if [[ "$PROJECT" == "$REPO_ROOT" ]]; then
-  ok "저장소 자체에서 실행 — self-reference 로 'logos' 를 바로 import 할 수 있습니다"
+  ok "저장소 자체에서 실행 — self-reference 로 '$PKG_NAME' 를 바로 import 할 수 있습니다"
 else
   link_package "$PROJECT" "$REPO_ROOT"
   name="$(project_name "$PROJECT" || true)"
