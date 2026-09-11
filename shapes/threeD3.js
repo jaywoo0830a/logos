@@ -4,6 +4,7 @@ import { Drawable } from '../core/drawable.js';
 import { node } from '../core/node.js';
 import { project3, depthZ } from './threeD.js';
 import { point } from './point.js';
+import { TAU } from '../solver/coords.js';
 
 // ── 간이 컬러맵 (matplotlib cmap 근사) ──────────────
 const CMAPS = {
@@ -87,6 +88,8 @@ export class Arrow3 extends Drawable {
   constructor(conf = {}) { super('arrow3', { head: 9, ...conf }); }
   to(P) { return this.set({ to: asCoords(P) }); }
   label(t, off) { return this.set({ label: t, labelOff: off }); }
+  /** 머리 길이 비율 (matplotlib arrow_length_ratio; 기본 0.12) */
+  ratio(r) { return this.set({ ratio: r }); }
   get vertices() { return [this._conf.from, this._conf.to].map((v) => point(...v)); }
   toIR(ctx) {
     const c = this._conf;
@@ -171,3 +174,116 @@ export class ParamSurface extends Drawable {
   }
 }
 export const surfaceParam = (fn) => new ParamSurface({ fn });
+
+// ── axes3 — mplot3d 스타일 3D 좌표축 ──────────────────
+/**
+ * mplot3d 관례의 3D 좌표축(화살표 3개 + x/y/z 라벨).
+ *
+ * logos 의 3D 씬은 `axes(false)` 로 자동 축을 끄고 직접 그리는 것을 권장한다
+ * (matplotlib 에서 `ax.set_axis_off()` + 화살표 3개를 그리는 관용구와 같다).
+ * 반환값이 **배열**이므로 `.add(...axes3({ length: 5 }))` 처럼 펼쳐 넣는다.
+ *
+ * @param {Object} [o]
+ * @param {number[]} [o.origin=[0,0,0]] 화살표 시작점
+ * @param {number}   [o.length=5]        각 축의 길이
+ * @param {string}   [o.color='#808080'] 축 색
+ * @param {number}   [o.width=1]         축 굵기
+ * @param {string[]} [o.labels=['x','y','z']] 축 라벨(null 이면 생략)
+ * @param {number}   [o.ratio]           머리 길이 비율(기본 0.12)
+ * @param {number}   [o.labelFont=12]    라벨 글자 크기
+ * @returns {Arrow3[]} `.add(...)` 에 펼칠 수 있는 도형 배열
+ * @example
+ *   scene().dim(3).camera({ elev: 20, azim: -50 }).axes(false)
+ *     .add(...axes3({ length: 4, color: '#808080', width: 0.8 }));
+ */
+export function axes3({ origin = [0, 0, 0], length = 5, color = '#808080', width = 1,
+  labels = ['x', 'y', 'z'], ratio, labelFont = 12, labelOffset } = {}) {
+  const dirs = [[length, 0, 0], [0, length, 0], [0, 0, length]];
+  return dirs.map((d, i) => {
+    const tip = [origin[0] + d[0], origin[1] + d[1], origin[2] + d[2]];
+    let a = arrow3(origin, tip).color(color).stroke(width);
+    if (ratio != null) a = a.ratio(ratio);
+    if (labels && labels[i]) a = a.label(labels[i], labelOffset).font(labelFont);
+    return a;
+  });
+}
+
+// ── 3D 곡선/곡면 단축 헬퍼 ───────────────────────────
+/** 원호 (z=cz 평면에 놓인 원) — `circle3(반지름, z, 중심)` */
+export function circle3(r, z = 0, center = [0, 0, 0]) {
+  return curve3
+    .parametric((t) => [center[0] + r * Math.cos(t), center[1] + r * Math.sin(t), center[2] + z])
+    .on([0, TAU]);
+}
+
+/**
+ * 표준 이차곡면(quadric) 팩토리 — 모두 `surfaceParam` 위에 세워진 파라메트릭 곡면.
+ * `.wire(nu,nv)` / `.solid(nu,nv)` / `.cmap(name)` 을 그대로 쓸 수 있다.
+ */
+export const quadrics = {
+  /** z = f(x,y) 그래프 (matplotlib plot_surface 의 기본형) */
+  plane(f, xr, yr) { return surfaceParam((u, v) => [u, v, f(u, v)]).on(xr, yr); },
+  /** 타원체 x²/a² + y²/b² + z²/c² = 1 */
+  ellipsoid(a, b, c, center = [0, 0, 0]) {
+    return surfaceParam((u, v) => [
+      center[0] + a * Math.sin(v) * Math.cos(u),
+      center[1] + b * Math.sin(v) * Math.sin(u),
+      center[2] + c * Math.cos(v),
+    ]).on([0, TAU], [0, Math.PI]);
+  },
+  /** 구 (반지름 r) */
+  ball(r, center = [0, 0, 0]) { return quadrics.ellipsoid(r, r, r, center); },
+  /** 한 겹 쌍곡면 x²/a² + y²/b² − z²/c² = 1 (v 범위로 z 절단) */
+  hyperboloid1(a, b, c, center = [0, 0, 0], vr = [-2, 2]) {
+    return surfaceParam((u, v) => [
+      center[0] + a * Math.cosh(v) * Math.cos(u),
+      center[1] + b * Math.cosh(v) * Math.sin(u),
+      center[2] + c * Math.sinh(v),
+    ]).on([0, TAU], vr);
+  },
+  /** 두 겹 쌍곡면 −x²/a² − y²/b² + z²/c² = 1 (v>0 한 겹; v<0 은 다른 겹) */
+  hyperboloid2(a, b, c, center = [0, 0, 0], vr = [0.7, 2]) {
+    return surfaceParam((u, v) => [
+      center[0] + a * Math.sinh(v) * Math.cos(u),
+      center[1] + b * Math.sinh(v) * Math.sin(u),
+      center[2] + c * Math.cosh(v),
+    ]).on([0, TAU], vr);
+  },
+  /** 이중 원뿔 z² = k²(x²+y²) — v∈[-h,h] 두 뿔 */
+  cone(k, center = [0, 0, 0], vr = [-2, 2]) {
+    return surfaceParam((u, v) => [
+      center[0] + k * v * Math.cos(u),
+      center[1] + k * v * Math.sin(u),
+      center[2] + v,
+    ]).on([0, TAU], vr);
+  },
+  /** 원기둥 x²+y²=r² — z∈zr */
+  cylinder(r, center = [0, 0, 0], zr = [-2, 2]) {
+    return surfaceParam((u, v) => [
+      center[0] + r * Math.cos(u),
+      center[1] + r * Math.sin(u),
+      center[2] + v,
+    ]).on([0, TAU], zr);
+  },
+};
+
+// ── frame3 — 보이지 않는 경계 상자(프레이밍 제어) ─────
+/**
+ * 그리지 않지만 **프레이밍에만** 참여하는 상자.
+ * matplotlib 의 `ax.set_xlim/set_ylim/set_zlim` 처럼 3D 뷰 범위를 고정한다
+ * (도형이 점 하나뿐이거나 축만 보이고 싶을 때 유용).
+ * `toIR()` 이 빈 배열이라 출력에는 아무것도 추가되지 않는다.
+ */
+export class Frame3 extends Drawable {
+  constructor(conf) { super('frame3', conf); }
+  get vertices() {
+    const { xlim, ylim, zlim } = this._conf;
+    const out = [];
+    for (const x of xlim) for (const y of ylim) for (const z of zlim) out.push(point(x, y, z));
+    return out;
+  }
+  toIR() { return []; }
+}
+/** 3D 프레이밍 상자 — `frame3([-2,2], [-2,2], [-2,2])` */
+export function frame3(xlim, ylim, zlim) { return new Frame3({ xlim, ylim, zlim }); }
+

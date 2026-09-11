@@ -404,17 +404,25 @@ import { scene, point, vector, line, segment, ray,
          ellipse, parabola, hyperbola,
          polygon, triangle, quad, regular,
          plane, sphere, cylinder, cone, torus,
-         surface, curve3, polyhedron, cube, prism, pyramid,
+         surface, curve3, arrow3, surfaceParam,
+         axes3, quadrics, circle3, frame3,      // 3D 도우미
+         polyhedron, cube, prism, pyramid,
          region, vectorField,
-         transform, annotate,
-         tex, tau, pi, e } from 'logos';
+         transform, annotate, tex, kit,         // kit = 그림 작성 키트
+         tau, pi, e } from 'logos';
 ```
 
 - **`scene()`** — 캔버스
 - **`point` ~ `vectorField`** — 도형
+- **`axes3` / `quadrics` / `circle3` / `frame3`** — 3D 도우미(mplot3d 대응)
+- **`kit`** — 예제 작성 키트: `palette` · `plot2d` · `plot3d` · `subplots` ·
+  `saveFigure` · `saveFigures` · `writeGallery` · `seg` · `poly3`
 - **`transform`** — 변환
 - **`annotate`** — 주석
 - **`tex`** — 심볼릭 수식 (LaTeX 그대로)
+
+> 예제를 처음 쓴다면 [`KIT.md`](KIT.md) 부터 보세요 — 프리셋·저장·타이포그래피(행간/자간)까지
+> 실제로 그림을 "만드는" 쪽 이야기가 정리돼 있습니다.
 
 ---
 

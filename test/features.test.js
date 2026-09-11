@@ -2,7 +2,11 @@
 // region.betweenX/barH/annulus/wedge · panels · surface.z · vectorField3 · scene.layout
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { scene, point, circle, region, panels, surface, vectorField3, annotate, curve3, arrow3, surfaceParam, tau } from '../index.js';
+import { scene, point, circle, region, panels, surface, vectorField3, annotate, curve3, arrow3, surfaceParam, tau,
+         axes3, quadrics, circle3, frame3, kit, typography } from '../index.js';
+import { mkdtempSync, rmSync, readFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 test('point.marker(): 마커 모양 (square/triangle/diamond/star/point/plus/cross)', () => {
   const svg = scene().view([-5, 5], [-5, 5]).equal().add(
@@ -153,4 +157,110 @@ test('scene.layout(): 겹치는 라벨 오프셋을 조정', () => {
   const off = build(false), on = build(true);
   assert.ok(!/NaN/.test(on));
   assert.notEqual(off, on, 'layout 이 라벨을 재배치');
+});
+
+
+test('axes3/quadrics/circle3/frame3 — 3D 작성 헬퍼', () => {
+  // axes3: 화살표 3개(+라벨)를 배열로 돌려주어 .add(...) 에 펼칠 수 있다.
+  const arr = axes3({ length: 4, color: '#808080', width: 0.8 });
+  assert.equal(arr.length, 3, '축 3개');
+  const labeled = scene().dim(3).axes(false).add(...axes3({ length: 4, labels: null })).compile().toSVG();
+  const withLabels = scene().dim(3).axes(false).add(...axes3({ length: 4 })).compile().toSVG();
+  assert.ok(withLabels.length > labeled.length, 'labels: null 이면 축 라벨을 생략');
+
+  // quadrics: 곡면 팩토리는 모두 surfaceParam 을 상속 → wire/solid/cmap 사용 가능
+  const svg = scene().dim(3).axes(false).add(
+    quadrics.ball(1.2, [0, 0, 0]).wire(12, 8).color('#0000ff'),
+    quadrics.ellipsoid(2, 1.5, 1).wire(10, 6),
+    quadrics.hyperboloid1(1, 1, 2).wire(10, 6),
+    quadrics.hyperboloid2(1, 1, 2, [0, 0, 0], [0.7, 2]).wire(10, 6),
+    quadrics.cone(1).wire(10, 6),
+    quadrics.cylinder(1).wire(10, 6),
+    quadrics.plane((x, y) => x * x - y * y, [-1, 1], [-1, 1]).wire(8, 8),
+    circle3(1, 0.5),
+  ).compile().toSVG();
+  assert.ok(/<path/.test(svg) && !/NaN/.test(svg), '이차곡면/원호 렌더');
+  assert.equal(typeof quadrics.ball(1).cmap, 'function', 'cmap 상속');
+
+  // frame3: 그리지 않지만 프레이밍에는 참여(출력 도형 수는 늘지 않는다)
+  const bare = scene().dim(3).axes(false).add(...axes3({ length: 2 })).compile();
+  const framed = scene().dim(3).axes(false).add(...axes3({ length: 2 }), frame3([-2, 2], [-2, 2], [-2, 2])).compile();
+  const draws = (ir) => ir.o.nodes.filter((n) => ['path', 'polygon', 'circle'].includes(n.kind)).length;
+  assert.equal(draws(bare), draws(framed), 'frame3 는 도형을 그리지 않는다');
+  assert.notDeepEqual(framed.o.world, bare.o.world, 'frame3 는 뷰 범위만 바꾼다');
+});
+
+test('kit: plot2d/plot3d 프리셋 + palette + seg/poly3 단축', () => {
+  const p2 = kit.plot2d([-1, 1], [-2, 2]).compile();
+  assert.equal(p2.o.dim, 2);
+  assert.deepEqual(p2.o.size, [560, 440], '기본 셀 [560,440]');
+  assert.deepEqual([p2.o.world.xmin, p2.o.world.xmax], [-1, 1]);
+
+  const p3 = kit.plot3d({ elev: 25, azim: -60 }).compile();
+  assert.equal(p3.o.dim, 3);
+  assert.deepEqual(p3.o.size, [480, 440], '3D 기본 셀 [480,440]');
+  assert.ok(!/NaN/.test(p3.toSVG()));
+
+  assert.equal(kit.palette.blue, '#0000ff');
+  assert.equal(kit.palette.orangead, '#ffa500');
+  assert.equal(kit.palette.tab10.length, 10);
+
+  // seg: 2D 는 직선, 3D 좌표는 곡선으로 자동 분기
+  assert.equal(kit.seg(point(0, 0), point(1, 1)).kind, 'line');
+  assert.equal(kit.seg(point(0, 0, 0), point(1, 1, 1)).kind, 'curve3');
+  assert.equal(kit.poly3([[0, 0, 0], [1, 1, 1]], { dash: [4, 3] })._conf.dash.join(' '), '4 3', 'poly3 dash');
+});
+
+test('kit.subplots(): 셀 크기를 figure 에서 자동 추론 (패널 겹침 방지)', () => {
+  const fig = (r) => scene().size(480, 440).equal().add(circle.center(point(0, 0)).radius(r));
+  const p = kit.subplots([fig(1), fig(2), fig(3)], { cols: 3, title: 'T', tight: true });
+  // W = 3*480 + 2*4(gap) + 2*8(outer) / H = 440 + 2*8 + 34(title)
+  assert.equal(p.width, 1464);
+  assert.equal(p.height, 490);
+  // 셀보다 큰 서브씬이 있으면 최댓값을 셀 크기로 쓴다(겹침 방지)
+  const mixed = kit.subplots([
+    scene().size(300, 300).add(circle.center(point(0, 0)).radius(1)),
+    scene().size(500, 400).add(circle.center(point(0, 0)).radius(2)),
+  ], { cols: 2 });
+  assert.ok(mixed.width >= 2 * 500, '가장 큰 서브씬 기준으로 셀 확보');
+  assert.ok(!/NaN/.test(p.toSVG()));
+});
+
+test('kit.saveFigures(): SVG(+PNG) 저장 + index.html 갤러리', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'logos-kit-'));
+  try {
+    const res = await kit.saveFigures([
+      ['t-one', () => scene().add(circle.center(point(0, 0)).radius(1)).compile(), '테스트 원'],
+    ], { dir, index: true, log: false, title: '테스트 갤러리' });
+    assert.equal(res.ok, 1);
+    assert.equal(res.fail, 0);
+    const svg = readFileSync(join(dir, 't-one.svg'), 'utf8');
+    assert.ok(svg.startsWith('<svg'), 'SVG 저장');
+    const html = readFileSync(join(dir, 'index.html'), 'utf8');
+    assert.ok(html.includes('t-one.svg') && html.includes('테스트 원'), '갤러리 카드');
+
+    // 원시 Scene 을 돌려주는 factory 도 자동 컴파일되어 저장된다
+    const res2 = await kit.saveFigures([['t-two', () => scene().equal().add(circle.center(point(0, 0)).radius(2))]],
+      { dir, log: false, png: false });
+    assert.equal(res2.ok, 1);
+    assert.ok(readFileSync(join(dir, 't-two.svg'), 'utf8').startsWith('<svg'), 'Scene 자동 컴파일');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('타이포그래피: 행간/자간 (TYPE + lineHeight/letterSpacing)', () => {
+  assert.deepEqual(typography, { lineHeight: 1.32, letterSpacing: 0.01 });
+  const multi = scene().view([0, 10], [0, 10]).add(
+    annotate.text(point(1, 5)).label('첫 줄\n둘째 줄').font(10),
+  ).compile().toSVG();
+  assert.ok(multi.includes('letter-spacing:0.01em'), '전역 자간');
+  assert.ok(multi.includes('dy="13.2'), '기본 행간 1.32 × fs');
+  assert.ok(!multi.includes('dy="11.5"'), '옛 행간(1.15) 미사용');
+
+  const custom = scene().view([0, 10], [0, 10]).add(
+    annotate.text(point(1, 5)).label('가\n나').font(10).lineHeight(2).letterSpacing(1.5),
+  ).compile().toSVG();
+  assert.ok(custom.includes('dy="20"'), 'lineHeight(2) 오버라이드');
+  assert.ok(/<text[^>]*letter-spacing="1.5"/.test(custom), 'letterSpacing(px) 속성');
 });

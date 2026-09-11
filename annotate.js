@@ -238,6 +238,8 @@ export class TextAnno extends Drawable {
       math: typeof c.text?.toLatex === 'function',
       anchor: c.anchor || 'start', dxPx: c.dxPx, dyPx: c.dyPx,
       font: c.font, bold: c.bold, italic: c.italic, color: c.color, rotate: c.rotate, box: c.box, z: c.z,
+      // 타이포그래피(선택): 미지정이면 렌더러 기본값(행간 1.32 / 자간 0.01em)
+      lineHeight: c.lineHeight, letterSpacing: c.letterSpacing,
     })];
   }
 }

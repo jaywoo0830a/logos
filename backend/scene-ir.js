@@ -132,13 +132,18 @@ const escAttr = (s) => String(s)
 /**
  * 여러 figure(SceneIR)를 그리드로 합친다 (matplotlib subplots 대응).
  * 각 figure 는 중첩 <svg x,y> 로 배치되며 자체 viewBox 스케일을 유지한다.
+ *
+ * `cell` 을 생략하면 **figure 들의 `.size()` 중 최댓값을 셀 크기로 자동 사용**한다
+ * (셀보다 큰 서브씬이 이웃 패널을 침범해 겹치는 사고 방지).
  * @param {SceneIR[]} figures
- * @param {Object} [opts] { cols, cell:[w,h], gap, title(suptitle), background, scale, math }
+ * @param {Object} [opts] { cols, cell, gap, pad, title(suptitle), background, scale, math, tight }
  */
 export function panels(figures, opts = {}) {
   const cols = opts.cols || figures.length || 1;
   const rows = Math.ceil(figures.length / cols);
-  const [cw, ch] = opts.cell || [600, 600];
+  const sizes = figures.map((f) => f && f.o && Array.isArray(f.o.size) ? f.o.size : null).filter(Boolean);
+  const auto = sizes.length ? [Math.max(...sizes.map((s) => s[0])), Math.max(...sizes.map((s) => s[1]))] : null;
+  const [cw, ch] = opts.cell || auto || [600, 600];
   const tight = !!opts.tight;
   const gap = opts.gap ?? (tight ? 4 : 16);
   const outer = opts.pad ?? (tight ? 8 : gap);

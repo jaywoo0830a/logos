@@ -18,12 +18,13 @@ import { region } from './shapes/region.js';
 import { vectorField } from './shapes/vectorfield.js';
 import { sphere, plane } from './shapes/threeD.js';
 import { cylinder, cone, surface, polyhedron, vectorField3 } from './shapes/threeD2.js';
-import { curve3, arrow3, surfaceParam } from './shapes/threeD3.js';
+import { curve3, arrow3, surfaceParam, axes3, quadrics, circle3, frame3 } from './shapes/threeD3.js';
 import transform from './transform.js';
 import annotate from './annotate.js';
 import { tex } from './symbolic/tex.js';
 import { Sym } from './symbolic/sym.js';
 import { TAU } from './solver/coords.js';
+import { TYPE as typography } from './backend/fonts.js';
 // ── ADAPT.md 외부엔진 어댑터 ──────────────────────
 import { SymPyAdapter, SageAdapter, createSymbolicAdapter, defaultAdapter } from './symbolic/adapter.js';
 import irToAsymptote from './backend/asymptote.js';
@@ -38,7 +39,13 @@ export const e = Math.E;
 export { Scene, scene, panels, node, point, vector, line, segment, curve, circle, ellipse,
          parabola, hyperbola, polygon, triangle, quad, regular, square, rectangle, region,
          vectorField, vectorField3, sphere, plane, cylinder, cone, surface, polyhedron,
-         curve3, arrow3, surfaceParam, transform, annotate, tex, Sym };
+         curve3, arrow3, surfaceParam, axes3, quadrics, circle3, frame3,
+         transform, annotate, tex, Sym, typography };
+
+// ── 예제/스케치 공용 작성 키트 (kit.js) ─────────────
+//   palette · plot2d · plot3d · subplots · saveFigure · saveFigures · writeGallery · seg · poly3
+//   사용: `import { kit } from 'logos'; const { plot3d, palette } = kit;`
+export * as kit from './kit.js';
 
 // ── ADAPT.md 외부엔진 어댑터 API ───────────────────
 export const adapt = {
@@ -69,6 +76,7 @@ export const pyramid = ns('pyramid');
 export default {
   scene, point, vector, line, segment, curve, circle, ellipse, parabola, hyperbola,
   polygon, triangle, quad, regular, square, rectangle, region, vectorField,
-  sphere, plane, cylinder, cone, surface, polyhedron, curve3, arrow3, surfaceParam,
+  sphere, plane, cylinder, cone, surface, polyhedron,
+  curve3, arrow3, surfaceParam, axes3, quadrics, circle3, frame3,
   transform, annotate, tex, tau, pi, e,
 };

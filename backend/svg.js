@@ -1,7 +1,7 @@
 // DSL.md §12 렌더러 파이프라인 — SVG emitter (clip / gradient / math label)
 import { applyTransforms } from '../transform.js';
 import { katexRender, latexToText } from './katex.js';
-import { STIX_STACK, svgFontStyle } from './fonts.js';
+import { STIX_STACK, svgFontStyle, TYPE } from './fonts.js';
 import { regionRect } from '../shapes/region.js';
 
 const esc = (s) => String(s)
@@ -115,14 +115,19 @@ function transformPt(map) {
   };
 }
 
-/** 텍스트 배경 상자 (matplotlib bbox 대응) — 텍스트 폭을 근사 추정. */
+/**
+ * 텍스트 배경 상자 (matplotlib bbox 대응) — 텍스트 폭을 근사 추정.
+ * 높이는 실제 행간(`d.lineHeight ?? TYPE.lineHeight`)을 써서 글자와 상자가 어긋나지 않게 한다.
+ */
 function textBoxSvg(d, x, y) {
   const fs = d.font || (d.math ? 14 : 13.5);
   const lines = String(d.text ?? '').split('\n');
+  const lh = d.lineHeight ?? TYPE.lineHeight;
+  const track = d.letterSpacing != null ? d.letterSpacing / fs : TYPE.letterSpacing;
   const wchars = Math.max(...lines.map((l) => l.length), 1);
   const pad = d.box?.pad ?? 4;
-  const w = wchars * fs * (d.math ? 0.62 : 0.6) + pad * 2 + 4;
-  const h = lines.length * fs * 1.15 + pad * 2;
+  const w = wchars * fs * (d.math ? 0.62 : 0.6 + track) + pad * 2 + 4;
+  const h = lines.length * fs * lh + pad * 2;
   let left = x;
   if (d.anchor === 'middle') left = x - w / 2;
   else if (d.anchor === 'end') left = x - w;
@@ -249,11 +254,14 @@ function renderNode(n, m, scaleX, scaleY, t, gradId) {
       const fs = d.font || 13.5;
       const fsStyle = d.italic === undefined ? (d.caption ? 'normal' : 'italic') : (d.italic ? 'italic' : 'normal');
       const rot = d.rotate ? ` transform="rotate(${d.rotate} ${x} ${y})"` : '';
-      const head = `font-size="${fs}" font-style="${fsStyle}"${bold} text-anchor="${d.anchor || 'start'}" fill="${color}"${rot}`;
-      // 멀티라인: \n → <tspan>
+      // 자간: 개별 지정(px)이 있으면 그것을, 없으면 스타일시트 기본값(em)을 그대로 쓴다.
+      const track = d.letterSpacing != null ? ` letter-spacing="${d.letterSpacing}"` : '';
+      const head = `font-size="${fs}" font-style="${fsStyle}"${bold} text-anchor="${d.anchor || 'start'}" fill="${color}"${track}${rot}`;
+      // 멀티라인: \n → <tspan>. 줄 간격은 행간 배수(기본 TYPE.lineHeight)로 계산한다.
       const lines = String(d.text ?? '').split('\n');
       if (lines.length > 1) {
-        const tspans = lines.map((ln, i) => `<tspan x="${x}" dy="${i === 0 ? 0 : fs * 1.15}">${esc(ln)}</tspan>`).join('');
+        const lh = d.lineHeight ?? TYPE.lineHeight;
+        const tspans = lines.map((ln, i) => `<tspan x="${x}" dy="${i === 0 ? 0 : fs * lh}">${esc(ln)}</tspan>`).join('');
         return boxStr + `<text x="${x}" y="${y}" ${head}>${tspans}</text>`;
       }
       return boxStr + `<text x="${x}" y="${y}" ${head}>${esc(d.text || '')}</text>`;

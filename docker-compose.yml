@@ -6,7 +6,7 @@ services:
       context: .
     image: logos:0.1.0
     container_name: logos-web
-    command: ["sh", "-c", "npm install --no-audit --no-fund >/dev/null 2>&1; node examples/gallery.js; node server.js"]
+    command: ["sh", "-c", "npm install --no-audit --no-fund >/dev/null 2>&1; npm run examples; node server.js"]
     environment:
       NODE_ENV: development
       PORT: "18080"

@@ -20,8 +20,10 @@
     "test": "node --test test/*.test.js",
     "test:svg": "node --test test/senarios.test.js",
     "snap:update": "UPDATE=1 node --test test/snapshots.test.js",
-    "gallery": "node examples/gallery.js",
-    "test:visual": "node examples/visual.js"
+    "parity9b": "node examples/mpl_parity_9b.js",
+    "parity9c": "node examples/mpl_parity_9c.js",
+    "examples": "node examples/mpl_parity_9b.js && node examples/mpl_parity_9c.js",
+    "serve": "node server.js"
   },
   "dependencies": {
     "@cortex-js/compute-engine": "^0.27.0",

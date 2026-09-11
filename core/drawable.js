@@ -44,6 +44,10 @@ export class Drawable {
   z(z) { return this.set({ z }); }
   label(l, off) { return this.set({ label: l, labelOff: off }); }
   font(f) { return this.set({ font: f }); }        // 텍스트/라벨 크기
+  /** 행간(줄 간격 배수) — 여러 줄 텍스트의 'a\nb' 간격. 기본 1.32 (backend/fonts.js TYPE) */
+  lineHeight(x) { return this.set({ lineHeight: x }); }
+  /** 자간(px) — 기본은 스타일시트 값(0.01em). 예: .letterSpacing(0.5) */
+  letterSpacing(px) { return this.set({ letterSpacing: px }); }
   bold(on = true) { return this.set({ bold: on }); }
   as(name) { return this.set({ name }); }
   apply(...ts) { return this.set({ transforms: [...(this._conf.transforms || []), ...ts] }); }
