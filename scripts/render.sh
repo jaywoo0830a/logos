@@ -144,18 +144,29 @@ else
     "${MOUNTS[@]}" \
     --entrypoint sh "$IMAGE_REF" -c '
       set -e
-      # ① 패키지 연결 (깨진 링크/미설치일 때만) — 이미지 안의 /opt/logos 를 가리킨다
+      # ① 패키지 연결 (깨진 링크/미설치일 때만) — 이미지 안의 /opt/logos 를 가리킨다.
+      #    우리가 만든 링크만 렌더 후 제거해 프로젝트를 깨끗하게 유지한다(깨진 심링크 잔재 방지).
+      LINKED=0
       if [ ! -e node_modules/logos/index.js ]; then
         rm -rf node_modules/logos
         mkdir -p node_modules
         ln -sfn /opt/logos node_modules/logos
+        LINKED=1
       fi
       # ② 다른 의존성이 필요하면(--install) 설치
       if [ "$LOGOS_INSTALL" = "1" ] && [ -f package.json ]; then
         npm install --no-audit --no-fund
       fi
-      # ③ 렌더
-      exec node /opt/logos/bin/logos.mjs "$@"
+      # ③ 렌더 (exec 하지 않는다 — 뒤처리로 만든 링크를 되돌려야 하므로)
+      set +e
+      node /opt/logos/bin/logos.mjs "$@"
+      STATUS=$?
+      set -e
+      if [ "$LINKED" = "1" ]; then
+        rm -f node_modules/logos
+        rmdir node_modules 2>/dev/null || true
+      fi
+      exit $STATUS
     ' sh render "$SRC_REL" --out "$OUT_IN_CONTAINER" "${CLI_OPTS[@]+"${CLI_OPTS[@]}"}"
 fi
 

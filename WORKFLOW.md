@@ -171,7 +171,7 @@ bash scripts/build-image.sh [--render|--dev|--both] [--force]
 | 왜 이렇게 하는가 | 설명 |
 |---|---|
 | `-u $(id -u):$(id -g)` | 산출물이 **호스트 사용자 소유**로 나온다(권한 사고 방지) |
-| `node_modules/logos → /opt/logos` | 네트워크 없이 "패키지 설치"를 재현(npm `file:` 과 동일 결과) |
+| `node_modules/logos → /opt/logos` | 네트워크 없이 "패키지 설치"를 재현(npm `file:` 과 동일 결과) · **렌더 후 제거**해 프로젝트에 깨진 심링크를 남기지 않는다 |
 | 이미지에 폰트 포함 | PNG 래스터에서 텍스트가 네모(□)로 깨지지 않게 |
 | 패키지는 이미지에 스냅샷 | 재현성 확보. 패키지를 고쳤으면 `--build` 또는 `--live-pkg` |
 
