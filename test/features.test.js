@@ -2,7 +2,7 @@
 // region.betweenX/barH/annulus/wedge · panels · surface.z · vectorField3 · scene.layout
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { scene, point, circle, region, panels, surface, vectorField3, annotate } from '../index.js';
+import { scene, point, circle, region, panels, surface, vectorField3, annotate, curve3, arrow3, surfaceParam, tau } from '../index.js';
 
 test('point.marker(): 마커 모양 (square/triangle/diamond/star/point/plus/cross)', () => {
   const svg = scene().view([-5, 5], [-5, 5]).equal().add(
@@ -100,6 +100,44 @@ test('3D hidden-line: 뒤에 있는 선을 제거', () => {
     surface.z((x, y) => x * x - y * y).on([-2, 2], [-2, 2]).mesh(10).color('#1e3a8a'),
   ).compile();
   assert.equal(segs(coin.toSVG()), segs(coin.toSVG({ hiddenLine: false })), '동일 곡면 mesh 는 유지');
+});
+
+test('curve3/arrow3/surfaceParam — 3D 프리미티브', () => {
+  const svg = scene().dim(3).camera({ elev: 22, azim: -55, aspect: [1, 1, 0.75] }).add(
+    curve3.parametric((t) => [Math.cos(t), Math.sin(t), 0]).on([0, tau]).color('#cc0000').stroke(2).label('C3'),
+    curve3.through([[0, 0, 0], [1, 1, 1]]).dash([4, 3]),
+    arrow3([0, 0, 0], [2, 0, 0]).color('#ff0000').label('xaxis'),
+    surfaceParam((u, v) => [Math.sin(v) * Math.cos(u), Math.sin(v) * Math.sin(u), Math.cos(v)]).on([0, tau], [0, Math.PI]).solid(12, 8).cmap('viridis'),
+  ).compile().toSVG();
+  assert.ok(/<polygon/.test(svg), 'surfaceParam solid 면');
+  assert.ok(/<path/.test(svg), 'curve3/arrow3 경로');
+  assert.ok(svg.includes('C3') && svg.includes('xaxis'), '3D 라벨');
+  assert.ok(!/NaN/.test(svg));
+});
+
+test('3D camera(elev/azim/aspect) · axes(false) · 3D 텍스트 투영', () => {
+  const mk = (opts, noAxes) => {
+    let s = scene().dim(3).camera(opts);
+    if (noAxes) s = s.axes(false);
+    return s.add(arrow3([0, 0, 0], [1, 0, 0]), annotate.text(point(1, 0, 0)).label('A(1,0,0)')).compile().toSVG();
+  };
+  const a = mk({ elev: 20, azim: -50 }, true), b = mk({ elev: 60, azim: -10 }, true);
+  assert.ok(!/NaN/.test(a) && !/NaN/.test(b));
+  assert.notEqual(a, b, 'elev/azim 이 투영에 반영');
+  const withAxes = mk({ elev: 20, azim: -50 }, false);
+  assert.ok(withAxes.length > a.length, 'axes(false) 는 3D 자동축을 생략');
+  assert.ok(/3D|A\(1,0,0\)/.test(a), '3D 텍스트가 투영되어 렌더');
+});
+
+test('surface.z(...).cmap() — 높이 컬러맵', () => {
+  const mk = (s) => scene().dim(3).add(s).compile().toSVG();
+  const surf = () => surface.z((x, y) => x * x + y * y).on([-2, 2], [-2, 2]).faces(true);
+  const plain = mk(surf()), cm = mk(surf().cmap('viridis'));
+  assert.notEqual(plain, cm, 'cmap 이 면 색에 반영');
+  const fills = (s) => new Set([...s.matchAll(/fill="(#[0-9a-fA-F]{6})"/g)].map((m) => m[1]));
+  const anyGreen = [...fills(cm)].some((h) => { const n = parseInt(h.slice(1), 16); return ((n >> 16) & 255) > 110 && ((n >> 8) & 255) > 130; });
+  assert.ok(anyGreen, 'viridis 상향(녹/황) 색 존재');
+  assert.ok(!/NaN/.test(cm));
 });
 
 test('scene.layout(): 겹치는 라벨 오프셋을 조정', () => {

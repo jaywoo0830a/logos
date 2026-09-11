@@ -104,7 +104,23 @@ export class Scene {
   layout(mode = 'auto') { return this.set({ layout: mode }); }
 
   // ── 3D 카메라/조명 ─────────────────────────────
-  camera(c) { return this.set({ camera: { ...this._conf.camera, ...c } }); }
+  camera(c) {
+    const cam = { ...this._conf.camera, ...c };
+    // matplotlib view_init(elev, azim) 대응: 각도로 카메라 위치를 계산한다.
+    if (c && (c.elev !== undefined || c.azim !== undefined)) {
+      const t = cam.target || [0, 0, 0];
+      const elev = ((cam.elev ?? 20) * Math.PI) / 180;
+      const azim = ((cam.azim ?? -50) * Math.PI) / 180;
+      const d = cam.distance ?? 30;
+      cam.position = [
+        t[0] + d * Math.cos(elev) * Math.cos(azim),
+        t[1] + d * Math.cos(elev) * Math.sin(azim),
+        t[2] + d * Math.sin(elev),
+      ];
+      cam.up = [0, 0, 1];
+    }
+    return this.set({ camera: cam });
+  }
   orbit(o) { return this.set({ camera: { ...this._conf.camera, ...o } }); }
   light(l) { return this.set({ lights: [...this._conf.lights, l] }); }
 
@@ -151,7 +167,7 @@ export class Scene {
         };
       }
       nodes = nodes.concat(axesIR(effWorld, ac, themeDef));
-    } else if (dim === 3) nodes = nodes.concat(axes3IR(effWorld, project, themeDef, true));
+    } else if (dim === 3 && conf.axes !== false) nodes = nodes.concat(axes3IR(effWorld, project, themeDef, true));
 
     for (const shape of conf.shapes) {
       if (shape && typeof shape.toIR === 'function') {
@@ -179,20 +195,21 @@ function rank({ n, i }) {
   return (z === undefined ? 0 : z) * 1000 + i / 100000;
 }
 // ── 세계 사각형 ──────────────────────────────────
-/** 3D 씬: 원점(0,0,0)을 중심으로 하여, 가장 먼 도형점까지 거리를 반경으로 사각 view 를 잡는다. */
+/** 3D 씬: 투영된 도형점들의 bbox(원점 포함) + 여백으로 view 를 잡는다(mplot3d box framing 유사). */
 function world3From(shapes, project) {
-  const o = project([0, 0, 0]); // 원점의 화면 좌표
-  let R2 = 1; // 반경의 제곱(여백 포함)
+  let xmin = Infinity, xmax = -Infinity, ymin = Infinity, ymax = -Infinity;
   const consider = (p) => {
     const [x, y] = project(p);
     if (!Number.isFinite(x) || !Number.isFinite(y)) return;
-    R2 = Math.max(R2, (x - o[0]) ** 2 + (y - o[1]) ** 2);
+    xmin = Math.min(xmin, x); xmax = Math.max(xmax, x);
+    ymin = Math.min(ymin, y); ymax = Math.max(ymax, y);
   };
+  consider([0, 0, 0]);
   for (const s of shapes) for (const p of collect3(s, 1)) consider(p);
-  // 원점 중심으로 여백을 두어 축이 중심부에 놓이게 (축은 도형 위를 지나도 됨)
-  const R = Math.sqrt(R2);
-  const pad = R * 0.25;
-  return { xmin: o[0] - R - pad, xmax: o[0] + R + pad, ymin: o[1] - R - pad, ymax: o[1] + R + pad };
+  if (xmin === Infinity) { xmin = -5; xmax = 5; ymin = -5; ymax = 5; }
+  const sx = (xmax - xmin) || 1, sy = (ymax - ymin) || 1;
+  const pad = Math.max(sx, sy) * 0.08;
+  return { xmin: xmin - pad, xmax: xmax + pad, ymin: ymin - pad, ymax: ymax + pad };
 }
 
 /** 3D 형태의 좌표들만 추출 (2D 좌표는 무시). 구/회전체는 표면점(코너) 포함. */
@@ -553,9 +570,12 @@ function fmtTick(v) {
 
 // ── 3D 정사영 프로젝션 ───────────────────────────
 function makeProjection(camera) {
-  const eye = camera.position;
-  const target = camera.target || [0, 0, 0];
-  const up = camera.up || [0, 0, 1];
+  // box aspect: 축별 스케일 (mplot3d 의 box_aspect [4,4,3] ≈ [1,1,0.75] 대응)
+  const as = camera.aspect || [1, 1, 1];
+  const S = (p) => [p[0] * as[0], p[1] * as[1], p[2] * as[2]];
+  const eye = S(camera.position);
+  const target = S(camera.target || [0, 0, 0]);
+  const up = S(camera.up || [0, 0, 1]);
   const f = sub(target, eye);
   const fl = len(f) || 1;
   const fn = [f[0] / fl, f[1] / fl, f[2] / fl];
@@ -566,7 +586,7 @@ function makeProjection(camera) {
   // [screenX, screenY, depth] — depth 는 시선(forward) 방향 거리(클수록 멀다).
   // 3D 도형은 이 depth 로 painter's algorithm 정렬에 쓴다(P4-1).
   return (pos) => {
-    const d = sub(pos, eye);
+    const d = sub(S(pos), eye);
     return [dot(d, rn), dot(d, u), dot(d, fn)];
   };
 }

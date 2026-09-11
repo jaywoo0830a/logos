@@ -18,6 +18,7 @@ import { region } from './shapes/region.js';
 import { vectorField } from './shapes/vectorfield.js';
 import { sphere, plane } from './shapes/threeD.js';
 import { cylinder, cone, surface, polyhedron, vectorField3 } from './shapes/threeD2.js';
+import { curve3, arrow3, surfaceParam } from './shapes/threeD3.js';
 import transform from './transform.js';
 import annotate from './annotate.js';
 import { tex } from './symbolic/tex.js';
@@ -36,7 +37,8 @@ export const e = Math.E;
 
 export { Scene, scene, panels, node, point, vector, line, segment, curve, circle, ellipse,
          parabola, hyperbola, polygon, triangle, quad, regular, square, rectangle, region,
-         vectorField, vectorField3, sphere, plane, cylinder, cone, surface, polyhedron, transform, annotate, tex, Sym };
+         vectorField, vectorField3, sphere, plane, cylinder, cone, surface, polyhedron,
+         curve3, arrow3, surfaceParam, transform, annotate, tex, Sym };
 
 // ── ADAPT.md 외부엔진 어댑터 API ───────────────────
 export const adapt = {
@@ -60,7 +62,6 @@ export const ray = todo('ray', '직선(line) 등으로 대체하세요.');
 export const arc = ns('arc', '원호. circle 위에서 표현하세요.');
 export const sector = ns('sector');
 export const torus = ns('torus');
-export const curve3 = ns('curve3');
 export const cube = ns('cube');
 export const prism = ns('prism');
 export const pyramid = ns('pyramid');
@@ -68,6 +69,6 @@ export const pyramid = ns('pyramid');
 export default {
   scene, point, vector, line, segment, curve, circle, ellipse, parabola, hyperbola,
   polygon, triangle, quad, regular, square, rectangle, region, vectorField,
-  sphere, plane, cylinder, cone, surface, polyhedron,
+  sphere, plane, cylinder, cone, surface, polyhedron, curve3, arrow3, surfaceParam,
   transform, annotate, tex, tau, pi, e,
 };

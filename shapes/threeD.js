@@ -1,6 +1,7 @@
 // 3D 입체 코어 (E1) — 정사영 후 2D IR 로 방출
 import { Drawable } from '../core/drawable.js';
 import { node } from '../core/node.js';
+import { point } from './point.js';
 
 export function pick(c) {
   const s = {};
@@ -65,6 +66,11 @@ export class Sphere extends Drawable {
   constructor(conf = {}) { super('sphere', { ...conf }); }
   center() { return this._conf.center.coords; }
   radius() { return this._conf.radius; }
+  // 3D 자동 프레이밍용 코너점
+  get vertices() {
+    const [cx, cy, cz] = this._conf.center.coords, r = this._conf.radius;
+    return [[cx - r, cy - r, cz - r], [cx + r, cy + r, cz + r]].map((v) => point(...v));
+  }
   label(l, o) { return this.set({ label: l, labelOff: o }); }
   toIR(ctx) {
     const [cx, cy, cz] = this._conf.center.coords;
@@ -102,6 +108,10 @@ export const sphere = {
 
 export class Plane extends Drawable {
   constructor(conf = {}) { super('plane', { ...conf }); }
+  get vertices() {
+    const half = this._conf.half || 2.2;
+    return [[-half, -half, 0], [half, half, 0]].map((v) => point(...v));
+  }
   toIR(ctx) {
     const c = this._conf;
     const half = c.half || 2.2;

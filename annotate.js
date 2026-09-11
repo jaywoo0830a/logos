@@ -228,9 +228,11 @@ export class TextAnno extends Drawable {
   rotate(deg) { return this.set({ rotate: deg }); }
   /** 텍스트 배경 상자 (matplotlib bbox). 예: .box({ facecolor:'wheat', alpha:0.8 }) */
   box(cfg = {}) { return this.set({ box: cfg === true ? {} : cfg }); }
-  toIR() {
+  toIR(ctx) {
     const c = this._conf;
-    const [x, y] = c.P.coords;
+    const coords = c.P.coords;
+    // 3D 점(z 포함)이면 카메라 투영 적용 (matplotlib ax.text 3D 대응)
+    const [x, y] = (coords.length >= 3 && ctx && ctx.project) ? ctx.project(coords) : coords;
     return [node('text', {
       x, y, text: renderText(c.text),
       math: typeof c.text?.toLatex === 'function',

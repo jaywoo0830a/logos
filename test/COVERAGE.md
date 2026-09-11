@@ -15,7 +15,7 @@
 | **`test/invariants.test.js`** | **P0-2 SVG 무결성 린터, P0-1 결정성, P0-5 기하 불변식** | **신규(Phase 0)** |
 | **`test/snapshots.test.js`** | **P0-3 골든 스냅샷 (`test/fixtures/*.svg`, 로컬 전용·gitignore)** | **신규(Phase 0)** |
 | **`test/backend.test.js`** | **P5-1 TikZ/Asymptote/JSXGraph/KaTeX/PNG 백엔드 정합** | **신규(Phase 5)** |
-| **`test/features.test.js`** | **region.betweenX/barH/annulus/wedge · panels · surface.z · vectorField3 · scene.layout** | **신규(§7)** |
+| **`test/features.test.js`** | **region.betweenX/barH/annulus/wedge · panels · surface.z(+cmap) · vectorField3 · scene.layout · curve3/arrow3/surfaceParam · 3D camera(elev/azim/aspect) · axes(false)** | **신규(§7)** |
 | `test/scenes.js` | 공용 대표 씬(`figures` = SceneIR, `scenes` = SVG) | 공용 |
 
 ## 0911-PLAN Phase ↔ 검증
@@ -54,8 +54,16 @@
 | 수평 슬라이스 | `region.betweenX(f, g).on([y0,y1])` |
 | 수평 막대 | `region.barH(y0,y1,x0,x1)` |
 | 링/부채꼴 | `region.annulus(O,ri,ro)` · `region.wedge(O,r,a0,a1)` |
-| 3D 곡면 | `surface.z((x,y)=>…).on(xr,yr).mesh(n)` / `.faces()` |
+| 3D 곡면 | `surface.z((x,y)=>…).on(xr,yr).mesh(n)` / `.faces()` / `.cmap(name)` |
 | 3D quiver | `vectorField3((x,y,z)=>[dx,dy,dz]).on(box)` |
+| **3D 곡선/폴리라인** | **`curve3.parametric(f).on([t0,t1])` · `curve3.through([P,…])` (`.label()`, `.dash()`)** |
+| **3D 화살표(quiver)** | **`arrow3(from, to)` — 머리 = 0.12·|화살표| (`arrow_length_ratio` 대응, `.label()`)** |
+| **파라메트릭 곡면** | **`surfaceParam((u,v)=>[x,y,z]).on(ur,vr).wire(nu,nv)` / `.solid(nu,nv)` / `.cmap(name)`** |
+| **컬러맵** | **`cmap('viridis'\|'plasma'\|'coolwarm'\|'jet'\|'summer')` (5–6 stop 보간)** |
+| **3D 카메라 각도** | **`scene.camera({ elev, azim, distance })` (mplot3d `view_init` 대응)** |
+| **box aspect** | **`scene.camera({ aspect:[1,1,0.75] })` (mplot3d `box_aspect` [4,4,3] 대응)** |
+| **3D 자동축 끄기** | **`scene.axes(false)`** |
+| **3D 텍스트** | **`annotate.text(point(x,y,z)).label(…)` (자동 투영)** |
 | **3D hidden-line/실루엣** | `backend/hidden.js` (깊이 버퍼, `toSVG({ hiddenLine:false })` 로 해제) |
 
 ## 남은(부분) 항목

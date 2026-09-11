@@ -3,9 +3,14 @@ import { Drawable } from '../core/drawable.js';
 import { node } from '../core/node.js';
 import { project3, polyline, pick, depthZ } from './threeD.js';
 import { point } from './point.js';
+import { cmapColor } from './threeD3.js';
 
 export class Cylinder extends Drawable {
   constructor(conf = {}) { super('cylinder', { ...conf }); }
+  get vertices() {
+    const [cx, cy, cz] = this._conf.center.coords, r = this._conf.radius, h = this._conf.height;
+    return [[cx - r, cy - r, cz], [cx + r, cy + r, cz + h]].map((v) => point(...v));
+  }
   toIR(ctx) {
     const [cx, cy, cz] = this._conf.center.coords;
     const r = this._conf.radius, h = this._conf.height;
@@ -21,6 +26,11 @@ export const cylinder = {
 
 export class Cone extends Drawable {
   constructor(conf = {}) { super('cone', { ...conf }); }
+  get vertices() {
+    const [vx, vy, vz] = this._conf.vertex.coords, r = this._conf.radius, h = this._conf.height;
+    const dir = this._conf.axis && this._conf.axis.v ? this._conf.axis.v : [0, 0, -1];
+    return [[vx, vy, vz], [vx + dir[0] * h - r, vy + dir[1] * h - r, vz + dir[2] * h - r], [vx + dir[0] * h + r, vy + dir[1] * h + r, vz + dir[2] * h + r]].map((v) => point(...v));
+  }
   toIR(ctx) {
     const [vx, vy, vz] = this._conf.vertex.coords;
     const r = this._conf.radius, h = this._conf.height;
@@ -40,6 +50,16 @@ export const cone = {
 
 export class Surface extends Drawable {
   constructor(conf = {}) { super('surface', { ...conf }); }
+  get vertices() {
+    const curve = this._conf.curve, [a, b] = curve.domain, n = 8, out = [];
+    for (let i = 0; i <= n; i++) {
+      const x = a + ((b - a) * i) / n;
+      const y = curve.eval(x).cart[1];
+      if (!Number.isFinite(y)) continue;
+      out.push(point(x, y, 0), point(x, -y, 0), point(x, 0, y), point(x, 0, -y));
+    }
+    return out;
+  }
   toIR(ctx) {
     const c = this._conf, curve = this._conf.curve;
     const [a, b] = curve.domain;
@@ -74,6 +94,8 @@ export class ZSurface extends Drawable {
   on(xr, yr) { return this.set({ xr, yr }); }
   mesh(n) { return this.set({ n }); }
   faces(on = true) { return this.set({ faces: on }); }
+  /** 면 색을 높이 z 로 컬러맵 적용 (matplotlib cmap 대응) */
+  cmap(name) { return this.set({ cmap: name }); }
   // 3D 자동 프레이밍용 코너점(collect3 가 사용)
   get vertices() {
     const c = this._conf, f = c.fn, [x0, x1] = c.xr, [y0, y1] = c.yr;
@@ -88,6 +110,13 @@ export class ZSurface extends Drawable {
       return project3(ctx, [x, y, f(x, y)]);
     };
     const base = c.color || '#93c5fd';
+    // cmap 정규화용 높이 범위
+    let zmin = Infinity, zmax = -Infinity;
+    for (let j = 0; j <= n; j++) for (let i = 0; i <= n; i++) {
+      const zv = f(x0 + ((x1 - x0) * i) / n, y0 + ((y1 - y0) * j) / n);
+      if (Number.isFinite(zv)) { zmin = Math.min(zmin, zv); zmax = Math.max(zmax, zv); }
+    }
+    if (!Number.isFinite(zmin)) { zmin = 0; zmax = 1; }
     const out = [];
     // 깊이 포함 선(path) — hidden-line 대상
     const line3 = (pts, stroke, color, hidden) => {
@@ -104,7 +133,11 @@ export class ZSurface extends Drawable {
         for (let i = 0; i < n; i++) {
           const p = [P(i, j), P(i + 1, j), P(i + 1, j + 1), P(i, j + 1)];
           if (p.some((q) => !Number.isFinite(q[0]) || !Number.isFinite(q[1]))) continue;
-          quads.push({ p, depth: p.reduce((a, q) => a + q[2], 0) / 4 });
+          const zc = (f(x0 + ((x1 - x0) * i) / n, y0 + ((y1 - y0) * j) / n)
+            + f(x0 + ((x1 - x0) * (i + 1)) / n, y0 + ((y1 - y0) * j) / n)
+            + f(x0 + ((x1 - x0) * (i + 1)) / n, y0 + ((y1 - y0) * (j + 1)) / n)
+            + f(x0 + ((x1 - x0) * i) / n, y0 + ((y1 - y0) * (j + 1)) / n)) / 4;
+          quads.push({ p, depth: p.reduce((a, q) => a + q[2], 0) / 4, zc });
         }
       }
       quads.sort((a, b) => b.depth - a.depth);   // 먼 것부터(painter)
@@ -112,7 +145,8 @@ export class ZSurface extends Drawable {
       const dmax = Math.max(...quads.map((q) => q.depth));
       for (const q of quads) {
         const t = dmax > dmin ? (q.depth - dmin) / (dmax - dmin) : 0.5;   // 가까울수록 밝게
-        const col = shadeHex(base, 1.28 - t * 0.55);
+        const colBase = c.cmap ? cmapColor(c.cmap, zmax > zmin ? (q.zc - zmin) / (zmax - zmin) : 0.5) : base;
+        const col = shadeHex(colBase, 1.18 - t * 0.4);
         out.push(node('polygon', {
           pts: q.p.map((p) => [p[0], p[1]]), depths: q.p.map((p) => p[2]), closed: true,
           fill: col, color: col, stroke: 0.4, opacity: c.opacity ?? 0.96, z: depthZ(q.depth),
