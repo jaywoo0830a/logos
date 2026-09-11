@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { scene, point, circle, region, panels, surface, vectorField3, annotate, curve3, arrow3, surfaceParam, tau,
-         axes3, quadrics, circle3, frame3, kit, typography, mat, vec, Matrix, transform, polygon, line, segment } from '../index.js';
+         axes3, quadrics, circle3, frame3, kit, typography, mat, vec, Matrix, transform, polygon, line, segment, cplx } from '../index.js';
 import { mkdtempSync, rmSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -401,4 +401,86 @@ test('axes3: 축 화살표 촉 기본값 0.06 (ratio 로 조절)', () => {
   const svg = scene().dim(3).camera({ elev: 20, azim: -50 }).axes(false)
     .add(...axes3({ length: 3 })).compile().toSVG();
   assert.ok(!/NaN/.test(svg));
+});
+
+test('제목/축라벨 여백: 눈금·격자는 데이터 영역 안에만 그린다', () => {
+  // 제목 자리(ymax 위 10% 여백)에 눈금 라벨이 찍히면 제목과 겹친다("6" 이 제목 위로).
+  const fig = scene().view([-5.5, 5.5], [-5.5, 5.5]).axes().grid().title('T')
+    .add(circle.center(point(0, 0)).radius(1)).compile();
+  const svg = fig.toSVG();
+  // view 상한(5.5) 밖의 눈금(6)은 없어야 한다.
+  assert.ok(!/>6<\/text>/.test(svg), '여백(제목 자리)에 눈금 라벨 없음');
+  assert.ok(/>5<\/text>/.test(svg), '데이터 영역 눈금은 그대로');
+  // 격자도 데이터 영역까지만 — y = 5.5 위로는 그리지 않는다.
+  const world = fig.o.world;
+  assert.ok(world.ymax > 5.5 + 1e-9, '제목 여백이 world 를 넓혔다');
+  assert.ok(!/NaN/.test(svg));
+});
+
+test('annotate.arrow().bend(): 이차 베지어 path + 끝 화살촉', () => {
+  const svg = scene().view([-5, 5], [-5, 5])
+    .add(annotate.arrow(point(-2, -2), point(2, 2)).bend(0.3).color('#e74c3c').stroke(2))
+    .compile().toSVG();
+  assert.ok(/<path d="M [^"]*L [^"]*L/.test(svg), '곡선 화살표는 여러 점 path');
+  assert.ok(/marker-end="url\(#lgsArrow\d+\)"/.test(svg), 'path 끝에 화살촉(marker-end)');
+  assert.ok(svg.includes('#e74c3c'));
+  assert.ok(!/NaN/.test(svg));
+  // bend 없으면 기존 arrow 노드(직선)
+  const straight = scene().view([-5, 5], [-5, 5])
+    .add(annotate.arrow(point(-2, -2), point(2, 2))).compile().toSVG();
+  assert.ok(/<line [^>]*marker-end=/.test(straight), '직선 화살표는 line + marker-end');
+});
+
+test('cplx: 복소수 수치 도우미 (abs·arg·conj·mul·div·pow·roots·unity·matrix)', () => {
+  const z = cplx(3, 2);
+  assert.equal(z.toString(), '3 + 2i');
+  assert.ok(Math.abs(z.abs - Math.sqrt(13)) < 1e-12, '|3+2i| = √13');
+  assert.ok(Math.abs(z.argDeg - 33.6900675) < 1e-6, 'arg(3+2i) ≈ 33.69°');
+  assert.equal(z.conj.toString(), '3 - 2i', '켤레 = 실축 반사');
+  assert.deepEqual(z.toArray(), [3, 2]);
+
+  // 곱 = 회전+확대: |z₁z₂| = |z₁||z₂|, arg 합
+  const p = cplx.mul(cplx.polar(2, 60), cplx.polar(3, 30));
+  assert.ok(Math.abs(p.abs - 6) < 1e-12 && Math.abs(p.argDeg - 90) < 1e-9, '2∠60° · 3∠30° = 6∠90°');
+
+  // 나눗셈: z / z = 1, 1/z = z̄/|z|²
+  assert.ok(cplx.div(z, z).equals(1));
+  const inv = cplx.div(1, z);
+  assert.ok(Math.abs(inv.re - 3 / 13) < 1e-12 && Math.abs(inv.im + 2 / 13) < 1e-12, '1/(3+2i) = (3-2i)/13');
+  assert.ok(Math.abs(inv.abs * z.abs - 1) < 1e-12, '|z|·|1/z| = 1 (반전)');
+  assert.ok(Math.abs(cplx.argDeg(inv) + z.argDeg) < 1e-9, 'arg(1/z) = −arg z (반사)');
+
+  // 드무아브르
+  assert.ok(cplx.pow(cplx.polar(2, 20), 3).equals(cplx.polar(8, 60)), 'z³ = r³∠3θ');
+  assert.throws(() => cplx(1, 1).pow(0.5), /정수/, '정수가 아닌 지수는 예외');
+  assert.throws(() => cplx(0, 0).pow(-1), /정의되지/, '0 의 0 이하 거듭제곱은 예외');
+  assert.throws(() => cplx.div(1, 0), /나눌 수 없/, '0 으로 나누면 예외');
+  assert.throws(() => cplx(NaN, 1), /유한한 실수/, 'NaN 입력은 예외');
+
+  // n제곱근/1의 n제곱근 = 정n각형, 합 = 0
+  const r4 = cplx(16, 0).roots(4);
+  assert.equal(r4.length, 4);
+  assert.ok(r4.every((w) => Math.abs(w.abs - 2) < 1e-9), '16 의 네 제곱근은 반지름 2');
+  assert.deepEqual(cplx.unity(4).map((w) => w.toString()), ['1', 'i', '-1', '-i']);
+  const sum = cplx.unity(6, 1.5).reduce((a, b) => a.add(b), cplx(0, 0));
+  assert.ok(sum.abs < 1e-12, '1 의 n제곱근 합 = 0');
+  assert.throws(() => cplx.unity(0), /1 이상의 정수/, 'n 은 1 이상');
+
+  // a+bi ↔ 회전·확대 행렬 [[a, −b], [b, a]] (12A2 의 linalg.mat 과 연결)
+  assert.deepEqual(cplx.matrix(z).rows, [[3, -2], [2, 3]]);
+  const w = cplx(0, 1);
+  assert.deepEqual(cplx.matrix(w).rows, [[0, -1], [1, 0]], 'z = i → 90° 회전 행렬');
+});
+
+test('cplx.matrix: 곱셈 = 행렬 곱 (복소수 ↔ 회전·확대 행렬 동형)', () => {
+  const a = cplx(0.6, 0.8), b = cplx(1.5, -0.5);
+  const byNumber = cplx.mul(a, b).toArray();
+  const byMatrix = cplx.matrix(a).mul(cplx.matrix(b)).rows;
+  const [re, im] = byNumber;
+  assert.ok(Math.abs(byMatrix[0][0] - re) < 1e-12 && Math.abs(byMatrix[0][1] + im) < 1e-12,
+    '[[a,−b],[b,a]] 곱 = [[Re, −Im], [Im, Re]] (1행)');
+  assert.ok(Math.abs(byMatrix[1][0] - im) < 1e-12 && Math.abs(byMatrix[1][1] - re) < 1e-12, '2행 = (Im, Re)');
+  // 행렬식 = |z|²
+  const det = cplx.matrix(a).rows[0][0] * cplx.matrix(a).rows[1][1] - cplx.matrix(a).rows[0][1] * cplx.matrix(a).rows[1][0];
+  assert.ok(Math.abs(det - a.abs ** 2) < 1e-12, 'det = |z|²');
 });

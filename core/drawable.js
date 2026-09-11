@@ -1,6 +1,10 @@
 // DSL.md §3 「Drawable 프로토콜 (모든 도형 공통)」
 // 모든 도형(점·선·주석·영역·벡터장)이 같은 불변 체이닝 메서드를 구현한다.
 // 설계 원칙(§13): 「불변이 기본」 — 모든 메서드는 새 노드를 반환한다.
+//
+// 확장(코어 무수정): 플러그인은 `use(p => p.extend('drawable', {...}))` 로 모든 도형에
+// 체이닝 메서드를, `p.chain('drawable', {...})` 로 선언형 메서드를 붙일 수 있다.
+import { registerTarget, callPlugin } from './plugin.js';
 
 let ORDER = 0;
 
@@ -58,4 +62,14 @@ export class Drawable {
   get conf() { return this._conf; }
   get order() { return this._order; }
   get kind() { return this._kind; }
+
+  /**
+   * 플러그인이 등록한 메서드를 **이름으로** 호출하는 escape hatch.
+   * 코어에 없는 기능을 이름만 알아도 쓸 수 있게 한다(`d.plugin('slope', 2)` ≡ `d.slope(2)`).
+   * 미등록이면 "어떻게 등록하는지" 안내하는 PluginError 를 던진다.
+   */
+  plugin(name, ...args) { return callPlugin(this, name, args); }
 }
+
+// 플러그인 대상 공개 — `api.extend('drawable', …)` 가 모든 도형(서브클래스 포함)에 붙는다.
+registerTarget('drawable', Drawable);

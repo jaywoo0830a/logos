@@ -14,12 +14,16 @@
 | `test/adapters.test.js`, `test/external.test.js`, `test/sympy.test.js` | ADAPT.md 외부엔진 어댑터 | 단위 |
 | **`test/invariants.test.js`** | **P0-2 SVG 무결성 린터, P0-1 결정성, P0-5 기하 불변식** | **신규(Phase 0)** |
 | **`test/snapshots.test.js`** | **P0-3 골든 스냅샷 (`test/fixtures/*.svg`, 로컬 전용·gitignore)** | **신규(Phase 0)** |
-| **`test/backend.test.js`** | **P5-1 TikZ/Asymptote/JSXGraph/KaTeX/PNG 백엔드 정합** | **신규(Phase 5)** |
-| **`test/features.test.js`** | **region.betweenX/barH/annulus/wedge · panels · surface.z(+cmap) · vectorField3 · scene.layout · curve3/arrow3/surfaceParam · 3D camera(elev/azim/aspect) · axes(false)/`axes({y:{ticks:false}})` · `axes3/quadrics/circle3/frame3` · `kit`(palette/plot2d/plot3d/subplots/saveFigures) · 타이포그래피(행간·자간) · `linalg`(mat/vec) · `transform.matrix` · 점선(arrow/polygon)** | **신규(§7·6차)** |
+| **`test/backend.test.js`** | **P5-1 TikZ/Asymptote/JSXGraph/KaTeX/PNG 백엔드 정합 · `latexToText` 악센트(`\bar`/`\vec`) 폴백** | **신규(Phase 5·7차)** |
+| **`test/features.test.js`** | **region.betweenX/barH/annulus/wedge · panels · surface.z(+cmap) · vectorField3 · scene.layout · curve3/arrow3/surfaceParam · 3D camera(elev/azim/aspect) · axes(false)/`axes({y:{ticks:false}})` · `axes3/quadrics/circle3/frame3` · `kit`(palette/plot2d/plot3d/subplots/saveFigures) · 타이포그래피(행간·자간) · `linalg`(mat/vec) · `transform.matrix` · 점선(arrow/polygon) · `cplx`(복소수) · `arrow().bend()` 곡선 화살표 · 제목/축라벨 여백에서 눈금·격자 제외** | **신규(§7·6차·7차)** |
+| **`test/plugin.test.js`** | **플러그인 아키텍처 — `use`/`extend`/`chain`/`define`/`static`/`node`(SVG+TikZ)/`theme`/`hook`(`ir`·`svg`)/`around`/`plugin()` escape hatch/미등록 `PluginError` 안내/`plugins` Proxy/`uninstall`·`reset` 원복/이름 충돌 롤백/`plugins/geometry-extras.js` 통합** | **신규(9차)** |
+| **`examples/plugin_demo.js`** | **플러그인 데모 4 figure — `plugins/geometry-extras.js` 로 `ray`·`arc.circular`·`hatch`(새 IR 노드)·체이닝(`.tilt/.dashed/.arrowTip`)·`theme('chalk')`·SVG 훅·`title` 래핑 (코어 수정 0줄)** | **확장 예제(9차)** |
 | `test/scenes.js` | 공용 대표 씬(`figures` = SceneIR, `scenes` = SVG) | 공용 |
+| **`examples/mpl_parity_11ab.js`** | 11AB · 삼각함수 **31 figure**(11A 19 + 11B 12) 재현 (`npm run parity11ab`) | **대표 예제(8차)** |
 | **`examples/mpl_parity_9b.js`** | Session 9B · 2D 기하 **25 figure** 재현 (`npm run parity9b`) | **대표 예제** |
 | **`examples/mpl_parity_9c.js`** | Session 9C · 3D 기하 **35 figure** 재현 (`npm run parity9c`) | **대표 예제** |
 | **`examples/mpl_parity_12a2.js`** | 12A2 · 행렬과 벡터 **20 figure** 재현 (`npm run parity12a2`) | **대표 예제(6차)** |
+| **`examples/mpl_parity_12a1.js`** | 12A1 · 복소수 **12 figure** 재현 (`npm run parity12a1`) | **대표 예제(7차)** |
 
 ## 0911-PLAN Phase ↔ 검증
 

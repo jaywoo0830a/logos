@@ -1,6 +1,7 @@
 // DSL.md §12 렌더러 파이프라인 — TikZ emitter (논문/책 삽입용)
 // IR 노드를 TikZ(standalone) 문서로 방출. 좌표는 사용자 좌표계 그대로.
 import { applyTransforms } from '../transform.js';
+import { nodeEmitter } from '../core/plugin.js';
 
 function pt(d, x, y) {
   const [nx, ny] = (d.transforms && d.transforms.length) ? applyTransforms(d.transforms, [x, y]) : [x, y];
@@ -61,6 +62,12 @@ export function emitTikZ(nodes, opts = {}) {
         break;
       }
       default:
+        // 플러그인 노드 — `api.node(kind, { tikz })` emitter (문자열 반환 시 그대로 삽입)
+        {
+          const em = nodeEmitter('tikz', n.kind);
+          const s = em ? em(n, opts) : null;
+          if (s) body.push(s);
+        }
         break;
     }
   }

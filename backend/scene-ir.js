@@ -1,5 +1,6 @@
 // Scene IR — 컴파일 결과. 다중 백엔드 진입점.
 import { emitSVG } from './svg.js';
+import { apply } from '../core/plugin.js';
 import { emitTikZ } from './tikz.js';
 import { irToAsymptote } from './asymptote.js';
 import { buildJSXGraphHTML } from './jsxgraph.js';
@@ -42,7 +43,9 @@ export class SceneIR {
     let nodes = this.o.nodes;
     if (this.o.dim === 3 && opts.hiddenLine !== false) nodes = applyHiddenLines(nodes, m.map, m.W, m.H);
     if (this.o.layout && opts.layout !== false) nodes = relayout(nodes, m.map, m.W, m.H);
-    return emitSVG(nodes, {
+    // 플러그인 훅 — 'ir:svg'(노드 손질) · 'svg'(완성된 SVG 문자열 후처리)
+    nodes = apply('ir:svg', nodes, { ir: this, map: m.map, W: m.W, H: m.H }) || nodes;
+    const svg = emitSVG(nodes, {
       ...m, world: this.o.world,
       math: opts.math,
       bg: td.bg || '#ffffff',
@@ -52,10 +55,12 @@ export class SceneIR {
       labelColor: td.labelColor, pointColor: td.pointColor,
       strokeDefault: td.strokeDefault,
     });
+    return apply('svg', svg, { ir: this, map: m.map }) || svg;
   }
 
   toTikZ(opts = {}) {
-    return emitTikZ(this.o.nodes, opts);
+    const tikz = emitTikZ(this.o.nodes, opts);
+    return apply('tikz', tikz, { ir: this }) || tikz;
   }
 
   // ── ADAPT.md 외부엔진 어댑터 백엔드 ──────────────

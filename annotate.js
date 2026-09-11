@@ -170,15 +170,47 @@ function renderIntegral(c, ctx) {
 export class ArrowAnno extends Drawable {
   constructor(A, B) { super('annotation', { kind: 'arrow', A, B }); }
   label(l, off) { return this.set({ label: l, labelOff: off }); }
+  /**
+   * 곡선 화살표 — mpl `connectionstyle='arc3,rad=…'` 대응.
+   * `rad > 0` 이면 진행 방향 **오른쪽**으로 휜다(원호 화살표·순환 표시에 쓴다).
+   * @param {number} rad 휨 정도(현 길이에 대한 비율)
+   */
+  bend(rad) { return this.set({ bend: rad }); }
   toIR() {
     const c = this._conf;
     const [x1, y1] = c.A.coords, [x2, y2] = c.B.coords;
-    return [node('arrow', {
-      x1, y1, x2, y2, label: renderText(c.label),
-      labelMath: typeof c.label?.toLatex === 'function',
+    const label = renderText(c.label);
+    const labelMath = typeof c.label?.toLatex === 'function';
+    if (!c.bend) {
+      return [node('arrow', {
+        x1, y1, x2, y2, label, labelMath,
+        color: c.color, stroke: c.stroke, dash: c.dash, transforms: c.transforms,
+        headless: c.headless,
+      })];
+    }
+    // 이차 베지어 제어점 — mpl 과 같은 cx = 중점 + rad·dy, cy = 중점 − rad·dx
+    const cx = (x1 + x2) / 2 + c.bend * (y2 - y1), cy = (y1 + y2) / 2 - c.bend * (x2 - x1);
+    const N = 24, ops = [];
+    for (let i = 0; i <= N; i++) {
+      const t = i / N, u = 1 - t;
+      ops.push({
+        op: i ? 'L' : 'M',
+        x: u * u * x1 + 2 * u * t * cx + t * t * x2,
+        y: u * u * y1 + 2 * u * t * cy + t * t * y2,
+      });
+    }
+    const out = [node('path', {
+      ops, head: !c.headless,                       // path 끝에 촉(marker-end)
       color: c.color, stroke: c.stroke, dash: c.dash, transforms: c.transforms,
-      headless: c.headless,
+      style: pickStyle(c),
     })];
+    if (label) {
+      out.push(node('text', {
+        x: (x1 + 2 * cx + x2) / 4, y: (y1 + 2 * cy + y2) / 4,
+        text: label, math: labelMath, anchor: 'middle', color: c.color,
+      }));
+    }
+    return out;
   }
 }
 
@@ -277,7 +309,8 @@ export class TextAnno extends Drawable {
 
 function pickStyle(c) {
   const s = {};
-  for (const k of ['color', 'stroke']) if (c[k] !== undefined) s[k] = c[k];
+  // 점선/투명도도 스타일로 넘긴다 — 각 호(arc)를 점선으로 그리거나 흐리게 할 때 필요.
+  for (const k of ['color', 'stroke', 'dash', 'opacity']) if (c[k] !== undefined) s[k] = c[k];
   return s;
 }
 export default annotate;

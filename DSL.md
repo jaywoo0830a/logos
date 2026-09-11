@@ -128,6 +128,26 @@ circle.center(O).radius(1).on(plane.normal(vector(1,1,1)));
 
 모든 도형이 이걸 구현한다. 점이든, 적분 주석이든, 벡터장이든.
 
+### 3.1 확장 — 코어를 고치지 않는 체이너블 플러그인
+
+프로토콜은 **닫힌 목록이 아니다.** 사용자가 새 메서드·새 도형·새 IR 노드를 붙일 수 있고,
+그것도 코어 파일 수정 없이 된다 → [`PLUGIN.md`](PLUGIN.md).
+
+```js
+import { point, use } from 'logos';
+
+use({ name: 'my-extras', install(api) {
+  api.chain('drawable', { slope: (conf, m) => ({ slopeM: m }) });   // 모든 도형에 .slope()
+  api.define('ray', (O, P) => new Ray(O, P), { ctor: Ray });        // logos.ray(…) 가 살아난다
+  api.node('hatch', { svg: (n, ctx) => '…', tikz: (n) => '…' });    // 새 IR kind (백엔드 무수정)
+}});
+
+point(1, 2).slope(3).color('#c00').dot();     // 프로토콜 메서드와 섞여도 체인 유지
+```
+
+체이닝 규칙: 플러그인 메서드가 **패치 객체를 반환하면 자동 `this.set(patch)`**(불변 복제),
+**Drawable 을 반환하면 그대로 통과**, 아무것도 반환하지 않으면 `this`.
+
 ---
 
 ## 4. 도형 카탈로그 (2D · 3D · 좌표계)
@@ -343,6 +363,8 @@ annotate.angle(A, B, C).rightAngle()          // 꼭짓점 B 에 두 광선이 �
 annotate.dimension(A, B).offset(24).label('5').units('cm')
 annotate.tick(segment(A, B)).count(2)
 annotate.arrow(A, B).label('v')
+annotate.arrow(A, B).bend(0.3)                // 곡선 화살표 (mpl annotate arc3,rad) — 순환 표시
+                                              // rad>0 = 진행 방향 오른쪽으로 휨, 촉은 path 끝
 annotate.brace(curve).label('arc')
 annotate.shade(region).color('steelblue').opacity(.3)
 annotate.dot(P).label('A')
@@ -365,6 +387,8 @@ const fig = scene()
   .axes({ x: { label: 'x', ticks: 1 }, y: { label: 'y' } })
   .grid({ step: 1, minor: 0.5 })
   .polarGrid()                                   // 극좌표 눈금
+  // 눈금·격자·축선은 **데이터 영역 안쪽에만** 그려진다.
+  // 제목·xlabel·ylabel 은 그 바깥 여백에 배치되므로 서로 겹치지 않는다(7차 수정).
   .sphericalGrid()                               // 3D 구면 격자
 
   // 3D 카메라
@@ -721,6 +745,8 @@ fig.toSVG();
 6. **LaTeX가 1급 시민** — `tex` 태그드 템플릿이 입구이자 출구
 7. **IR 하나로 다중 백엔드** — TikZ(논문) · SVG(웹) · PDF(인쇄) · PNG(미리보기)
 8. **품질은 기본값** — `theme('textbook')` 하나로 출판 수준
+9. **코어는 훅만, 기능은 플러그인** — 없는 기능은 코어를 고치지 않고 `use(plugin)` 으로 붙인다.
+   새 도형·체이닝 메서드·IR 노드·테마·백엔드 emitter 가 모두 등록 대상이다 ([`PLUGIN.md`](PLUGIN.md)).
 
 ---
 

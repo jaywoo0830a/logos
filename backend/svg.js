@@ -3,6 +3,7 @@ import { applyTransforms } from '../transform.js';
 import { katexRender, latexToText } from './katex.js';
 import { STIX_STACK, svgFontStyle, TYPE } from './fonts.js';
 import { regionRect } from '../shapes/region.js';
+import { nodeEmitter } from '../core/plugin.js';
 
 const esc = (s) => String(s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -185,7 +186,14 @@ function renderNode(n, m, scaleX, scaleY, t, gradId) {
         if (op.op === 'Z' || op.op === 'z') { segs.push('Z'); continue; }
         segs.push(`${op.op} ${m(d, op.x, op.y).join(' ')}`);
       }
-      return `<path d="${segs.join(' ')}" fill="none" stroke="${st.stroke}" stroke-width="${st['stroke-width']}" stroke-dasharray="${st.dash || 'none'}" stroke-linecap="round" stroke-linejoin="round" opacity="${st.opacity}"/>`;
+      // 곡선 화살표(`annotate.arrow().bend()`): path 끝에 화살촉을 붙인다(marker 는 path 방향을 따라 회전).
+      let headDefs = '', headAttr = '';
+      if (d.head) {
+        const id = 'lgsArrow' + (++CLIPN);
+        headDefs = `<defs><marker id="${id}" markerWidth="9" markerHeight="9" refX="6" refY="4" orient="auto-start-reverse"><path d="M0,0 L8,4 L0,8 L2,4 Z" fill="${st.stroke}"/></marker></defs>`;
+        headAttr = ` marker-end="url(#${id})"`;
+      }
+      return headDefs + `<path d="${segs.join(' ')}" fill="none" stroke="${st.stroke}" stroke-width="${st['stroke-width']}" stroke-dasharray="${st.dash || 'none'}" stroke-linecap="round" stroke-linejoin="round" opacity="${st.opacity}"${headAttr}/>`;
     }
     case 'polygon': {
       const pts = d.pts.map((p) => m(d, p[0], p[1]).join(',')).join(' ');
@@ -316,8 +324,19 @@ function renderNode(n, m, scaleX, scaleY, t, gradId) {
     }
     case 'cliprect':
       return null; // 정의 전용
-    default:
+    default: {
+      // 플러그인 노드 — `api.node(kind, { svg })` 로 등록된 emitter 가 이어받는다.
+      //   좌표는 ctx.map(data, x, y) 로 화면 좌표로 바꾸고, 스타일은 ctx.style(data) 를 쓴다.
+      const em = nodeEmitter('svg', n.kind);
+      if (em) {
+        const html = em(n, {
+          map: m, scaleX, scaleY, theme: t, gradId, esc,
+          style: (dd) => stroke(dd.style || dd, t),
+        });
+        if (html) return html;
+      }
       return `<!-- ${n.kind} -->`;
+    }
   }
 }
 

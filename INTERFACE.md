@@ -410,6 +410,7 @@ import { scene, point, vector, line, segment, ray,
          region, vectorField,
          transform, annotate, tex, kit,         // kit = 그림 작성 키트
          mat, vec,                              // 행렬/벡터 수치 (linalg)
+         cplx, Complex,                         // 복소수 수치 (complex)
          tau, pi, e } from 'logos';
 ```
 
@@ -422,6 +423,10 @@ import { scene, point, vector, line, segment, ray,
   `apply/det/inv/pow/mul/t/col/map` + `mat.rotation/reflection/shear/scaling`,
   `vec.dot/norm/unit/project/cross/areaOf/angleDeg`. 도형에 행렬을 씌우려면
   `transform.matrix(A)` + `.apply()`.
+- **`cplx` / `Complex`** — 복소수 **계산** (complex.js): `cplx(3, 2)` = 3+2i 의
+  `abs/arg/argDeg/conj/toPolar/toArray/toString`, `add/sub/mul/div/scale/neg/pow/roots`,
+  `cplx.polar/unity/matrix`(→ `mat`). 복소수는 복소평면의 **점 `(a, b)`** 이므로
+  그리기는 `point`/`segment`/`polygon` 이 그대로 담당합니다.
 - **`transform`** — 변환 (회전·평행이동·반사·스케일·**행렬**)
 - **`annotate`** — 주석
 - **`tex`** — 심볼릭 수식 (LaTeX 그대로)
@@ -451,3 +456,41 @@ annotate.angle(O, P, /* 접선 방향 */).rightAngle(),
 - `.compile()` `.toSVG()` `.toTikZ()` — 출력
 
 **"쓰는 사람이 수학을 다시 한 번 말로 설명하는 것처럼"** — 이게 `logos` 클라이언트 코드의 최종 목표입니다.
+
+---
+
+## 15. 확장 — 없는 기능은 코어를 고치지 않고 붙인다
+
+그림을 그리다 보면 DSL 에 없는 것이 나옵니다. 그때 `core/` 를 고치는 대신 **플러그인 한 줄**을 씁니다.
+
+```js
+import { scene, point, circle, use, plugins } from 'logos';
+import geometryExtras from './plugins/geometry-extras.js';
+
+use(geometryExtras, { watermark: true });      // ← 이 한 줄이 전부
+
+scene()
+  .equal().axes().theme('chalk')
+  .add(
+    plugins.ray(point(0, 0), point.byDeg(1, 30)).arrowTip().dashed(),   // 코어에 없던 도형
+    plugins['arc.circular'](point(0, 0), 2, 30, 150),                   // index.js 스텁이 살아남
+    plugins.hatch(1, 1, 4, 1.6).text('A = ∫₀⁴ f(x) dx'),                // 새 IR 노드(SVG+TikZ)
+    circle.center(point.origin()).radius(1).tilt(15),                   // 새 체이닝 메서드
+  )
+  .compile().toSVG();
+```
+
+읽히는 그대로입니다 — “이름을 등록하면 그 이름이 DSL 이 된다.” 새 메서드가 코어 메서드와
+섞여도 체인이 끊기지 않고, 없는 이름을 부르면 **등록 방법을 알려주는 안내**가 나옵니다.
+
+| 하고 싶은 것 | 한 줄 |
+|---|---|
+| 새 체이닝 메서드 | `api.chain('drawable', { name: (conf, …) => ({…}) })` |
+| 새 도형 | `api.define('name', factory, { ctor })` |
+| 새 IR 노드(백엔드 무수정) | `api.node('kind', { svg, tikz })` |
+| 새 테마 | `api.theme('name', tokens)` |
+| 파이프라인 끼어들기 | `api.hook('svg', (svg) => …)` |
+| 기존 동작 보강 | `api.around('scene', 'title', (orig, t) => …)` |
+
+전체 목록과 좌표 변환 규칙은 [`PLUGIN.md`](PLUGIN.md), 실제 8종 예시는
+`plugins/geometry-extras.js`(`npm run plugin-demo` → `output/plugin-demo/`)에 있습니다.

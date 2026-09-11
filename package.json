@@ -20,10 +20,13 @@
     "test": "node --test test/*.test.js",
     "test:svg": "node --test test/senarios.test.js",
     "snap:update": "UPDATE=1 node --test test/snapshots.test.js",
+    "parity11ab": "node examples/mpl_parity_11ab.js",
     "parity9b": "node examples/mpl_parity_9b.js",
     "parity9c": "node examples/mpl_parity_9c.js",
     "parity12a2": "node examples/mpl_parity_12a2.js",
-    "examples": "node examples/mpl_parity_9b.js && node examples/mpl_parity_9c.js && node examples/mpl_parity_12a2.js",
+    "parity12a1": "node examples/mpl_parity_12a1.js",
+    "plugin-demo": "node examples/plugin_demo.js",
+    "examples": "node examples/mpl_parity_11ab.js && node examples/mpl_parity_9b.js && node examples/mpl_parity_9c.js && node examples/mpl_parity_12a2.js && node examples/mpl_parity_12a1.js && node examples/plugin_demo.js",
     "serve": "node server.js"
   },
   "dependencies": {

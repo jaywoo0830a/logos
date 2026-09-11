@@ -65,6 +65,10 @@ export function latexToText(latex) {
   // \lim_{...} \log_{...} 등 아래첨자 → 괄호
   s = s.replace(/\\lim\s*_\s*\{([^{}]*)\}/g, 'lim($1)');
   s = s.replace(/\\log\s*_\s*\{([^{}]*)\}/g, 'log($1)');
+  // \bar{z} \overline{z} \vec{v} \hat{x} → 결합 문자 (래스터 폴백에서도 accent 가 보이게)
+  const accent = { bar: '\u0304', overline: '\u0304', vec: '\u20d7', hat: '\u0302', dot: '\u0307', tilde: '\u0303' };
+  s = s.replace(/\\(bar|overline|vec|hat|dot|tilde)\s*\{([^{}]*)\}/g,
+    (m, name, body) => body.split('').map((ch) => ch + accent[name]).join(''));
   // 남은 명령 제거, 중괄호/달러/여분 공백 정리
   s = s.replace(/\\[a-zA-Z]+/g, '');
   s = s.replace(/\^\{([^{}]*)\}/g, '^$1');

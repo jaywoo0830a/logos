@@ -1,7 +1,7 @@
 // logos 렌더 갤러리 정적 서버 — output/ 디렉토리를 HTTP 로 서빙한다.
 // 실행: node server.js  (포트 기본 18080, 환경변수 PORT 로 변경 가능)
 // 접속: http://localhost:18080/  → 대표 예제의 렌더 갤러리(index.html)
-//   `npm run examples` 가 output/parity9b|parity9c|parity12a2/index.html 을 만든 뒤 열면 된다.
+//   `npm run examples` 가 output/index.html · parity11a|parity11b|parity12a1|… /index.html 을 만든 뒤 열면 된다.
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { join, dirname, normalize, extname } from 'node:path';
@@ -10,8 +10,10 @@ import { fileURLToPath } from 'node:url';
 const PORT = Number(process.env.PORT || 18080);
 const HOST = process.env.HOST || '0.0.0.0'; // 컨테이너 외부 접속 허용
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), 'output');
-// `/` 로 들어왔을 때 차례로 시도할 갤러리(통합 → 3D(9C) → 2D(9B) → 3D+2D(12A2)).
-const GALLERIES = ['index.html', 'parity9c/index.html', 'parity9b/index.html', 'parity12a2/index.html'];
+// `/` 로 들어왔을 때 차례로 시도할 갤러리(통합 → 삼각함수 11A/11B → 플러그인 데모 → 3D(9C) → 2D(9B) → 3D+2D(12A2) → 복소수(12A1)).
+const GALLERIES = ['index.html', 'parity11a/index.html', 'parity11b/index.html',
+  'plugin-demo/index.html',
+  'parity9c/index.html', 'parity9b/index.html', 'parity12a2/index.html', 'parity12a1/index.html'];
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',

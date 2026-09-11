@@ -184,6 +184,43 @@ annotate.arrow(point(0,0), point(1,0)).apply(transform.matrix(A));   // 변환�
 > `transform.matrix()` 는 배열과 `mat()` 행렬을 **둘 다** 받습니다(6차에서 `Matrix` 지원 추가).
 > 그림 예시는 [`examples/mpl_parity_12a2.js`](examples/mpl_parity_12a2.js) 참고.
 
+### 3.8 `cplx` — 복소수 계산 (`complex.js`)
+
+행렬이 `linalg` 라면 **복소수**는 `complex.js` 입니다(같은 성격의 순수 수치 계층).
+복소평면 그림의 `|z|`·`arg z`·`z̄`·`z₁z₂`·`1/z`·`zⁿ`·n제곱근이 전부 여기 있습니다.
+
+```js
+import { cplx } from 'logos';
+
+const z = cplx(3, 2);            // 3+2i — 복소평면의 점 (3, 2)
+z.abs;                           // 3.6055…   ← abs(z)
+z.argDeg;                        // 33.69…    ← np.angle(z), deg
+z.conj;                          // 3-2i      ← np.conj(z) = 실축 반사
+z.toArray();                     // [3, 2]    ← 점 좌표로 그대로
+z.toString();                    // '3 + 2i'  ← 라벨용
+
+cplx.polar(2, 60);               // 2e^{i60°} (θ 는 **도**)
+cplx.mul(z, w);                  // 곱 = (|z||w|)·(arg z + arg w) → 회전+확대
+cplx.div(1, z);                  // 1/z = z̄/|z|²  (0 으로 나누면 예외)
+z.pow(4); z.roots(3);            // zⁿ (음수 지수 허용) · n제곱근 n개
+cplx.unity(6, 1.5);              // 반지름 1.5 인 1의 6제곱근 = 정육각형 꼭짓점
+cplx.matrix(z).rows;             // [[3, -2], [2, 3]]  ← a+bi ↔ 회전·확대 행렬
+```
+
+| mpl / numpy | logos |
+|---|---|
+| `complex(3, 2)` | `cplx(3, 2)` |
+| `abs(z)` / `np.angle(z)` | `z.abs` / `z.arg`, `z.argDeg` |
+| `np.conj(z)` | `z.conj` |
+| `z1 * z2` / `z1 / z2` | `cplx.mul(z1, z2)` / `cplx.div(z1, z2)` |
+| `z ** n` | `z.pow(n)` |
+| `np.roots` / 1의 n제곱근 | `z.roots(n)` / `cplx.unity(n, r)` |
+| `np.array([a, -b, b, a]).reshape(2, 2)` | `cplx.matrix(z)` → `mat` |
+
+> `cplx.matrix(z)` 는 `[[a, −b], [b, a]]` (`det = |z|²`). 그래서 **12A1(복소수)과 12A2(행렬과 벡터)가
+> 같은 `mat`·`vec` 층을 공유**합니다 — `cplx.mul` 은 이 행렬의 곱과 같습니다.
+> 그림 예시는 [`examples/mpl_parity_12a1.js`](examples/mpl_parity_12a1.js) 참고.
+
 ---
 
 ## 4. 3D 도우미 — `axes3` · `quadrics` · `circle3` · `frame3`
@@ -294,13 +331,20 @@ annotate.text(point(1, 1)).label('벌려 쓰기').letterSpacing(1.2)  // 자간(
 
 | 파일 | 내용 | 실행 | 출력 |
 |---|---|---|---|
+| `examples/mpl_parity_11ab.js` | 11AB · **삼각함수 31 figure**(11A 19 + 11B 12, `example5.py` 재현) | `npm run parity11ab` | `output/parity11a/`, `output/parity11b/` |
 | `examples/mpl_parity_9b.js` | Session 9B · **2D 기하 25 figure** (`example1.py` 재현) | `npm run parity9b` | `output/parity9b/` |
 | `examples/mpl_parity_9c.js` | Session 9C · **3D 기하 35 figure** (`example2.py` 재현) | `npm run parity9c` | `output/parity9c/` |
 | `examples/mpl_parity_12a2.js` | 12A2 · **행렬과 벡터 20 figure** (`example3.py` 재현) | `npm run parity12a2` | `output/parity12a2/` |
-| 셋 다 | — | `npm run examples` | `*/*.svg`, `*/*.png`, `*/index.html` |
+| `examples/mpl_parity_12a1.js` | 12A1 · **복소수 12 figure** (`example4.py` 재현) | `npm run parity12a1` | `output/parity12a1/` |
+| `examples/plugin_demo.js` + `plugins/geometry-extras.js` | **플러그인 데모 4 figure** — `ray`·`arc.circular`·`hatch` IR 노드·체이닝 확장·테마·훅 (코어 수정 0) | `npm run plugin-demo` | `output/plugin-demo/` |
+| 여섯 다 | — | `npm run examples` | `*/*.svg`, `*/*.png`, `*/index.html` |
 
-세 스크립트는 라이브러리의 **회귀 기준**입니다. 즉 “matplotlib 급 그림을 정말 그릴 수 있는가”를
+여섯 스크립트는 라이브러리의 **회귀 기준**입니다. 즉 “matplotlib 급 그림을 정말 그릴 수 있는가”를
 사람이 눈으로(갤러리) 그리고 기계가(`npm test`) 확인합니다.
+
+`11AB` 는 삼각함수 그림이라 단위원(equal aspect)·`arcAt`/`wedge`·`branchCurves`(극점 절단)·
+`curve.fn().on().n(N)`(고주파 샘플) 사용 예가 집중되어 있습니다 — “계산은 `Math`, 그리기는 `Scene`”
+이라는 분리도 여기서 잘 보입니다.
 
 `12A2` 는 행렬 그림이라 `mat`/`vec`/`transform.matrix` 사용 예가 집중되어 있습니다 —
 “계산은 `linalg`, 그리기는 `Scene`” 이라는 분리도 이 예제에서 가장 잘 보입니다.
@@ -384,6 +428,27 @@ KaTeX 는 SVG `foreignObject` 로 들어가는데 resvg 래스터에서는 사�
 좌표를 손으로(`A.apply(p)`) 옮겨 새 도형을 만드는 쪽이 프레이밍이 더 정확하지만,
 강조 도형(변환된 정사각형·기저벡터)에는 `.apply()` 가 짧고 읽기 좋습니다.
 
+**Q. 복소평면(z = a+bi) 그림은 어떻게 그리나요?**
+복소수는 **점 `(a, b)`** 입니다 — 계산은 `cplx`, 그리기는 `point`/`segment`/`polygon` 입니다.
+
+```js
+const z = cplx(3, 2);
+const P = (w) => point(w.re ?? w[0], w.im ?? w[1]);   // cplx → point
+scene().view([-1, 5], [-1, 4]).equal().axes()
+  .add(arrowAt([0, 0], P(z)),                          // z 를 벡터로
+       circle.center(point(0, 0)).radius(z.abs),       // |z| 원
+       annotate.angle({ from: [1, 0], vertex: [0, 0], to: P(z) }).arc({ radius: 0.6 }));  // arg z
+```
+
+`1/z`(반전+반사)·`zⁿ`(드무아브르)·n제곱근(정n각형)은 `cplx.div`·`z.pow`·`cplx.unity` 로 좌표를
+얻은 뒤 그대로 그리면 됩니다 — [`examples/mpl_parity_12a1.js`](examples/mpl_parity_12a1.js) 참고.
+
+**Q. 제목이 눈금 라벨과 겹쳐 보여요.**
+7차에서 고쳤습니다. 제목/축 라벨은 데이터 영역 **바깥** 여백에 들어가는데, 예전에는 눈금 라벨과
+격자까지 그 여백에 그려져 제목 위에 숫자(`6` 등)가 찍혔습니다. 지금은 눈금·격자가 **데이터 영역
+안쪽에만** 그려지고, `y` 축 라벨도 데이터 영역 끝(여백과의 경계)에 붙습니다.
+`view` 범위를 그대로 두면 보이는 결과만 달라집니다(코드 수정 불필요).
+
 **Q. 각도 표식(호)이 엉뚱한 곳에 그려져요.**
 `annotate.angle(A, B, C)` 는 **가운데 B 가 각의 꼭짓점**입니다(∠ABC). 꼭짓점을 첫 인자로
 넘기면 호가 다른 점 위에 그려집니다. 헷갈릴 때는 이름 지정형을 쓰세요 — 순서 실수가 불가능합니다.
@@ -416,7 +481,35 @@ annotate.angle({ from: a, vertex: proj, to: vec.add(proj, vec.unit(b)) }).arc({ 
 
 ## 8. 이력 — 무엇이 언제 바뀌었나
 
-### 8.1 6차 요청 (2026-09-11) — 행렬과 벡터 예제(12A2) + 선형대수 계산 계층
+### 8.1 7차 요청 (2026-09-11) — 복소수 예제(12A1) + 복소수 계산 계층 `cplx`
+
+* **예제 추가**: `examples/mpl_parity_12a1.js` (`example4.py` 재현, **12 figure**).
+  복소평면·극형식 · i 의 거듭제곱 · 켤레 · 덧셈 · 곱(회전+확대) · a+bi ↔ 회전·확대 행렬 ·
+  드무아브르 나선 · 1 의 n제곱근 · 1/z 반전+반사 · 이차방정식의 복소근 · 편각의 덧셈 · 복소평면 요약.
+* **`complex.js` 신설**: `cplx()`/`Complex` (re·im, `abs`·`arg`·`argDeg`·`conj`·`toPolar`,
+  `add/sub/mul/div/scale/neg/pow/roots/equals/toString`) + `cplx.polar/mul/div/pow/roots/unity/
+  matrix/conj/abs/arg/round`. `index.js` 에서 `cplx`·`Complex` export.
+* **`annotate.arrow().bend(rad)`** (mpl `arc3,rad`): 이차 베지어 `path` 로 그리고 **path 끝에
+  화살촉**(`marker-end`)을 붙인다 — 순환/회전 화살표를 한 줄로.
+* **`latexToText` 악센트**: `\bar`·`\overline`·`\vec`·`\hat`·`\dot`·`\tilde` 를 **결합 문자**로
+  남긴다. 예전에는 중괄호만 벗겨져 `\bar{z}` 가 빈 `{z}`/`NaN` 으로 새어 래스터(PNG) 라벨이 깨졌다.
+* **레이아웃: 눈금·격자는 데이터 영역 안쪽에만**(`core/scene.js`). 제목/축라벨용 여백
+  (`withMargins`)까지 눈금·격자를 그려서 **제목 위에 눈금 숫자가 겹쳐 찍히던** 문제를 고쳤다.
+  축 라벨(`y`)도 여백이 아니라 데이터 영역 끝에 붙는다.
+* **7차 후속 수정(같은 날, 사용자 피드백)**:
+  * **드무아브르 나선의 각 호가 허공에 떠 보이던 문제**(`12a1` 7번): mpl 은
+    `Arc((0,0), 0.6·rⁿ, 0.6·rⁿ)` 인데 Arc 의 폭/높이는 **지름**이라 실제 반지름이 `0.3·rⁿ` —
+    호가 나선팔에도 실수축에도 닿지 않았습니다. 호 반지름을 `|zⁿ|` 로 잡아 **호의 한 끝은
+    실수축 `(rⁿ, 0)`, 다른 끝은 `zⁿ`** 에 붙게 하고(`mpl 대비`), 호 가운데에 `nθ` 를 라벨했습니다.
+  * **`1/z` 반전 그림이 읽히지 않던 문제**(`12a1` 9번) — mpl 의 `ylim(-0.5, 3.5)` 안에 `1/z` 가
+    **하나도 들어오지 않아서**(네 점 모두 허수부가 음수) 점들이 좌표축 밖으로 나갔고, 남은 점선만으로는
+    규칙 `1/z = z̄/|z|²` 이 읽히지 않았습니다. 대표 점 `z = 2+0.5i` 하나로 **두 단계를 2×2 4컷**으로
+    나눠 차례로 보여줍니다 — ① z(원점에서의 벡터, `|z|`·`arg z`) → ② 실축 대칭 `z̄`(길이 그대로,
+    각도만 반대) → ③ 반지름만 `÷|z|²`(`z̄` 와 같은 반직선 위, 화살표로 줄어드는 길이 표시) →
+    ④ 세 점에서 확인(`|z|·|1/z| = 1`, 밖 ↔ 안).
+* **검증**: `npm test` **168 pass / 0 fail**, `npm run examples` 25+35+20+12 figure 생성.
+
+### 8.2 6차 요청 (2026-09-11) — 행렬과 벡터 예제(12A2) + 선형대수 계산 계층
 
 * **예제 추가**: `examples/mpl_parity_12a2.js` (`example3.py` 재현, **20 figure**).
   회전/반사/전단/합성/역행렬 · 내적·정사영·외적 · 3D 부피 · 연립방정식 ·
@@ -441,7 +534,7 @@ annotate.angle({ from: a, vertex: proj, to: vec.add(proj, vec.unit(b)) }).arc({ 
     (얇은 점선)을 그어 발을 '두 선의 모서리'로 만들었습니다(`mpl 대비` — 교과서의 연장선 표기).
 * **검증**: `npm test` **162 pass / 0 fail**, `npm run examples` 25+35+20 figure 생성.
 
-### 8.2 5차 요청 (2026-09-11) — 예제 정리 · `kit.js` 신설
+### 8.3 5차 요청 (2026-09-11) — 예제 정리 · `kit.js` 신설
 
 * **예제 정리**: 대표 예제 2개(`mpl_parity_9b.js`, `mpl_parity_9c.js`)만 남기고
   `adapters.js`·`book.js`·`gallery.js`·`interface.js`·`mpl_parity.js`·`v02.js`·`visual.js` 삭제.

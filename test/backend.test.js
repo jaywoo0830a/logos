@@ -42,6 +42,21 @@ test('수식 라벨: LaTeX → 텍스트 폴백', async () => {
   assert.ok(!/[\\{}]/.test(t), '역슬래시/중괄호 제거');
 });
 
+test('latexToText: 악센트(\\bar·\\vec)가 결합 문자로 남는다', async () => {
+  const { latexToText } = await import('../backend/katex.js');
+  // 예전에는 \\bar{z} 의 중괄호만 벗겨져 `z` 가 아니라 빈 `{z}`/NaN 으로 새어 나갔다.
+  assert.equal(latexToText('\\bar{z}'), 'z\u0304', '\\bar{z} → z + 결합 macron');
+  assert.equal(latexToText('\\overline{z}'), 'z\u0304', '\\overline 도 같다');
+  assert.equal(latexToText('\\vec{v}'), 'v\u20d7', '\\vec → 결합 화살표');
+  assert.equal(latexToText('\\hat{x}').length, 2, '\\hat{x} → x + 결합 circumflex');
+  assert.ok(!/[\\{}]/.test(latexToText('1/\\bar{z} = z/|z|^2')), '악센트 뒤에도 중괄호 없음');
+  // 실제 라벨 경로에서도 NaN 이 나오지 않는다.
+  const svg = scene().view([-2, 2], [-2, 2]).add(
+    point(1, 1).dot().label(tex`\\bar{z}`),
+  ).compile().toSVG({ math: 'text' });
+  assert.ok(!/NaN/.test(svg), '래스터 폴백 라벨에 NaN 없음');
+});
+
 test('PNG: resvg 있으면 실제 래스터, 없으면 명확한 에러', async () => {
   const fig = scene().view([-0.5, pi + 0.5], [-0.5, 1.5]).axes().add(
     curve.fn(Math.sin).on([0, pi]).color('crimson'),
