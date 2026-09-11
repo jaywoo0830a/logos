@@ -106,20 +106,22 @@ export class Scene {
   compile() {
     const conf = this._conf;
     const dim = conf.dim === 'auto' ? guessDim(conf.shapes) : conf.dim;
-    const world = resolveWorld(conf, conf.shapes);
+    const world = resolveWorld(conf, conf.shapes, dim);
     const themeDef = THEMES[conf.theme] || THEMES.default;
 
     let project = null;
     if (dim === 3) project = makeProjection(conf.camera);
-    const ctx = { world, dim, theme: conf.theme, project };
+    // 3D 면 축이 view 안에 들도록, 세계사각형을 프로젝션 후로 계산한다.
+    const effWorld = (dim === 3 && project && !conf.view) ? world3From(conf.shapes, project) : world;
+    const ctx = { world: effWorld, dim, theme: conf.theme, project };
 
     let nodes = [];
-    if (conf.grid) nodes = nodes.concat(gridIR(world, conf.grid, themeDef));
-    if (conf.polarGrid) nodes = nodes.concat(polarGridIR(world, themeDef));
-    if (conf.sphericalGrid) nodes = nodes.concat(sphericalGridIR(world, project, themeDef));
-    if (conf.axes && dim === 3) nodes = nodes.concat(axes3IR(world, project, themeDef, conf.axes));
-    else if (conf.axes) nodes = nodes.concat(axesIR(world, conf.axes, themeDef));
-    else if (dim === 3) nodes = nodes.concat(axes3IR(world, project, themeDef, true));
+    if (conf.grid) nodes = nodes.concat(gridIR(effWorld, conf.grid, themeDef));
+    if (conf.polarGrid) nodes = nodes.concat(polarGridIR(effWorld, themeDef));
+    if (conf.sphericalGrid) nodes = nodes.concat(sphericalGridIR(effWorld, project, themeDef));
+    if (conf.axes && dim === 3) nodes = nodes.concat(axes3IR(effWorld, project, themeDef, conf.axes));
+    else if (conf.axes) nodes = nodes.concat(axesIR(effWorld, conf.axes, themeDef));
+    else if (dim === 3) nodes = nodes.concat(axes3IR(effWorld, project, themeDef, true));
 
     for (const shape of conf.shapes) {
       if (shape && typeof shape.toIR === 'function') {
@@ -131,7 +133,10 @@ export class Scene {
 
     checkAsserts(conf.asserts);
 
-    return new SceneIR({ nodes, world, dim, size: conf.size, equal: conf.equal, theme: conf.theme, themeDef, dpi: conf.dpi });
+    // 3D 씬은 좌표 왜곡을 막기 위해 정사각(equal) 렌더를 기본 활성화한다.
+    const effectiveEqual = conf.equal || (dim === 3);
+
+    return new SceneIR({ nodes, world: effWorld, dim, size: conf.size, equal: effectiveEqual, theme: conf.theme, themeDef, dpi: conf.dpi });
   }
 }
 
@@ -141,11 +146,45 @@ function rank({ n, i }) {
   return (z === undefined ? 0 : z) * 1000 + i / 100000;
 }
 // ── 세계 사각형 ──────────────────────────────────
-function resolveWorld(conf, shapes) {
+/** 3D 씬: 원점(0,0,0)을 중심으로 하여, 가장 먼 도형점까지 거리를 반경으로 사각 view 를 잡는다. */
+function world3From(shapes, project) {
+  const o = project([0, 0, 0]); // 원점의 화면 좌표
+  let R2 = 1; // 반경의 제곱(여백 포함)
+  const consider = (p) => {
+    const [x, y] = project(p);
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+    R2 = Math.max(R2, (x - o[0]) ** 2 + (y - o[1]) ** 2);
+  };
+  for (const s of shapes) for (const p of collect3(s, 1)) consider(p);
+  // 원점 중심으로 여백을 두어 축이 중심부에 놓이게 (축은 도형 위를 지나도 됨)
+  const R = Math.sqrt(R2);
+  const pad = R * 0.25;
+  return { xmin: o[0] - R - pad, xmax: o[0] + R + pad, ymin: o[1] - R - pad, ymax: o[1] + R + pad };
+}
+
+/** 3D 형태의 좌표들만 추출 (2D 좌표는 무시). 구/회전체는 표면점(코너) 포함. */
+function collect3(s, _ = 1) {
+  if (s == null) return [];
+  const out = [];
+  if (Array.isArray(s.coords) && s.coords.length >= 3) out.push(s.coords);
+  if (s.vertices && Array.isArray(s.vertices)) for (const v of s.vertices) if (v.coords.length >= 3) out.push(v.coords);
+  if (typeof s.center === 'function') {
+    const c = s.center(); if (c.length >= 3) out.push(c);
+  }
+  if (typeof s.center === 'function' && typeof s.radius === 'function') {
+    const c = s.center(); const r = s.radius();
+    if (c.length >= 3) for (const dx of [-r, r]) for (const dy of [-r, r]) for (const dz of [-r, r]) out.push([c[0] + dx, c[1] + dy, c[2] + dz]);
+  }
+  return out;
+}
+
+function resolveWorld(conf, shapes, dim = 2) {
   if (conf.view) return { xmin: conf.view[0][0], xmax: conf.view[0][1], ymin: conf.view[1][0], ymax: conf.view[1][1] };
   let xmin = Infinity, xmax = -Infinity, ymin = Infinity, ymax = -Infinity;
   for (const s of shapes) {
     for (const p of collect(s)) {
+      // 3D 점은 투영 좌표를 world 로 사용하되, 원점 포함 처리
+      if (p.length >= 3 && dim === 3) continue; // 3D 축이 별도로 world 를 확장
       if (p.length >= 1) { xmin = Math.min(xmin, p[0]); xmax = Math.max(xmax, p[0]); }
       if (p.length >= 2) { ymin = Math.min(ymin, p[1]); ymax = Math.max(ymax, p[1]); }
     }
@@ -307,11 +346,11 @@ function axesIR(world, cfg, theme) {
 function axes3IR(world, project, theme, cfg) {
   const out = [];
   if (!project) return out;
-  const R = Math.max(world.xmax - world.xmin, world.ymax - world.ymin) * 0.55;
+  // 축 길이: 세계(원점중심 project) 반경의 0.8 (여백 남겨 모서리 안 닿게)
+  const radius = Math.max((world.xmax - world.xmin), (world.ymax - world.ymin)) / 2;
+  const R = radius * 0.8;
   const axis = {
-    x: { color: '#d62728' },
-    y: { color: '#2ca02c' },
-    z: { color: '#1f77b4' },
+    x: { color: '#d62728' }, y: { color: '#2ca02c' }, z: { color: '#1f77b4' },
   };
   const step = niceStep(-R, R, cfg && cfg.tick ? cfg.tick : undefined);
 
@@ -319,15 +358,20 @@ function axes3IR(world, project, theme, cfg) {
     const idx = 'xyz'.indexOf(name);
     const neg = [0, 0, 0], pos = [0, 0, 0];
     neg[idx] = -R; pos[idx] = R;
-    out.push(node('path', { ops: [{ op: 'M', x: project(neg)[0], y: project(neg)[1] }, { op: 'L', x: project(pos)[0], y: project(pos)[1] }], z: -6, style: { color: a.color, stroke: 1.4 } }));
-    for (let t = -R; t <= R + 1e-9; t += step) {
+    const pn = project(neg), pp = project(pos);
+    out.push(node('path', { ops: [{ op: 'M', x: pn[0], y: pn[1] }, { op: 'L', x: pp[0], y: pp[1] }], z: -6, style: { color: a.color, stroke: 1.4 } }));
+    // 축 방향 단위 벡터(오프셋 계산)
+    const L = Math.hypot(pp[0] - pn[0], pp[1] - pn[1]) || 1;
+    const ux = (pp[0] - pn[0]) / L, uy = (pp[1] - pn[1]) / L;
+    // 양(+)축에만 눈금 (원점 지나며, 오프셋은 world 단위로 소량)
+    for (let t = 0; t <= R + 1e-9; t += step) {
       if (Math.abs(t) < step * 1e-6) continue;
       const pt = [0, 0, 0]; pt[idx] = t;
-      const p1 = project(pt);
-      out.push(node('text', { x: p1[0] + 4, y: p1[1] - 4, text: fmtTick(t), font: 10, color: a.color, z: -5 }));
+      const p = project(pt);
+      out.push(node('text', { x: p[0] + ux * 0.12, y: p[1] - uy * 0.12, text: fmtTick(t), font: 10, color: a.color, z: -5 }));
     }
-    const [lx, ly] = project(pos);
-    out.push(node('text', { x: lx + 6, y: ly - 6, text: name, font: 13, italic: true, color: a.color, z: -4 }));
+    // 축 라벨은 끝점 살짝 위 (world 단위)
+    out.push(node('text', { x: pp[0] + ux * 0.16, y: pp[1] - uy * 0.16, text: name, font: 13, italic: true, color: a.color, z: -4 }));
   }
   return out;
 }
