@@ -2,6 +2,7 @@
 import { Drawable } from '../core/drawable.js';
 import { node } from '../core/node.js';
 import { project3, polyline, pick, depthZ } from './threeD.js';
+import { point } from './point.js';
 
 export class Cylinder extends Drawable {
   constructor(conf = {}) { super('cylinder', { ...conf }); }
@@ -60,9 +61,131 @@ export class Surface extends Drawable {
     return out;
   }
 }
+// ── z = f(x,y) 곡면 (mesh wireframe / shaded faces) ──
+function shadeHex(hex, k) {
+  if (!/^#[0-9a-fA-F]{6}$/.test(hex || '')) return hex;
+  const n = parseInt(hex.slice(1), 16);
+  const cl = (x) => Math.max(0, Math.min(255, Math.round(x * k)));
+  return `#${((cl((n >> 16) & 255) << 16) | (cl((n >> 8) & 255) << 8) | cl(n & 255)).toString(16).padStart(6, '0')}`;
+}
+
+export class ZSurface extends Drawable {
+  constructor(conf = {}) { super('surface', { xr: [-2, 2], yr: [-2, 2], n: 24, ...conf }); }
+  on(xr, yr) { return this.set({ xr, yr }); }
+  mesh(n) { return this.set({ n }); }
+  faces(on = true) { return this.set({ faces: on }); }
+  // 3D 자동 프레이밍용 코너점(collect3 가 사용)
+  get vertices() {
+    const c = this._conf, f = c.fn, [x0, x1] = c.xr, [y0, y1] = c.yr;
+    const z = (x, y) => { const v = f(x, y); return Number.isFinite(v) ? v : 0; };
+    return [[x0, y0], [x1, y0], [x1, y1], [x0, y1]].map(([x, y]) => point(x, y, z(x, y)));
+  }
+  toIR(ctx) {
+    const c = this._conf, f = c.fn;
+    const [x0, x1] = c.xr, [y0, y1] = c.yr, n = c.n;
+    const P = (i, j) => {
+      const x = x0 + ((x1 - x0) * i) / n, y = y0 + ((y1 - y0) * j) / n;
+      return project3(ctx, [x, y, f(x, y)]);
+    };
+    const base = c.color || '#93c5fd';
+    const out = [];
+    // 깊이 포함 선(path) — hidden-line 대상
+    const line3 = (pts, stroke, color, hidden) => {
+      if (pts.some((p) => !Number.isFinite(p[0]) || !Number.isFinite(p[1]))) return null;
+      const depth = pts.reduce((a, p) => a + p[2], 0) / pts.length;
+      return node('path', {
+        ops: pts.map((p, i) => ({ op: i ? 'L' : 'M', x: p[0], y: p[1], depth: p[2] })),
+        color, stroke, z: depthZ(depth), hiddenTest: hidden,
+      });
+    };
+    if (c.faces) {
+      const quads = [];
+      for (let j = 0; j < n; j++) {
+        for (let i = 0; i < n; i++) {
+          const p = [P(i, j), P(i + 1, j), P(i + 1, j + 1), P(i, j + 1)];
+          if (p.some((q) => !Number.isFinite(q[0]) || !Number.isFinite(q[1]))) continue;
+          quads.push({ p, depth: p.reduce((a, q) => a + q[2], 0) / 4 });
+        }
+      }
+      quads.sort((a, b) => b.depth - a.depth);   // 먼 것부터(painter)
+      const dmin = Math.min(...quads.map((q) => q.depth));
+      const dmax = Math.max(...quads.map((q) => q.depth));
+      for (const q of quads) {
+        const t = dmax > dmin ? (q.depth - dmin) / (dmax - dmin) : 0.5;   // 가까울수록 밝게
+        const col = shadeHex(base, 1.28 - t * 0.55);
+        out.push(node('polygon', {
+          pts: q.p.map((p) => [p[0], p[1]]), depths: q.p.map((p) => p[2]), closed: true,
+          fill: col, color: col, stroke: 0.4, opacity: c.opacity ?? 0.96, z: depthZ(q.depth),
+          occluder: true,   // hidden-line 용 깊이 버퍼 소스
+        }));
+      }
+    } else {
+      for (let j = 0; j <= n; j++) { const pts = []; for (let i = 0; i <= n; i++) pts.push(P(i, j)); const l = line3(pts, c.stroke ?? 1, c.color || base, true); if (l) out.push(l); }
+      for (let i = 0; i <= n; i++) { const pts = []; for (let j = 0; j <= n; j++) pts.push(P(i, j)); const l = line3(pts, c.stroke ?? 1, c.color || base, true); if (l) out.push(l); }
+    }
+    // 실루엣: 정의역 경계 4변은 항상 표시(강한 선)
+    const boundary = [
+      Array.from({ length: n + 1 }, (_, i) => P(i, 0)),
+      Array.from({ length: n + 1 }, (_, i) => P(i, n)),
+      Array.from({ length: n + 1 }, (_, j) => P(0, j)),
+      Array.from({ length: n + 1 }, (_, j) => P(n, j)),
+    ];
+    for (const b of boundary) { const l = line3(b, 1.4, shadeHex(base, 0.7), false); if (l) out.push(l); }
+    return out;
+  }
+}
+
 export const surface = {
   revolution(curveObj) { return { about: () => new Surface({ curve: curveObj }) }; },
+  /** z = f(x,y).on([x0,x1],[y0,y1]).mesh(n) / .faces() */
+  z(fn) { return new ZSurface({ fn }); },
 };
+
+// ── 3D 벡터장(quiver) ────────────────────────────
+export class VectorField3 extends Drawable {
+  constructor(conf = {}) { super('vectorField3', { box: [-2, 2, -2, 2, -2, 2], step: 1, len: 0.7, ...conf }); }
+  on(box) { return this.set({ box }); }
+  step(s) { return this.set({ step: s }); }
+  len(l) { return this.set({ len: l }); }
+  get vertices() {
+    const [ax, bx, ay, by, az, bz] = this._conf.box;
+    return [[ax, ay, az], [bx, by, bz]].map((v) => point(...v));
+  }
+  toIR(ctx) {
+    const c = this._conf;
+    const [ax, bx, ay, by, az, bz] = c.box;
+    const st = c.step, out = [];
+    const head = c.len * 0.4;
+    for (let x = Math.ceil(ax / st) * st; x <= bx + 1e-9; x += st) {
+      for (let y = Math.ceil(ay / st) * st; y <= by + 1e-9; y += st) {
+        for (let z = Math.ceil(az / st) * st; z <= bz + 1e-9; z += st) {
+          const v = c.fn(x, y, z);
+          if (!v || !v.every(Number.isFinite)) continue;
+          const m = Math.hypot(v[0], v[1], v[2]);
+          if (m < 1e-9) continue;
+          const u = [v[0] / m, v[1] / m, v[2] / m];
+          const base = project3(ctx, [x, y, z]);
+          const tip = project3(ctx, [x + u[0] * c.len, y + u[1] * c.len, z + u[2] * c.len]);
+          if (![base[0], base[1], tip[0], tip[1]].every(Number.isFinite)) continue;
+          const col = c.color || '#1971c2';
+          out.push(node('path', {
+            ops: [{ op: 'M', x: base[0], y: base[1], depth: base[2] }, { op: 'L', x: tip[0], y: tip[1], depth: tip[2] }],
+            color: col, stroke: c.stroke || 1.6, z: depthZ(base[2]), hiddenTest: true,
+          }));
+          const dx = tip[0] - base[0], dy = tip[1] - base[1];
+          const L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L, px = -uy, py = ux;
+          out.push(node('polygon', {
+            pts: [[tip[0], tip[1]], [tip[0] - ux * head + px * head * 0.5, tip[1] - uy * head + py * head * 0.5], [tip[0] - ux * head - px * head * 0.5, tip[1] - uy * head - py * head * 0.5]],
+            closed: true, fill: col, z: depthZ(tip[2]),
+          }));
+        }
+      }
+    }
+    return out;
+  }
+}
+
+export const vectorField3 = (fn) => new VectorField3({ fn });
 
 export class Polyhedron extends Drawable {
   constructor(conf = {}) { super('polyhedron', { ...conf }); }

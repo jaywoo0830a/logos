@@ -4,6 +4,9 @@ import { emitTikZ } from './tikz.js';
 import { irToAsymptote } from './asymptote.js';
 import { buildJSXGraphHTML } from './jsxgraph.js';
 import { katexRender, katexify, buildFigureHTML } from './katex.js';
+import { relayout } from './layout.js';
+import { applyHiddenLines } from './hidden.js';
+import { STIX_STACK, STIX_LINK, resvgFontOptions } from './fonts.js';
 
 const katexNs = { katexRender, katexify };
 
@@ -35,12 +38,16 @@ export class SceneIR {
   toSVG(opts = {}) {
     const m = this._map();
     const td = this.o.themeDef || {};
-    return emitSVG(this.o.nodes, {
+    // 라벨 자동 배치(옵션) — world 좌표는 유지, 화면 오프셋만 조정.
+    let nodes = this.o.nodes;
+    if (this.o.dim === 3 && opts.hiddenLine !== false) nodes = applyHiddenLines(nodes, m.map, m.W, m.H);
+    if (this.o.layout && opts.layout !== false) nodes = relayout(nodes, m.map, m.W, m.H);
+    return emitSVG(nodes, {
       ...m, world: this.o.world,
       math: opts.math,
       bg: td.bg || '#ffffff',
-      font: td.font || 'sans-serif',
-      fontMath: td.fontMath || td.font,
+      font: opts.font || STIX_STACK,   // 모든 텍스트 = STIX Two Math
+      fontMath: opts.fontMath || STIX_STACK,
       axisColor: td.axisColor, gridColor: td.gridColor,
       labelColor: td.labelColor, pointColor: td.pointColor,
       strokeDefault: td.strokeDefault,
@@ -103,7 +110,11 @@ export class SceneIR {
     try { ({ Resvg } = await import('@resvg/resvg-js')); }
     catch { throw new Error("toPNG() 는 @resvg/resvg-js 가 필요합니다. `npm i -D @resvg/resvg-js` 후 사용하세요. (대안: toSVG())"); }
     const svg = this.toSVG({ math: opts.math || 'text' });
-    const r = new Resvg(svg, { background: opts.background || 'white', fitTo: { mode: 'zoom', value: opts.scale || 1 } });
+    const r = new Resvg(svg, {
+      background: opts.background || 'white',
+      fitTo: { mode: 'zoom', value: opts.scale || 1 },
+      ...resvgFontOptions(),
+    });
     return r.render().asPng();
   }
   toPDF() {
@@ -112,6 +123,55 @@ export class SceneIR {
   toCanvas() {
     throw new Error('toCanvas(ctx) requires a canvas implementation. Not bundled.');
   }
+}
+
+// ── subplots / panels ────────────────────────────
+const escAttr = (s) => String(s)
+  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+/**
+ * 여러 figure(SceneIR)를 그리드로 합친다 (matplotlib subplots 대응).
+ * 각 figure 는 중첩 <svg x,y> 로 배치되며 자체 viewBox 스케일을 유지한다.
+ * @param {SceneIR[]} figures
+ * @param {Object} [opts] { cols, cell:[w,h], gap, title(suptitle), background, scale, math }
+ */
+export function panels(figures, opts = {}) {
+  const cols = opts.cols || figures.length || 1;
+  const rows = Math.ceil(figures.length / cols);
+  const [cw, ch] = opts.cell || [600, 600];
+  const tight = !!opts.tight;
+  const gap = opts.gap ?? (tight ? 4 : 16);
+  const outer = opts.pad ?? (tight ? 8 : gap);
+  const titleH = opts.title ? (tight ? 34 : 44) : 0;
+  const W = cols * cw + (cols - 1) * gap + 2 * outer;
+  const H = rows * ch + (rows - 1) * gap + 2 * outer + titleH;
+  const bg = opts.background || '#ffffff';
+  return {
+    width: W, height: H,
+    toSVG(so = {}) {
+      const parts = figures.map((f, i) => {
+        const r = Math.floor(i / cols), c = i % cols;
+        const x = outer + c * (cw + gap);
+        const y = titleH + outer + r * (ch + gap);
+        return f.toSVG(so).replace(/^<svg /, `<svg x="${x}" y="${y}" `);
+      });
+      const t = opts.title
+        ? `<text x="${W / 2}" y="${titleH * 0.72}" font-size="20" font-weight="bold" text-anchor="middle" fill="#222">${escAttr(opts.title)}</text>`
+        : '';
+      return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><rect width="100%" height="100%" fill="${bg}"/>${t}${parts.join('\n')}</svg>`;
+    },
+    toTikZ() { return figures.map((f) => f.toTikZ({ standalone: true })).join('\n\n'); },
+    async toPNG(o = {}) {
+      let Resvg;
+      try { ({ Resvg } = await import('@resvg/resvg-js')); }
+      catch { throw new Error('toPNG() 는 @resvg/resvg-js 가 필요합니다. `npm i -D @resvg/resvg-js`'); }
+      const r = new Resvg(this.toSVG({ math: o.math || 'text' }), {
+        background: o.background || 'white', fitTo: { mode: 'zoom', value: o.scale || 1 },
+        ...resvgFontOptions(),
+      });
+      return r.render().asPng();
+    },
+  };
 }
 
 export default SceneIR;

@@ -43,6 +43,8 @@ export class Drawable {
   opacity(o) { return this.set({ opacity: o }); }
   z(z) { return this.set({ z }); }
   label(l, off) { return this.set({ label: l, labelOff: off }); }
+  font(f) { return this.set({ font: f }); }        // 텍스트/라벨 크기
+  bold(on = true) { return this.set({ bold: on }); }
   as(name) { return this.set({ name }); }
   apply(...ts) { return this.set({ transforms: [...(this._conf.transforms || []), ...ts] }); }
   symbolic(s) { return this.set({ sym: s }); }

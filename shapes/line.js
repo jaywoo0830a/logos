@@ -60,12 +60,9 @@ export class Line extends Drawable {
 }
 
 export function pickStyle(c) {
-  return {
-    ...(c.color ? { color: c.color } : {}),
-    ...(c.stroke ? { stroke: c.stroke } : {}),
-    ...(c.dash ? { dash: c.dash } : {}),
-    ...(c.opacity ? { opacity: c.opacity } : {}),
-  };
+  const s = {};
+  for (const k of ['color', 'stroke', 'dash', 'opacity']) if (c[k] !== undefined) s[k] = c[k];
+  return s;
 }
 // ── Cohen–Sutherland clip ───────────────────────
 function clipSeg([x0, y0], [x1, y1], w) {

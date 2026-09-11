@@ -77,6 +77,22 @@ test('P2-3 region.below 가 곡선 domain 을 상속', () => {
   assert.deepEqual(r.conf.domain, [0, pi], 'domain 상속');
 });
 
+test('figure 데코레이션: 제목/축라벨/범례/임의 텍스트/화살표 수식', () => {
+  const svg = scene().view([-6, 6], [-5, 6]).equal().axes()
+    .title('T').xlabel(tex`x`).ylabel(tex`y`).legend('upper left')
+    .add(
+      circle.center(point(0, 0)).radius(5).color('#1a73e8').label(tex`r=5`),
+      annotate.text(point(1, 1)).label('hello').color('#d93025').font(12).bold(),
+      annotate.arrow(point(1, 1), point(2, 2)).color('#d93025').label(tex`\tfrac{a}{b}`),
+    ).compile().toSVG({ math: 'text' });
+  assert.ok(svg.includes('hello'), '임의 텍스트 주석');
+  assert.ok(/font-weight="bold"/.test(svg), 'bold');
+  assert.ok(svg.includes('>T<'), '제목');
+  assert.ok(svg.includes('r=5'), '범례 항목');
+  assert.ok(svg.includes('(a)/(b)'), '화살표 라벨 수식 변환');
+  lint(svg, 'figure-decoration');
+});
+
 test('P1-2 auto-framing: 타원 bounds 가 view 에 반영', () => {
   const svg = scene().equal().axes().add(ellipse.center(point(0, 0)).semi(3, 2)).compile().toSVG();
   // 눈금 범위가 대략 ±3.6 (semi 3 + 10% pad) 이어야 한다.

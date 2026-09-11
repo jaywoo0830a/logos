@@ -13,7 +13,8 @@
     "shapes",
     "solver",
     "symbolic",
-    "backend"
+    "backend",
+    "assets"
   ],
   "scripts": {
     "test": "node --test test/*.test.js",

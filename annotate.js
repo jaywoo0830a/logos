@@ -12,6 +12,7 @@ annotate.arrow = (A, B) => new ArrowAnno(A, B);
 annotate.dimension = (A, B) => new DimensionAnno(A, B);
 annotate.dot = (P) => new DotAnno(P);
 annotate.tick = (seg) => new TickAnno(seg);
+annotate.text = (P) => new TextAnno(P);
 
 class _Annotate extends Drawable { toIR() { return []; } }
 
@@ -143,6 +144,7 @@ export class ArrowAnno extends Drawable {
     const [x1, y1] = c.A.coords, [x2, y2] = c.B.coords;
     return [node('arrow', {
       x1, y1, x2, y2, label: renderText(c.label),
+      labelMath: typeof c.label?.toLatex === 'function',
       color: c.color, stroke: c.stroke, dash: c.dash, transforms: c.transforms,
       headless: c.headless,
     })];
@@ -210,6 +212,28 @@ export class TickAnno extends Drawable {
       }));
     }
     return out;
+  }
+}
+
+// ── 임의 위치 텍스트 (matplotlib ax.text 대응) ───
+export class TextAnno extends Drawable {
+  constructor(P, text) {
+    super('annotation', { kind: 'text', P, anchor: 'start', italic: false, text });
+  }
+  label(l, opts) { return this.set({ text: l, ...(opts || {}) }); }
+  anchor(a) { return this.set({ anchor: a }); }
+  offset(dx, dy) { return this.set({ dxPx: dx, dyPx: dy }); }
+  font(f) { return this.set({ font: f }); }
+  bold(on = true) { return this.set({ bold: on }); }
+  toIR() {
+    const c = this._conf;
+    const [x, y] = c.P.coords;
+    return [node('text', {
+      x, y, text: renderText(c.text),
+      math: typeof c.text?.toLatex === 'function',
+      anchor: c.anchor || 'start', dxPx: c.dxPx, dyPx: c.dyPx,
+      font: c.font, bold: c.bold, italic: c.italic, color: c.color, rotate: c.rotate, z: c.z,
+    })];
   }
 }
 

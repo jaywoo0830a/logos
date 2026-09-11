@@ -1,6 +1,7 @@
 // `logos` 공개 API — DSL.md §14 구조의 진입점
 // 구현된 모듈과, 아직 미구현(스텁) 모듈을 함께 노출한다.
 import { Scene } from './core/scene.js';
+import { panels } from './backend/scene-ir.js';
 import { node } from './core/node.js';
 import { point } from './shapes/point.js';
 import { vector } from './shapes/vector.js';
@@ -16,7 +17,7 @@ import { rectangle } from './shapes/rectangle.js';
 import { region } from './shapes/region.js';
 import { vectorField } from './shapes/vectorfield.js';
 import { sphere, plane } from './shapes/threeD.js';
-import { cylinder, cone, surface, polyhedron } from './shapes/threeD2.js';
+import { cylinder, cone, surface, polyhedron, vectorField3 } from './shapes/threeD2.js';
 import transform from './transform.js';
 import annotate from './annotate.js';
 import { tex } from './symbolic/tex.js';
@@ -33,9 +34,9 @@ export const tau = TAU;
 export const pi = Math.PI;
 export const e = Math.E;
 
-export { Scene, scene, node, point, vector, line, segment, curve, circle, ellipse,
+export { Scene, scene, panels, node, point, vector, line, segment, curve, circle, ellipse,
          parabola, hyperbola, polygon, triangle, quad, regular, square, rectangle, region,
-         vectorField, sphere, plane, cylinder, cone, surface, polyhedron, transform, annotate, tex, Sym };
+         vectorField, vectorField3, sphere, plane, cylinder, cone, surface, polyhedron, transform, annotate, tex, Sym };
 
 // ── ADAPT.md 외부엔진 어댑터 API ───────────────────
 export const adapt = {

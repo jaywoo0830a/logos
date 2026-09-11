@@ -1,5 +1,6 @@
 // DSL.md §5 씬(Scene) + §12 Scene IR → 다중 백엔드
 import { node } from './node.js';
+import { renderText } from './drawable.js';
 import { SceneIR } from '../backend/scene-ir.js';
 
 const THEMES = {
@@ -84,11 +85,23 @@ export class Scene {
   equal() { return this.set({ equal: true }); }
   axes(cfg = true) { return this.set({ axes: cfg }); }
   grid(cfg = true) { return this.set({ grid: cfg }); }
+  /** 플롯 테두리(spines). 예: .spines({ top: false, right: false }) */
+  spines(cfg = true) { return this.set({ spines: cfg }); }
   polarGrid(cfg = true) { return this.set({ polarGrid: cfg }); }
   sphericalGrid(cfg = true) { return this.set({ sphericalGrid: cfg }); }
   size(w, h) { return this.set({ size: [w, h] }); }
   dpi(d) { return this.set({ dpi: d }); }
   theme(t) { return this.set({ theme: t }); }
+
+  // ── 제목 / 축 라벨 / 범례 (출판 품질) ──────────
+  title(t) { return this.set({ title: t }); }
+  xlabel(t) { return this.set({ xlabel: t }); }
+  ylabel(t) { return this.set({ ylabel: t }); }
+  legend(v = true) {
+    return this.set({ legend: v, ...(typeof v === 'string' ? { legendLoc: v } : {}) });
+  }
+  /** 라벨 자동 배치(텍스트 충돌 회피). */
+  layout(mode = 'auto') { return this.set({ layout: mode }); }
 
   // ── 3D 카메라/조명 ─────────────────────────────
   camera(c) { return this.set({ camera: { ...this._conf.camera, ...c } }); }
@@ -115,16 +128,30 @@ export class Scene {
     let project = null;
     if (dim === 3) project = makeProjection(conf.camera);
     // 3D 면 축이 view 안에 들도록, 세계사각형을 프로젝션 후로 계산한다.
-    const effWorld = (dim === 3 && project && !conf.view) ? world3From(conf.shapes, project) : world;
+    let effWorld = (dim === 3 && project && !conf.view) ? world3From(conf.shapes, project) : world;
+    // 제목/축 라벨을 가장자리 여백에 배치하기 위해 세계사각형을 약간 넓힌다.
+    effWorld = withMargins(effWorld, conf);
     const ctx = { world: effWorld, dim, theme: conf.theme, project };
 
     let nodes = [];
     if (conf.grid) nodes = nodes.concat(gridIR(effWorld, conf.grid, themeDef));
+    if (conf.spines !== undefined && conf.spines !== false) nodes = nodes.concat(spineIR(effWorld, conf.spines, themeDef));
     if (conf.polarGrid) nodes = nodes.concat(polarGridIR(effWorld, themeDef));
     if (conf.sphericalGrid) nodes = nodes.concat(sphericalGridIR(effWorld, project, themeDef));
     if (conf.axes && dim === 3) nodes = nodes.concat(axes3IR(effWorld, project, themeDef, conf.axes));
-    else if (conf.axes) nodes = nodes.concat(axesIR(effWorld, conf.axes, themeDef));
-    else if (dim === 3) nodes = nodes.concat(axes3IR(effWorld, project, themeDef, true));
+    else if (conf.axes) {
+      // figure 라벨(scene.xlabel/ylabel)을 쓰면 축 자체 라벨은 끈다(중복 방지).
+      let ac = conf.axes;
+      if (conf.xlabel || conf.ylabel) {
+        const base = (ac && typeof ac === 'object') ? ac : {};
+        ac = {
+          ...base,
+          x: { ...(base.x || {}), ...(conf.xlabel ? { label: false } : {}) },
+          y: { ...(base.y || {}), ...(conf.ylabel ? { label: false } : {}) },
+        };
+      }
+      nodes = nodes.concat(axesIR(effWorld, ac, themeDef));
+    } else if (dim === 3) nodes = nodes.concat(axes3IR(effWorld, project, themeDef, true));
 
     for (const shape of conf.shapes) {
       if (shape && typeof shape.toIR === 'function') {
@@ -132,6 +159,9 @@ export class Scene {
         (sub || []).forEach((n) => nodes.push(n));
       }
     }
+    // 제목/축 라벨/범례 (도형 위, z 큼)
+    nodes = nodes.concat(decorateIR(effWorld, conf, themeDef));
+    if (conf.legend) nodes = nodes.concat(legendIR(effWorld, conf, themeDef));
     nodes = nodes.map((n, i) => ({ n, i })).sort((a, b) => rank(a) - rank(b)).map((x) => x.n);
 
     checkAsserts(conf.asserts);
@@ -139,7 +169,7 @@ export class Scene {
     // 3D 씬은 좌표 왜곡을 막기 위해 정사각(equal) 렌더를 기본 활성화한다.
     const effectiveEqual = conf.equal || (dim === 3);
 
-    return new SceneIR({ nodes, world: effWorld, dim, size: conf.size, equal: effectiveEqual, theme: conf.theme, themeDef, dpi: conf.dpi });
+    return new SceneIR({ nodes, world: effWorld, dim, size: conf.size, equal: effectiveEqual, theme: conf.theme, themeDef, dpi: conf.dpi, layout: conf.layout });
   }
 }
 
@@ -230,36 +260,121 @@ function readRadius(s) {
   return null;
 }
 
+// ── 제목 / 축 라벨 / 범례 ────────────────────────
+/** 제목·축라벨을 위한 가장자리 여백 확장 */
+function withMargins(world, conf) {
+  const w = { xmin: world.xmin, xmax: world.xmax, ymin: world.ymin, ymax: world.ymax };
+  const sx = w.xmax - w.xmin, sy = w.ymax - w.ymin;
+  if (conf.title) w.ymax += sy * 0.10;
+  if (conf.xlabel) w.ymin -= sy * 0.10;
+  if (conf.ylabel) w.xmin -= sx * 0.10;
+  return w;
+}
+
+function decorateIR(world, conf, theme) {
+  const out = [];
+  const c = theme.labelColor || '#333';
+  const cx = (world.xmin + world.xmax) / 2;
+  const cy = (world.ymin + world.ymax) / 2;
+  const sx = world.xmax - world.xmin, sy = world.ymax - world.ymin;
+  const mk = (t, x, y, extra) => {
+    if (t == null) return;
+    out.push(node('text', {
+      x, y, text: renderText(t), math: typeof t?.toLatex === 'function',
+      italic: false, color: c, z: 60, ...extra,
+    }));
+  };
+  // 여백(10%)의 중앙에 배치
+  mk(conf.title, cx, world.ymax - sy * 0.05, { anchor: 'middle', font: 16, bold: true });
+  mk(conf.xlabel, cx, world.ymin + sy * 0.05, { anchor: 'middle', font: 14 });
+  mk(conf.ylabel, world.xmin + sx * 0.05, cy, { anchor: 'middle', font: 14, rotate: -90 });
+  return out;
+}
+
+function legendIR(world, conf, theme) {
+  const entries = [];
+  for (const s of conf.shapes || []) {
+    const lc = s && s._conf;
+    if (!lc || lc.label == null) continue;
+    entries.push({
+      text: renderText(lc.label), math: typeof lc.label?.toLatex === 'function',
+      color: lc.color || lc.fill || theme.strokeDefault || theme.axisColor || '#333', dash: lc.dash,
+    });
+  }
+  if (!entries.length) return [];
+  const spanX = world.xmax - world.xmin, spanY = world.ymax - world.ymin;
+  const loc = conf.legendLoc || 'upper left';
+  const padX = spanX * 0.03, padY = spanY * 0.03;
+  const sw = spanX * 0.05;                 // swatch 길이
+  const gap = spanX * 0.015;
+  const textW = spanX * 0.30;
+  const lineH = spanY * 0.075;
+  const boxW = padX * 2 + sw + gap + textW;
+  const boxH = padY * 2 + lineH * entries.length;
+  let bx = world.xmin + spanX * 0.02;
+  if (/right/.test(loc)) bx = world.xmax - boxW - spanX * 0.02;
+  let top = world.ymax - spanY * 0.02;
+  if (/lower/.test(loc)) top = world.ymin + spanY * 0.02 + boxH;
+  const bot = top - boxH;
+  const out = [node('polygon', {
+    pts: [[bx, bot], [bx + boxW, bot], [bx + boxW, top], [bx, top]], closed: true,
+    fill: '#ffffff', opacity: 0.86, color: theme.gridColor || '#cccccc', stroke: 0.8, z: 70,
+  })];
+  const labelC = theme.labelColor || '#333';
+  entries.forEach((e, i) => {
+    const yc = top - padY - lineH * (i + 0.5);
+    const x0 = bx + padX;
+    out.push(node('path', { ops: [{ op: 'M', x: x0, y: yc }, { op: 'L', x: x0 + sw, y: yc }], color: e.color, stroke: 2.4, dash: e.dash, z: 71 }));
+    out.push(node('text', { x: x0 + sw + gap, y: yc, dyPx: 4, text: e.text, math: e.math, anchor: 'start', font: 11.5, italic: false, color: labelC, z: 71 }));
+  });
+  return out;
+}
+
 // ── 배경 IR ──────────────────────────────────────
 function gridIR(world, cfg, theme) {
-  const step = (typeof cfg === 'object' && cfg.step) ? cfg.step : (typeof cfg === 'number' ? cfg : 1);
-  const color = theme.gridColor || '#cbd5e1';
-  const majorC = theme.gridMajor || (typeof cfg === 'object' && cfg.major) || color;
-  const minor = (typeof cfg === 'object' && cfg.minor) ? cfg.minor : null;
+  const o = (typeof cfg === 'object') ? cfg : {};
+  const step = o.step ? o.step : (typeof cfg === 'number' ? cfg : 1);
+  const color = o.color || theme.gridColor || '#cbd5e1';
+  const majorC = theme.gridMajor || o.major || color;
+  const minor = o.minor || null;
+  const alpha = o.alpha != null ? o.alpha : 1;          // grid alpha (matplotlib alpha=0.15 대응)
+  const lwMajor = o.width != null ? o.width : 0.6;
+  const lwMinor = o.minorWidth != null ? o.minorWidth : lwMajor * 0.7;
   const out = [];
   // 마이너 그리드
   if (minor) {
-    const mcol = theme.gridColor || color;
-    const startX = Math.floor(world.xmin / minor) * minor;
-    const startY = Math.floor(world.ymin / minor) * minor;
-    for (let x = startX; x <= world.xmax + 1e-9; x += minor) {
-      out.push(node('path', { ops: [{ op: 'M', x, y: world.ymin }, { op: 'L', x, y: world.ymax }], z: -11, style: { color: mcol, stroke: 0.4 } }));
+    const mcol = o.minorColor || theme.gridColor || color;
+    for (let x = Math.floor(world.xmin / minor) * minor; x <= world.xmax + 1e-9; x += minor) {
+      out.push(node('path', { ops: [{ op: 'M', x, y: world.ymin }, { op: 'L', x, y: world.ymax }], z: -11, style: { color: mcol, stroke: lwMinor, opacity: alpha } }));
     }
-    for (let y = startY; y <= world.ymax + 1e-9; y += minor) {
-      out.push(node('path', { ops: [{ op: 'M', x: world.xmin, y }, { op: 'L', x: world.xmax, y }], z: -11, style: { color: mcol, stroke: 0.4 } }));
+    for (let y = Math.floor(world.ymin / minor) * minor; y <= world.ymax + 1e-9; y += minor) {
+      out.push(node('path', { ops: [{ op: 'M', x: world.xmin, y }, { op: 'L', x: world.xmax, y }], z: -11, style: { color: mcol, stroke: lwMinor, opacity: alpha } }));
     }
   }
-  // 메이저 그리드 (step 배수에만, 원점 축은 생략해 깔끔하게)
-  const startX = Math.ceil(world.xmin / step) * step;
-  const startY = Math.ceil(world.ymin / step) * step;
-  for (let x = startX; x <= world.xmax + 1e-9; x += step) {
+  // 메이저 그리드 (step 배수, 원점 축은 생략)
+  for (let x = Math.ceil(world.xmin / step) * step; x <= world.xmax + 1e-9; x += step) {
     if (Math.abs(x) < step * 1e-6) continue;
-    out.push(node('path', { ops: [{ op: 'M', x, y: world.ymin }, { op: 'L', x, y: world.ymax }], z: -10, style: { color: majorC, stroke: 0.6 } }));
+    out.push(node('path', { ops: [{ op: 'M', x, y: world.ymin }, { op: 'L', x, y: world.ymax }], z: -10, style: { color: majorC, stroke: lwMajor, opacity: alpha } }));
   }
-  for (let y = startY; y <= world.ymax + 1e-9; y += step) {
+  for (let y = Math.ceil(world.ymin / step) * step; y <= world.ymax + 1e-9; y += step) {
     if (Math.abs(y) < step * 1e-6) continue;
-    out.push(node('path', { ops: [{ op: 'M', x: world.xmin, y }, { op: 'L', x: world.xmax, y }], z: -10, style: { color: majorC, stroke: 0.6 } }));
+    out.push(node('path', { ops: [{ op: 'M', x: world.xmin, y }, { op: 'L', x: world.xmax, y }], z: -10, style: { color: majorC, stroke: lwMajor, opacity: alpha } }));
   }
+  return out;
+}
+
+/** 플롯 테두리(spines) — 선택한 변만 그린다. */
+function spineIR(world, cfg, theme) {
+  const c = theme.axisColor || '#333';
+  const on = (k) => (cfg === true ? true : (cfg && cfg[k] !== undefined ? !!cfg[k] : false));
+  const w = (cfg && cfg.width != null) ? cfg.width : 1.2;
+  const col = (cfg && cfg.color) || c;
+  const out = [];
+  const seg = (x1, y1, x2, y2) => node('path', { ops: [{ op: 'M', x: x1, y: y1 }, { op: 'L', x: x2, y: y2 }], z: -7, style: { color: col, stroke: w } });
+  if (on('top')) out.push(seg(world.xmin, world.ymax, world.xmax, world.ymax));
+  if (on('right')) out.push(seg(world.xmax, world.ymin, world.xmax, world.ymax));
+  if (on('bottom')) out.push(seg(world.xmin, world.ymin, world.xmax, world.ymin));
+  if (on('left')) out.push(seg(world.xmin, world.ymin, world.xmin, world.ymax));
   return out;
 }
 

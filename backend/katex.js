@@ -50,12 +50,16 @@ export function latexToText(latex) {
     '\\degree': '°',
   };
   for (const [k, v] of Object.entries(sym)) s = s.split(k).join(v);
-  // \frac{a}{b} → (a)/(b)  (중첩은 반복 치환)
+  // \frac \tfrac \dfrac{a}{b} → (a)/(b)  (중첩은 반복 치환)
   let prev;
   do {
     prev = s;
-    s = s.replace(/\\frac\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g, '($1)/($2)');
+    s = s.replace(/\\(?:t|d)?frac\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g, '($1)/($2)');
   } while (s !== prev);
+  // \mathrm{X} / \text{X} → X
+  s = s.replace(/\\(?:mathrm|text|operatorname)\s*\{([^{}]*)\}/g, '$1');
+  // \left \right 제거
+  s = s.replace(/\\(?:left|right)/g, '');
   // \sqrt{a} → √(a)
   s = s.replace(/√\s*\{([^{}]*)\}/g, '√($1)');
   // \lim_{...} \log_{...} 등 아래첨자 → 괄호
@@ -75,9 +79,10 @@ export function escapeHtml(s) {
     .replace(/"/g, '&quot;');
 }
 
-/** 자식 노드(text)들을 전부 KaTeX 처리한 최종 <figure> 조립용 헬퍼 */
+/** 자식 노드(text)들을 전부 KaTeX 처리한 최종 <figure> 조립용 헬퍼 (STIX Two Math 포함) */
 export function buildFigureHTML(items) {
-  return `<figure class="logos">${items.join('\n')}</figure>`;
+  const link = '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=STIX+Two+Math&display=swap" rel="stylesheet">';
+  return `${link}<figure class="logos" style="font-family:'STIX Two Math',Georgia,serif">${items.join('\n')}</figure>`;
 }
 
 export default katexRender;

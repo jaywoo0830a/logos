@@ -1,6 +1,7 @@
 // DSL.md §12 렌더러 파이프라인 — SVG emitter (clip / gradient / math label)
 import { applyTransforms } from '../transform.js';
 import { katexRender, latexToText } from './katex.js';
+import { STIX_STACK, svgFontStyle } from './fonts.js';
 import { regionRect } from '../shapes/region.js';
 
 const esc = (s) => String(s)
@@ -10,8 +11,8 @@ const esc = (s) => String(s)
 function themed(opts) {
   return {
     bg: opts.bg || '#ffffff',
-    font: opts.font || 'sans-serif',
-    fontMath: opts.fontMath || 'Georgia, serif',
+    font: opts.font || STIX_STACK,
+    fontMath: opts.fontMath || STIX_STACK,
     axisColor: opts.axisColor || '#333',
     gridColor: opts.gridColor || '#cbd5e1',
     labelColor: opts.labelColor || '#333',
@@ -22,7 +23,7 @@ function themed(opts) {
 }
 
 function stroke(style, t) {
-  const w = style.stroke || t.strokeWidth;
+  const w = style.stroke != null ? style.stroke : t.strokeWidth;   // stroke(0) 도 존중
   return {
     stroke: style.color || t.strokeDefault,
     'stroke-width': w,
@@ -58,6 +59,8 @@ export function emitSVG(nodes, opts) {
   const out = [`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" font-family="${esc(t.font)}">`];
   // 배경: 상단 밝음 → 하단 미세하게 어두운 선형 그라디언트만 사용한다.
   // (채워진 원에 무조건 방사 그라디언트를 씌우던 동작은 제거 — 평면 채움은 평면으로)
+  // STIX Two Math 를 모든 텍스트/수식에 적용 (브라우저 @import)
+  out.push(svgFontStyle());
   out.push(`<defs><linearGradient id="lgbg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${t.bg}"/><stop offset="1" stop-color="${shadeBg(t.bg)}"/></linearGradient></defs>`);
   out.push(`<rect width="100%" height="100%" fill="url(#lgbg)"/>`);
 
@@ -144,12 +147,12 @@ function renderNode(n, m, scaleX, scaleY, t, gradId) {
       let fill = d.fill;
       if (d.gradient && gradId) { const gid = gradId.get(d.gradient); if (gid) fill = `url(#${gid})`; }
       const rx = d.r * scaleX, ry = d.r * scaleY;
-      if (Math.abs(rx - ry) < 1e-9) return `<circle cx="${cx}" cy="${cy}" r="${rx}" fill="${fill}" opacity="${d.opacity || 1}" stroke="none"/>`;
-      return `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${fill}" opacity="${d.opacity || 1}" stroke="none"/>`;
+      if (Math.abs(rx - ry) < 1e-9) return `<circle cx="${cx}" cy="${cy}" r="${rx}" fill="${fill}" opacity="${d.opacity ?? 1}" stroke="none"/>`;
+      return `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${fill}" opacity="${d.opacity ?? 1}" stroke="none"/>`;
     }
     case 'clipfill': {
       const cid = 'logosClip' + (++CLIPN);
-      return `<defs><clipPath id="${cid}"><path d="${diskPath(d.clip.cx, d.clip.cy, d.clip.r, m, d)}"/></clipPath></defs><path d="${diskPath(d.fill.cx, d.fill.cy, d.fill.r, m, d)}" fill="${d.fillColor}" opacity="${d.opacity || 1}" clip-path="url(#${cid})" stroke="none"/>`;
+      return `<defs><clipPath id="${cid}"><path d="${diskPath(d.clip.cx, d.clip.cy, d.clip.r, m, d)}"/></clipPath></defs><path d="${diskPath(d.fill.cx, d.fill.cy, d.fill.r, m, d)}" fill="${d.fillColor}" opacity="${d.opacity ?? 1}" clip-path="url(#${cid})" stroke="none"/>`;
     }
     case 'ellipse': {
       const [cx, cy] = m(d, d.cx, d.cy);
@@ -172,10 +175,11 @@ function renderNode(n, m, scaleX, scaleY, t, gradId) {
       const parts = [dot];
       if (d.label) {
         const [lx, ly] = m(d, d.x, d.y);
+        const ldx = d.dxPx ?? 7, ldy = d.dyPx ?? -7;
         if (d.labelMath) {
-          if (t.math === 'text') parts.push(`<text x="${lx + 8}" y="${ly - 7}" font-size="13" font-style="normal" fill="${d.color || t.labelColor}">${esc(latexToText(String(d.label)))}</text>`);
-          else parts.push(`<foreignObject x="${lx + 8}" y="${ly - 24}" width="300" height="44"><div xmlns="http://www.w3.org/1999/xhtml">${katexRender(String(d.label))}</div></foreignObject>`);
-        } else parts.push(`<text x="${lx + 7}" y="${ly - 7}" font-size="13" font-style="italic" fill="${d.color || t.labelColor}">${esc(d.label)}</text>`);
+          if (t.math === 'text') parts.push(`<text x="${lx + ldx}" y="${ly + (d.dyPx ?? -7)}" font-size="13" font-style="normal" fill="${d.color || t.labelColor}">${esc(latexToText(String(d.label)))}</text>`);
+          else parts.push(`<foreignObject x="${lx + ldx}" y="${ly + (d.dyPx ?? -24)}" width="300" height="44"><div xmlns="http://www.w3.org/1999/xhtml">${katexRender(String(d.label))}</div></foreignObject>`);
+        } else parts.push(`<text x="${lx + ldx}" y="${ly + ldy}" font-size="13" font-style="italic" fill="${d.color || t.labelColor}">${esc(d.label)}</text>`);
       }
       return parts.join('\n');
     }
@@ -184,21 +188,43 @@ function renderNode(n, m, scaleX, scaleY, t, gradId) {
       const [wx, wy] = m(d, d.x, d.y);
       const x = wx + (d.dxPx || 0);
       const y = wy + (d.dyPx || 0);
+      const bold = d.bold ? ' font-weight="bold"' : '';
+      const color = d.color || t.labelColor;
       if (d.math) {
         if (t.math === 'text') {
           const fs = d.font || 14;
-          return `<text x="${x}" y="${y}" font-size="${fs}" font-style="normal" text-anchor="${d.anchor || 'start'}" fill="${d.color || t.labelColor}">${esc(latexToText(d.text || ''))}</text>`;
+          return `<text x="${x}" y="${y}" font-size="${fs}" font-style="normal"${bold} text-anchor="${d.anchor || 'start'}" fill="${color}">${esc(latexToText(d.text || ''))}</text>`;
         }
-        return `<foreignObject x="${x}" y="${y - 18}" width="500" height="44"><div xmlns="http://www.w3.org/1999/xhtml">${katexRender(d.text || '')}</div></foreignObject>`;
+        // foreignObject 는 자체 폭을 모르므로 anchor=middle 이면 폭을 추정해 중앙 정렬한다.
+        const est = Math.max(40, Math.min(620, String(d.text || '').length * 7.5 + 16));
+        const fx = d.anchor === 'middle' ? x - est / 2 : x;
+        return `<foreignObject x="${fx}" y="${y - 18}" width="${est}" height="46"><div xmlns="http://www.w3.org/1999/xhtml">${katexRender(d.text || '')}</div></foreignObject>`;
       }
       const fs = d.font || 13.5;
       const fsStyle = d.italic === undefined ? (d.caption ? 'normal' : 'italic') : (d.italic ? 'italic' : 'normal');
-      return `<text x="${x}" y="${y}" font-size="${fs}" font-style="${fsStyle}" text-anchor="${d.anchor || 'start'}" fill="${d.color || t.labelColor}">${esc(d.text || '')}</text>`;
+      const rot = d.rotate ? ` transform="rotate(${d.rotate} ${x} ${y})"` : '';
+      const head = `font-size="${fs}" font-style="${fsStyle}"${bold} text-anchor="${d.anchor || 'start'}" fill="${color}"${rot}`;
+      // 멀티라인: \n → <tspan>
+      const lines = String(d.text ?? '').split('\n');
+      if (lines.length > 1) {
+        const tspans = lines.map((ln, i) => `<tspan x="${x}" dy="${i === 0 ? 0 : fs * 1.15}">${esc(ln)}</tspan>`).join('');
+        return `<text x="${x}" y="${y}" ${head}>${tspans}</text>`;
+      }
+      return `<text x="${x}" y="${y}" ${head}>${esc(d.text || '')}</text>`;
+    }
+    case 'rect': {
+      // 임의 좌표 사각형 (barh 등). fill + 선택적 테두리.
+      const [x0, y0] = m(d, d.x0, d.y0);
+      const [x1, y1] = m(d, d.x1, d.y1);
+      const strokeAttr = (d.color || d.stroke != null)
+        ? ` stroke="${d.color || st.stroke}" stroke-width="${d.stroke || st['stroke-width']}"`
+        : ' stroke="none"';
+      return `<rect x="${Math.min(x0, x1)}" y="${Math.min(y0, y1)}" width="${Math.abs(x1 - x0)}" height="${Math.abs(y1 - y0)}" fill="${d.fill || 'none'}"${strokeAttr} opacity="${d.opacity ?? 1}"/>`;
     }
     case 'fillrect': {
       const [x0, y0u] = m(d, d.x, 0);
       const [x1, y1u] = m(d, d.x + d.w, d.y1);
-      return `<rect x="${Math.min(x0, x1)}" y="${Math.min(y0u, y1u)}" width="${Math.abs(x1 - x0)}" height="${Math.abs(y1u - y0u)}" fill="${d.fill}" opacity="${d.opacity || 1}"/>`;
+      return `<rect x="${Math.min(x0, x1)}" y="${Math.min(y0u, y1u)}" width="${Math.abs(x1 - x0)}" height="${Math.abs(y1u - y0u)}" fill="${d.fill}" opacity="${d.opacity ?? 1}"/>`;
     }
     case 'fillpath': {
       const segs = [];
@@ -206,7 +232,7 @@ function renderNode(n, m, scaleX, scaleY, t, gradId) {
         if (op.op === 'Z' || op.op === 'z') { segs.push('Z'); continue; }
         segs.push(`${op.op} ${m(d, op.x, op.y).join(' ')}`);
       }
-      return `<path d="${segs.join(' ')}" fill="${d.fill}" opacity="${d.opacity || 1}" stroke="none"/>`;
+      return `<path d="${segs.join(' ')}" fill="${d.fill}" opacity="${d.opacity ?? 1}" stroke="none"/>`;
     }
     case 'arrow': {
       const [x1, y1] = m(d, d.x1, d.y1);
@@ -219,7 +245,16 @@ function renderNode(n, m, scaleX, scaleY, t, gradId) {
       } else {
         parts.push(`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${st.stroke}" stroke-width="${st['stroke-width']}" opacity="${st.opacity}"/>`);
       }
-      if (d.label) parts.push(`<text x="${(x1 + x2) / 2}" y="${(y1 + y2) / 2 - 6}" font-size="13" text-anchor="middle" fill="${st.stroke}">${esc(d.label)}</text>`);
+      if (d.label) {
+        const lx = (x1 + x2) / 2, ly = (y1 + y2) / 2 - 6;
+        if (d.labelMath && t.math !== 'text') {
+          const est = Math.max(40, Math.min(620, String(d.label).length * 7.5 + 16));
+          parts.push(`<foreignObject x="${lx - est / 2}" y="${ly - 18}" width="${est}" height="46"><div xmlns="http://www.w3.org/1999/xhtml">${katexRender(String(d.label))}</div></foreignObject>`);
+        } else {
+          const txt = d.labelMath ? latexToText(String(d.label)) : String(d.label);
+          parts.push(`<text x="${lx}" y="${ly}" font-size="13" text-anchor="middle" fill="${st.stroke}">${esc(txt)}</text>`);
+        }
+      }
       return parts.join('\n');
     }
     case 'cliprect':

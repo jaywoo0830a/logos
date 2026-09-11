@@ -39,14 +39,18 @@ export class Point extends Drawable {
     const c = this._conf;
     const [x, y, z] = c.cart;
     const proj = (z !== undefined && ctx && ctx.project) ? ctx.project([x, y, z]) : [x, y];
+    const labelMath = typeof c.label?.toLatex === 'function';
+    const off = (c.labelOff && typeof c.labelOff === 'object') ? c.labelOff : {};
     return [node('point', {
       x: proj[0], y: proj[1],
       marker: c.marker || 'dot',
       open: c.open,
       label: renderText(c.label),
-      labelMath: typeof c.label?.toLatex === 'function',
+      labelMath,
       color: c.color, fill: c.fill, stroke: c.stroke,
-      labelOff: c.labelOff,
+      // 라벨 화면 오프셋은 px — layout(자동 배치)이 조정할 수 있도록 데이터로 둔다.
+      dxPx: off.dx ?? (labelMath ? 8 : 7),
+      dyPx: off.dy ?? (labelMath ? -24 : -7),
       transforms: c.transforms,
       style: pickStyle(c),
     })];
