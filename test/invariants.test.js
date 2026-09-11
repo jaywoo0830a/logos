@@ -38,6 +38,26 @@ test('P0-2 tight view 에서 축 눈금 라벨이 화면 밖으로 날아가지 
   lint(svg, 'tight-view');
 });
 
+test('P0-6 축 눈금 길이가 데이터 종횡비와 무관 (증거 B)', () => {
+  // x 범위가 y 범위보다 훨씬 큰 플롯(급수 그림: x 0..50, y 0..1)에서
+  // 눈금 길이를 max(spanX, spanY) 로 잡으면 세로 눈금이 캔버스 높이의 절반까지
+  // 자라 패널 밖(축 라벨 자리)으로 삐져나온다.
+  const tickLens = (svg) => [...svg.matchAll(/<path d="M ([\d.]+) ([\d.]+) L ([\d.]+) ([\d.]+)"[^>]*stroke="#333"/g)]
+    .map((m) => Math.hypot(+m[3] - +m[1], +m[4] - +m[2]));
+  const mk = (xr, yr) => tickLens(scene().view(xr, yr).axes().grid(1).compile().toSVG());
+  const wide = mk([0, 50], [0, 1]);
+  const tall = mk([0, 1], [0, 50]);
+  const square = mk([-5, 5], [-5, 5]);
+  assert.ok(wide.length && tall.length && square.length, '눈금 선분이 방출되어야 한다');
+  const all = [...wide, ...tall, ...square];
+  for (const L of all) {
+    assert.ok(L <= 24, `눈금 길이 ${L.toFixed(1)}px 가 24px(캔버스 600px의 4%) 이하`);
+    assert.ok(L >= 4, `눈금 길이 ${L.toFixed(1)}px 가 보일 만큼 충분(4px 이상)`);
+  }
+  const spread = Math.max(...wide, ...tall) / Math.min(...wide, ...tall);
+  assert.ok(spread < 1.6, `종횡비가 달라도 눈금 길이가 같아야 한다 (spread ${spread.toFixed(2)})`);
+});
+
 test('P0-5 equal 씬의 원은 진짜 원(rx===ry)', () => {
   const svg = scene().equal().axes().add(circle.center(point(0, 0)).radius(3)).compile().toSVG();
   const c = svg.match(/<circle[^>]*\br="([\d.]+)"/);
