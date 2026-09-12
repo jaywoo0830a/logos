@@ -16,6 +16,7 @@ import { Scene } from './core/scene.js';
 import { panels } from './backend/scene-ir.js';
 import { curve3 } from './shapes/threeD3.js';
 import { line } from './shapes/line.js';
+import { point } from './shapes/point.js';
 
 // ── ① 팔레트 ─────────────────────────────────────────
 /**
@@ -23,6 +24,11 @@ import { line } from './shapes/line.js';
  * 자주 쓰는 명명색을 hex 로 고정한 팔레트.
  * (이름을 그대로 쓰면 렌더러마다 색이 달라질 수 있으므로 hex 로 못박는다.)
  */
+/** 이름 있는 10색 정성 팔레트 (tab10 근사) — `palette.tab.red` 처럼 이름으로 접근한다. */
+const TAB10 = {
+  blue: '#1f77b4', orange: '#ff7f0e', green: '#2ca02c', red: '#d62728', purple: '#9467bd',
+  brown: '#8c564b', pink: '#e377c2', gray: '#7f7f7f', olive: '#bcbd22', cyan: '#17becf',
+};
 export const palette = {
   blue: '#0000ff', red: '#ff0000', green: '#008000', magenta: '#ff00ff',
   orange: '#ff8c00', yellow: '#bfbf00', cyan: '#00bfbf', black: '#000000',
@@ -32,9 +38,10 @@ export const palette = {
   /** 한 글자 단축 (matplotlib 호환) */
   b: '#0000ff', r: '#ff0000', g: '#008000', m: '#ff00ff', y: '#bfbf00',
   c: '#00bfbf', k: '#000000', w: '#ffffff', o: '#ff8c00',
-  /** 10색 정성 팔레트 (tab10 근사) */
-  tab10: ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd',
-    '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'],
+  /** 이름 있는 10색 정성 팔레트 (tab10 근사) — palette.tab.red */
+  tab: TAB10,
+  /** 위 tab 의 값 배열 — palette.tab10[0] === palette.tab.blue (기존 사용처 호환) */
+  tab10: Object.values(TAB10),
 };
 
 // ── ② 기본 씬 프리셋 ─────────────────────────────────
@@ -197,9 +204,12 @@ code{display:block;padding:8px 14px;font-size:11px;color:#6b7280;background:#faf
  * @example seg(point(0,0), point(3,4), { color: palette.blue, stroke: 2 })
  */
 export function seg(A, B, { color, stroke = 2, dash, opacity } = {}) {
-  const a = A.coords || A, b = B.coords || B;
-  const is3 = a.length >= 3 || b.length >= 3;
-  let s = is3 ? curve3.through([a, b]) : line.through(A, B);
+  // 좌표 배열도 받는다 — 이전에는 2D 배열이 컴파일 때 line.pointDir 에서 죽었다(shapes/line.js:19).
+  const toPt = (v) => (v && v.coords ? v : Array.isArray(v) ? (v.length >= 3 ? point(v[0], v[1], v[2]) : point(v[0], v[1])) : v);
+  const a = toPt(A), b = toPt(B);
+  const ca = a.coords || a, cb = b.coords || b;
+  const is3 = ca.length >= 3 || cb.length >= 3;
+  let s = is3 ? curve3.through([ca, cb]) : line.through(a, b);
   if (color !== undefined) s = s.color(color);
   if (stroke !== undefined) s = s.stroke(stroke);
   if (dash !== undefined) s = s.dash(dash);
