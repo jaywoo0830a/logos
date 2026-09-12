@@ -91,7 +91,7 @@ export class Region extends Drawable {
       const [a, b] = c.domain && c.domain.length === 2 ? c.domain : [NaN, NaN];
       if (!(b > a)) return null;
       const fFn = toFn(c.a),
-        gFn = toFn(c.b);
+        gFn = c.b == null ? () => 0 : toFn(c.b);
       let ymin = Infinity,
         ymax = -Infinity;
       for (let i = 0; i <= 40; i++) {
@@ -128,7 +128,7 @@ export class Region extends Drawable {
       const [a, b] = c.domain && c.domain.length === 2 ? c.domain : [NaN, NaN];
       if (!(b > a)) return null;
       const fFn = toFnVar(c.a, 'y'),
-        gFn = toFnVar(c.b, 'y');
+        gFn = c.b == null ? () => 0 : toFnVar(c.b, 'y');
       let xmin = Infinity,
         xmax = -Infinity;
       for (let i = 0; i <= 40; i++) {
@@ -249,7 +249,9 @@ export class Region extends Drawable {
       if (strip) return [node('cliprect', { ...strip, fill: c.fill, style: pickStyle(c) })];
       // 일반 between (두 곡선/함수 사이)
       const fFn = toFn(c.a),
-        gFn = toFn(c.b);
+        // 두 번째 경계를 생략하면 0 — matplotlib `fill_between(x, y1, y2=0)` 과 같은 기본값.
+        // (생략 시 `toFn(undefined)` 가 NaN 을 방출해 영역이 조용히 사라지던 문제 방지)
+        gFn = c.b == null ? () => 0 : toFn(c.b);
       const [a, b] = c.domain && c.domain.length === 2 ? c.domain : [w.xmin, w.xmax];
       const n = 200;
       const ops = [{ op: 'M', x: a, y: fFn(a) }];
@@ -294,7 +296,8 @@ export class Region extends Drawable {
     // 수평 슬라이스 채움 (fill_betweenx): y 를 따라 x = f(y) ~ g(y) 사이
     if (c.mode === 'betweenX') {
       const fFn = toFnVar(c.a, 'y'),
-        gFn = toFnVar(c.b, 'y');
+        // 두 번째 경계 생략 시 x = 0 (matplotlib `fill_betweenx(y, x1, x2=0)` 기본값).
+        gFn = c.b == null ? () => 0 : toFnVar(c.b, 'y');
       const [a, b] = c.domain && c.domain.length === 2 ? c.domain : [w.ymin, w.ymax];
       const n = c.n || 200;
       const ops = [{ op: 'M', x: fFn(a), y: a }];

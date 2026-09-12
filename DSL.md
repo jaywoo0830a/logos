@@ -381,7 +381,7 @@ annotate.angle(A, B, C).arc({ radius: 22, double: true }).label('θ').degrees();
 annotate.angle({ from: A, vertex: B, to: C }).arc({ radius: 22 }); // 같은 각 — 이름 지정형
 annotate.angle(A, B, C).rightAngle(); // 꼭짓점 B 에 두 광선이 그려져 있어야 표식이 제자리
 // (발이 화살표 끝을 넘어가는 정사영 등은 안 그려진 쪽 선을 연장해 '모서리'로 만든 뒤 표시)
-annotate.dimension(A, B).offset(24).label('5').units('cm');
+annotate.dimension(A, B).offset(0.5).label('5').units('cm'); // offset 은 **world 단위**(px 아님)
 annotate.tick(segment(A, B)).count(2);
 annotate.arrow(A, B).label('v');
 annotate.arrow(A, B).bend(0.3); // 곡선 화살표 (mpl annotate arc3,rad) — 순환 표시
@@ -468,7 +468,19 @@ fig.toReact();
 | **텍스트/수식** | **KaTeX** (기본) → MathJax (fallback) | TeX 조판 품질                  |
 | **벡터 출력**   | SVG → **PDF (pdf-lib)**               | 인쇄 시 화질                   |
 | **래스터**      | resvg (WASM) 또는 node-canvas         | 300 DPI PNG                    |
-| **TikZ**        | 자체 emitter                          | 논문/책 직접 삽입              |
+
+### 6.2 래스터 안정성 — 화면 밖 도형과 resvg abort
+
+`toPNG()` 는 래스터 백엔드에서만 **안전 패스**를 켠다: 뷰(캔버스)를 벗어난 도형은 방출하지 않고,
+일부가 걸친 도형은 **정확히 잘라낸다**(보이는 부분은 기하학적으로 동일). 일반 `toSVG()` 출력은 변하지 않는다.
+
+까닭 — `@resvg/resvg-js`(내부 `resvg 0.34` 포크)는 캔버스를 크게 벗어난 그룹에서
+`geom::fit_to_rect()` 의 `IntRect::from_ltrb(...).unwrap()` 로 **Rust panic → 프로세스 abort** 를 낸다
+(JS `try/catch` 로 못 잡는다). 흔한 방아쇠는 **단위 실수**다:
+`annotate.angle(...).arc({ radius })` · `annotate.dimension(...).offset()` 은 **world 단위**(px 아님)라,
+px 처럼 큰 값을 주면 도형이 화면 밖으로 나간다. 2D 씬에서 제외된 도형이 있으면 `toPNG()` 가 경고한다.
+회귀는 `test/raster.test.js` 가 **케이스마다 자식 프로세스**로 지킨다(abort = 실패).
+| **TikZ** | 자체 emitter | 논문/책 직접 삽입 |
 
 ### 6.2 교과서급 디테일
 

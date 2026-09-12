@@ -67,7 +67,10 @@ const between = () =>
         .title('region.between  f–g')
         .add(
           region
-            .between(curve.fn((x) => x * x).on([-1.5, 1.5]), curve.fn(() => 0).on([-1.5, 1.5]))
+            .between(
+              (x) => x * x,
+              () => 0,
+            )
             .on([-1.5, 1.5])
             .fill(palette.orange)
             .opacity(0.45),

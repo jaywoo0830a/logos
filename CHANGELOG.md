@@ -5,6 +5,18 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- **래스터(PNG) 프로세스 abort** — 화면(뷰)을 크게 벗어난 도형이 있으면 `toPNG()`/`kit.saveFigures()` 가
+  resvg 의 Rust panic 으로 **프로세스를 죽이던** 문제. `try/catch` 로 못 잡아 배치 중 1장만 걸려도
+  나머지 산출물이 유실됐습니다. 이제 래스터 경로에서만 켜지는 **안전 패스**(화면 밖 도형 미방출 +
+  캔버스 밖 좌표 정확 클립)로 막고, 2D 씬에서는 단위 실수 경고를 냅니다.
+  일반 `toSVG()` 출력은 바이트 단위로 동일합니다. 회귀: `test/raster.test.js`(케이스별 자식 프로세스).
+- **`region.between` / `region.betweenX`** — 두 번째 경계를 생략하면 `NaN` 좌표를 방출해 영역이
+  조용히 사라지던 문제. matplotlib 과 동일하게 기본값 0(`fill_between(x, y1, y2=0)`)을 씁니다.
+- 문서·예제의 단위 실수 정정 — `annotate.angle(...).arc({ radius })` 와
+  `annotate.dimension(...).offset()` 은 **world 단위**(px 아님)임을 명시하고 값들을 바로잡았습니다.
+
 ## [0.4.0] — 2026-09-12
 
 **이미지를 하나로 통합**했습니다 — 렌더·서빙·테스트·개발이 모두 `logos:<버전>` **단일 이미지**에서

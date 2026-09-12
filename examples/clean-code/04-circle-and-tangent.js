@@ -25,7 +25,7 @@ const tangent = () => {
       t.label('tangent'),
       O.dot().label('O'),
       P.dot().label('P'),
-      annotate.angle(point(1, 0), P, point(2, 1)).arc({ radius: 18 }).rightAngle(),
+      annotate.angle(point(1, 0), P, point(2, 1)).arc({ radius: 0.35 }).rightAngle(),
     );
 };
 

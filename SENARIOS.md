@@ -434,7 +434,7 @@ scene()
   .equal()
   .add(
     segment(point(0, 0), point(4, 0)),
-    annotate.dimension(point(0, 0), point(4, 0)).offset(24).label('4').units('cm'),
+    annotate.dimension(point(0, 0), point(4, 0)).offset(0.6).label('4').units('cm'), // world 단위
   )
   .compile()
   .toSVG();
