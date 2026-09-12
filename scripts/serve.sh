@@ -45,7 +45,7 @@ PORT="${PORT:-18080}"
 
 require_linux
 require_docker
-ensure_image "$IMAGE_REF" "$REPO_ROOT/Dockerfile.render"
+ensure_image "$IMAGE_REF" "$DOCKERFILE"
 info "서빙: $DIR  →  http://localhost:$PORT/"
 ENVV=(-e "PORT=$PORT")
 [[ -n "$HOST" ]] && ENVV+=(-e "HOST=$HOST")

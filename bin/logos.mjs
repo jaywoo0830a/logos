@@ -440,7 +440,7 @@ ${C.bold}스케치 계약${C.off} (파일 하나가 그림 1장 이상)
   export const figures = [['a', () => scene…, '제목'], …];          // 배열 형식도 가능
 
 ${C.bold}도커/배시 워크플로우${C.off} (리눅스 전용)
-  bash scripts/install.sh [--docker]     패키지 설치 / 렌더 이미지 빌드
+  bash scripts/install.sh                이미지 준비(렌더·서빙·테스트)
   bash scripts/render.sh -s . -o out     렌더(도커 컨테이너에서 실행)
   bash scripts/serve.sh out 18080        결과 서빙
 `);

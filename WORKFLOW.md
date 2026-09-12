@@ -21,7 +21,7 @@ npm 설치(A)에서는 같은 자리에
 `bash "$(npm root)/@jaywoo0830a/logos/scripts/…"`, CLI 는 `node bin/logos.mjs` → `npx logos` 입니다.
 
 ```
-① 패키지 설치          bash scripts/install.sh --docker
+① 이미지 준비          bash scripts/install.sh             (단일 이미지 · 최초 1회)
 ② 코드 작성            sketches/hello.js          (logos new sketches 로 뼈대 생성)
 ③ 배시 스크립트 실행    bash scripts/render.sh -s sketches -o out
 ④ 산출물 렌더          out/{*.svg, *.png, index.html, manifest.json}
@@ -35,11 +35,11 @@ npm 설치(A)에서는 같은 자리에
 ```bash
 git clone <repo> logos && cd logos
 
-# ① 패키지 설치 + 렌더 이미지 빌드 (최초 1회, 2~3분)
-bash scripts/install.sh --docker
+# ① 단일 이미지 빌드 (최초 1회, 2~3분) — 렌더·서빙·테스트에 필요한 모든 것이 안에 들어 있다
+bash scripts/install.sh
 
-# ② 스케치 폴더 만들기 (뼈대 + 예제 1장) — 렌더 이미지의 CLI 로(호스트 Node 불필요)
-docker run --rm -u "$(id -u):$(id -g)" -v "$PWD":/work logos-render:0.3.0 new sketches
+# ② 스케치 폴더 만들기 (뼈대 + 예제 1장) — 이미지의 CLI 로(호스트 Node 불필요)
+docker run --rm -u "$(id -u):$(id -g)" -v "$PWD":/work logos:0.4.0 new sketches
 
 # ③ 렌더 — 항상 도커에서 실행, 산출물만 호스트로 나온다
 bash scripts/render.sh -s sketches -o out
@@ -124,14 +124,16 @@ use(extras, { watermark: true });
 
 ## 4. 스크립트 레퍼런스
 
-### `scripts/install.sh` — ① 패키지 설치
+### `scripts/install.sh` — ① 이미지 준비 (단일 이미지)
 
 ```bash
-bash scripts/install.sh                 # 호스트 의존성(npm install) + 스케치 폴더 점검
-bash scripts/install.sh --docker        # 렌더 이미지 빌드 (Dockerfile.render)
-bash scripts/install.sh --dev           # 개발/테스트 이미지(Dockerfile · sympy/asymptote 포함)
-bash scripts/install.sh --project ~/my-book   # 프로젝트에 logos 연결(node_modules/logos)
+bash scripts/install.sh                 # 단일 이미지 빌드 (렌더·서빙·테스트 공용 · Dockerfile)
+bash scripts/install.sh --force         # 강제 재빌드
+bash scripts/install.sh --project ~/my-book   # + 프로젝트에 logos 연결(node_modules/logos · 호스트 node)
+bash scripts/install.sh --host-npm      # + 호스트에서도 npm install (기여자용)
 ```
+
+> 이미지는 **하나**입니다(이전 `--docker` / `--dev` 는 같은 이미지를 빌드하는 호환 옵션).
 
 ### `scripts/render.sh` — ③ 렌더 (핵심)
 
@@ -168,10 +170,10 @@ bash scripts/serve.sh [폴더] [포트] [--host H]
 bash scripts/test.sh [--build]
 ```
 
-### `scripts/build-image.sh` — 이미지 빌드만
+### `scripts/build-image.sh` — 단일 이미지 빌드만
 
 ```bash
-bash scripts/build-image.sh [--render|--dev|--both] [--force]
+bash scripts/build-image.sh [--force] [--pull]
 ```
 
 ---
@@ -179,15 +181,15 @@ bash scripts/build-image.sh [--render|--dev|--both] [--force]
 ## 5. 도커는 이렇게 돌아간다
 
 ```
-                      호스트(리눅스)                 컨테이너 logos-render:0.3.0
+                      호스트(리눅스)                 컨테이너 logos:0.4.0
   bash scripts/render.sh
         │
-        ├─ docker build (없을 때만, Dockerfile.render)
+        ├─ docker build (없을 때만, Dockerfile)
         │
         └─ docker run --rm -u $(id -u):$(id -g) \
              -v "$PROJECT":/work -w /work \
              [-v "$OUT":/out]                     # 산출물이 프로젝트 밖이면 추가 마운트
-             logos-render:0.3.0 sh -c '
+             logos:0.4.0 sh -c '
                ① ln -s /opt/logos node_modules/logos   # 패키지 설치(오프라인)
                ② [--install] npm install
                ③ exec node /opt/logos/bin/logos.mjs render <src> --out <out>
@@ -220,19 +222,19 @@ SVG 는 정상 생성되고 경고만 남습니다. 렌더 이미지에는 resvg
 
 **Q. PNG 에서 한글이 □(네모)로 나온다** — 래스터(resvg)가 시스템 폰트를 못 찾은 경우입니다.
 `backend/fonts.js` 가 `fontDirs: /usr/share/fonts` 를 넘겨 글리프 폴백을 켜고,
-`Dockerfile.render` 는 `fonts-nanum`(한글)을 포함합니다. 이미지가 오래됐다면
+`Dockerfile` 는 `fonts-nanum`(한글)을 포함합니다. 이미지가 오래됐다면
 `bash scripts/render.sh --build` 로 다시 빌드하세요. (SVG 는 폰트 폴백이 브라우저에 맡겨지므로 원래 정상입니다.)
 
-**Q. 빌드를 다시 하고 싶다** — `bash scripts/render.sh --build`, `bash scripts/install.sh --docker --force`,
+**Q. 빌드를 다시 하고 싶다** — `bash scripts/render.sh --build`, `bash scripts/install.sh --force`,
 `LOGOS_BUILDKIT=1`(캐시 활용) 중 아무거나. 패키지 **이름/버전이 바뀌면** 이미지가 stale 이 되어
 스케치 `import` 가 깨지는데, 이미지 라벨(`logos.pkg`·`logos.version`)을 현재 패키지와 비교해
 **자동으로 다시 빌드**합니다(그래서 이름을 바꿔도 그냥 실행하면 됩니다).
-또는 `bash scripts/build-image.sh --render --force`.
+또는 `bash scripts/build-image.sh --force`.
 
 **Q. 호스트에 Node 가 없다** — 그대로 두세요. 렌더·서빙·테스트 모두 도커에서 실행되므로
 호스트엔 `bash` + `docker` 만 있으면 됩니다(Node·npm 불필요).
 
-**Q. 오프라인/프록시 환경** — `scripts/install.sh --docker` 는 `npm install` 을 호스트에서
+**Q. 오프라인/프록시 환경** — `scripts/install.sh` 는 `npm install` 을 호스트에서
 한 번만 하고, 렌더는 오프라인으로 동작합니다(패키지 심링크).
 
 **Q. CI 에서 쓰고 싶다** — `--json` 으로 결과를 받아 `fail` 을 검사하세요.

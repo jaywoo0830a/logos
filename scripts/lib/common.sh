@@ -74,12 +74,13 @@ require_docker() {
   docker info >/dev/null 2>&1 || die "도커 데몬에 연결할 수 없습니다. 'sudo systemctl start docker' 또는 Docker Desktop 을 실행하세요."
 }
 
-# ── 도커 이미지 ────────────────────────────────────────────
+# ── 도커 이미지 (단일) ─────────────────────────────────────
 # 이미지 태그는 **패키지 버전**을 따른다 — 버전이 바뀌면 자동으로 다시 빌드된다.
-IMAGE_NAME="${LOGOS_IMAGE_NAME:-logos-render}"
+# 렌더·서빙·테스트·개발이 모두 이 이미지 하나를 쓴다(Dockerfile 도 하나).
+DOCKERFILE="$REPO_ROOT/Dockerfile"
+IMAGE_NAME="${LOGOS_IMAGE_NAME:-logos}"
 IMAGE_TAG="${LOGOS_IMAGE_TAG:-$PKG_VERSION}"
 IMAGE_REF="${IMAGE_NAME}:${IMAGE_TAG}"
-BUILDER_IMAGE="${LOGOS_BUILDER_IMAGE:-logos-builder:${PKG_VERSION}}"
 
 image_exists() { docker image inspect "$1" >/dev/null 2>&1; }
 

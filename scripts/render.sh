@@ -108,7 +108,7 @@ SRC_REL="${SRC_ABS#"$PROJECT"/}"
 require_docker
 [[ $BUILD = 1 ]] && FORCE=--force || FORCE=''
 step "[3/4] 렌더 (docker · $SRC_ABS → $OUT_ABS)"
-ensure_image "$IMAGE_REF" "$REPO_ROOT/Dockerfile.render" "${FORCE:-}"
+ensure_image "$IMAGE_REF" "$DOCKERFILE" "${FORCE:-}"
 
 MOUNTS=(-v "$PROJECT":/work -w /work)
 if [[ $OUT_INSIDE = 1 ]]; then

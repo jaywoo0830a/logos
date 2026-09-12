@@ -99,13 +99,13 @@ npm run serve         # http://localhost:18080/  (렌더 갤러리 · 도커)
 | `npm run serve:out`                                           | `bash scripts/serve.sh out 18080` (렌더 결과를 브라우저로)                                                                       |
 | `npm run examples`                                            | 위 여섯을 연속 실행                                                                                                              |
 | `npm run snap:update`                                         | 골든 SVG 스냅샷 재생성(`test/fixtures/`, 로컬 전용)                                                                              |
-| `npm run serve`                                               | `output/` 정적 서버(갤러리 + SVG/PNG)                                                                                            |
+| `npm run serve`                                               | `output/` 정적 서버(갤러리 + SVG/PNG · 도커)                                                                                     |
 | `npm run test:svg`                                            | SENARIOS SVG 문자열 회귀만                                                                                                       |
 
-Docker(선택): `docker compose up web` → 같은 갤러리 서버,
-`docker compose run --rm logos` → 컨테이너 안에서 `npm test`.
+Docker(선택): **이미지 하나**로 전부 처리합니다 — `docker compose up web`(갤러리 서버),
+`docker compose run --rm logos`(테스트), `docker compose run --rm render`(렌더).
 
-npm 설치 사용자도 패키지에 `scripts/` · `Dockerfile.render` 가 함께 오므로 4단계 워크플로를
+npm 설치 사용자도 패키지에 `scripts/` · `Dockerfile` 이 함께 오므로 4단계 워크플로를
 그대로 쓸 수 있습니다 — `bash "$(npm root)/@jaywoo0830a/logos/scripts/render.sh" -p . -s sketches -o out`
 ([`WORKFLOW.md`](WORKFLOW.md)).
 
@@ -155,8 +155,8 @@ open output/parity12a1/index.html    # 12개 갤러리 (복소수)
 ```
 index.js            공개 API 진입점 (scene/shapes/annotate/tex/kit/use/plugins …)
 bin/logos.mjs       CLI — new(뼈대) · render(스케치 폴더 → 출력 디렉토리) · serve · list
-scripts/            배시 워크플로우(리눅스) — install.sh · render.sh · serve.sh · build-image.sh
-Dockerfile.render   렌더 전용 슬림 이미지(폰트+resvg · /opt/logos · ENTRYPOINT = logos)
+scripts/            배시 워크플로우(리눅스) — install.sh · render.sh · serve.sh · test.sh · build-image.sh
+Dockerfile          단일 이미지 — 폰트(한글/수학)+SymPy/Asymptote+의존성 · /opt/logos · ENTRYPOINT = logos
 kit.js              예제 작성 키트 (palette·plot2d·plot3d·subplots·saveFigures…)
 plugin_demo.js →    플러그인 데모 (examples/) · plugins/geometry-extras.js (코어 수정 0 확장 예시)
 linalg.js           행렬 · 벡터 수치 도우미 (mat · vec) — 행렬과 벡터 그림의 계산
@@ -208,7 +208,7 @@ SVG+PNG+갤러리+manifest 까지 검증했습니다(68 files · 719 kB). 자세
 → 배시 스크립트 실행 → 원하는 디렉토리에 렌더”. `bin/logos.mjs` CLI(`new` 뼈대 생성 ·
 `render` 스케치 폴더 → 출력 디렉토리 · `serve` · `list` · `--json`/`--dry-run`/`--clean`)와
 `scripts/` 4종(`install.sh` · `render.sh` · `serve.sh` · `build-image.sh`, 공통 `lib/common.sh`),
-`Dockerfile.render`(슬림 · 폰트+resvg · `/opt/logos` · ENTRYPOINT = `logos`), 예제 프로젝트
+`Dockerfile`(단일 이미지 · 폰트+SymPy/Asymptote+resvg · `/opt/logos` · ENTRYPOINT = `logos`), 예제 프로젝트
 `examples/workflow/`(스케치 3개 → 7 figure), 테스트 `test/cli.test.js`(8개)를 추가했습니다.
 도커 실행은 `-u $(id -u):$(id -g)` 로 산출물 소유권을 유지하고, 컨테이너 안에서
 `node_modules/logos → /opt/logos` 심링크로 “패키지 설치”를 오프라인 재현합니다.

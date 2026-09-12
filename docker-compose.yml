@@ -1,42 +1,48 @@
-# logos — v24.21.0 LTS Node — 테스트 / 갤러리 서버
+# logos — 단일 이미지(렌더 · 서빙 · 테스트 · 개발) — v24.21.0 LTS Node
+#
+#   이미지 하나로 전부 처리합니다. 기본 경로는 bash 스크립트(scripts/*.sh)이고,
+#   compose 를 쓰는 환경에서만 아래 서비스를 사용하세요.
+#     docker compose run --rm render -s sketches -o out      # 렌더
+#     docker compose up render-serve                         # → http://localhost:18080/
+#     docker compose run --rm logos                          # 테스트
+x-logos: &logos
+  image: logos:${LOGOS_IMAGE_TAG:-0.4.0}
+  build:
+    context: .
+
 services:
-  # 갤러리 정적 서버 — http://localhost:18080/ 에서 output/ 를 서빙
+  # 갤러리 정적 서버 — http://localhost:18080/
   web:
-    build:
-      context: .
-    image: logos:${LOGOS_IMAGE_TAG:-0.3.0}
+    <<: *logos
     container_name: logos-web
-    command: ['sh', '-c', 'npm install --no-audit --no-fund >/dev/null 2>&1; npm run examples; node server.js']
+    working_dir: /opt/logos
+    entrypoint: ['sh', '-c']
+    command: ['npm run examples && node server.js']
     environment:
-      NODE_ENV: development
       PORT: '18080'
     ports:
       - '18080:18080'
     volumes:
-      - .:/app
-      - /app/node_modules
+      - .:/opt/logos
+      - /opt/logos/node_modules
 
   # 테스트 실행기
   logos:
-    image: logos:${LOGOS_IMAGE_TAG:-0.3.0}
+    <<: *logos
     container_name: logos-test
-    command: ['sh', '-c', 'npm install --no-audit --no-fund && npm run test:unit']
-    environment:
-      NODE_ENV: development
-      NODE_OPTIONS: ''
+    working_dir: /opt/logos
+    entrypoint: ['npm']
+    command: ['run', 'test:unit']
     volumes:
-      - .:/app
-      - /app/node_modules
+      - .:/opt/logos
+      - /opt/logos/node_modules
 
   # ── 렌더 워크플로우 (리눅스 전용 · WORKFLOW.md) ─────────────
   #   기본 경로는 bash 스크립트입니다(scripts/render.sh). compose 를 쓰는 환경에서는 아래를.
   #     UID=$(id -u) GID=$(id -g) docker compose run --rm render -s sketches -o out
   #     docker compose up render-serve      # → http://localhost:18080/
   render:
-    build:
-      context: .
-      dockerfile: Dockerfile.render
-    image: logos-render:${LOGOS_IMAGE_TAG:-0.3.0}
+    <<: *logos
     # 산출물 소유권을 호스트 사용자로 유지(리눅스). macOS/Windows 는 root 로 생성될 수 있음.
     user: '${UID:-1000}:${GID:-1000}'
     working_dir: /work
@@ -47,7 +53,7 @@ services:
 
   # 렌더 결과 서빙 — 컨테이너 안에서 정적 서버 실행
   render-serve:
-    image: logos-render:${LOGOS_IMAGE_TAG:-0.3.0}
+    <<: *logos
     container_name: logos-render-serve
     entrypoint: ['node', '/opt/logos/server.js', '/work/out']
     environment:

@@ -1,6 +1,6 @@
 {
   "name": "@jaywoo0830a/logos",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Matplotlib-parity math figure DSL in pure JavaScript (Node ESM) — one chainable scene emits SVG, PNG, TikZ, Asymptote and JSXGraph.",
   "type": "module",
   "main": "index.js",
@@ -43,7 +43,6 @@
     "sprite.js",
     "server.js",
     "Dockerfile",
-    "Dockerfile.render",
     "docker-compose.yml",
     "examples/workflow/sketches",
     "examples/workflow/README.md",
@@ -73,7 +72,7 @@
     "plugin-demo": "node examples/plugin_demo.js",
     "render": "bash scripts/render.sh",
     "serve:out": "bash scripts/serve.sh out 18080",
-    "workflow": "bash scripts/install.sh --docker && bash scripts/render.sh -p examples/workflow -s sketches -o out",
+    "workflow": "bash scripts/install.sh && bash scripts/render.sh -p examples/workflow -s sketches -o out",
     "examples": "node examples/mpl_parity_11ab.js && node examples/mpl_parity_9b.js && node examples/mpl_parity_9c.js && node examples/mpl_parity_12a2.js && node examples/mpl_parity_12a1.js && node examples/plugin_demo.js",
     "serve": "bash scripts/serve.sh"
   },
