@@ -16,16 +16,24 @@ export function irToJSXGraph(nodes, opts = {}) {
     `const board = JXG.JSXGraph.initBoard('${id}', {${bboxStr(opts)}, axis:false, grid:false, boundingbox:${json(opts.bbox)}});`,
   );
   if (opts.axes) {
-    code.push("board.create('axis', [[0,0],[1,0]], {name:'x', withLabel:true});".replace(/name:'x'/, `name:'${opts.axesLabel?.x ?? 'x'}'`));
-    code.push("board.create('axis', [[0,0],[0,1]], {name:'y', withLabel:true});".replace(/name:'y'/, `name:'${opts.axesLabel?.y ?? 'y'}'`));
+    code.push(
+      "board.create('axis', [[0,0],[1,0]], {name:'x', withLabel:true});".replace(
+        /name:'x'/,
+        `name:'${opts.axesLabel?.x ?? 'x'}'`,
+      ),
+    );
+    code.push(
+      "board.create('axis', [[0,0],[0,1]], {name:'y', withLabel:true});".replace(
+        /name:'y'/,
+        `name:'${opts.axesLabel?.y ?? 'y'}'`,
+      ),
+    );
   }
   for (const nd of nodes) {
     const d = nd.data;
     switch (nd.kind) {
       case 'path': {
-        const pts = d.ops
-          .filter((o) => o.op === 'M' || o.op === 'L')
-          .map((o) => [o.x, o.y]);
+        const pts = d.ops.filter((o) => o.op === 'M' || o.op === 'L').map((o) => [o.x, o.y]);
         if (pts.length >= 2) {
           code.push(`board.create('polyline', [${json(pts)}]);`);
         }
@@ -54,7 +62,8 @@ const json = (v) => JSON.stringify(v);
 /** 전체 <div>+script HTML 문서(오프라인 반복형) */
 export function buildJSXGraphHTML(nodes, opts = {}) {
   const id = opts.boardId ?? 'board';
-  const w = opts.width ?? 500, h = opts.height ?? 500;
+  const w = opts.width ?? 500,
+    h = opts.height ?? 500;
   const script = irToJSXGraph(nodes, { ...opts, boardId: id });
   return [
     `<!doctype html><html><head><meta charset="utf-8">`,

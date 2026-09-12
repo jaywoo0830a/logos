@@ -18,10 +18,7 @@ test('tikz: standalone 문서 구조', () => {
 test('tikz: 곡선과 원 포함', () => {
   const out = scene()
     .view([-2, 2], [-2, 2])
-    .add(
-      circle.center(point(0, 0)).radius(1),
-      curve.fn((x) => x * x).on([-1, 1]),
-    )
+    .add(circle.center(point(0, 0)).radius(1), curve.fn((x) => x * x).on([-1, 1]))
     .compile()
     .toTikZ();
   assert.ok(out.includes('circle'));
@@ -46,8 +43,16 @@ test('integral annotate → SVG', () => {
   const svg = scene()
     .view([-0.5, 3], [-0.5, 10])
     .add(
-      curve.fn((x) => x * x).on([0, 2]).color('crimson'),
-      annotate.integral((x) => x * x).from(0).to(2).shade('steelblue').label(tex`\\int_0^2 x^2\\,dx`),
+      curve
+        .fn((x) => x * x)
+        .on([0, 2])
+        .color('crimson'),
+      annotate
+        .integral((x) => x * x)
+        .from(0)
+        .to(2)
+        .shade('steelblue')
+        .label(tex`\\int_0^2 x^2\\,dx`),
     )
     .compile()
     .toSVG();

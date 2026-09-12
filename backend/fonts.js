@@ -18,7 +18,6 @@ export const STIX_IMPORT_URL = 'https://fonts.googleapis.com/css2?family=STIX+Tw
  */
 export const TYPE = { lineHeight: 1.32, letterSpacing: 0.01 };
 
-
 /** HTML 문서용 폰트 <link> (preconnect + stylesheet). */
 export const STIX_LINK = [
   '<link rel="preconnect" href="https://fonts.googleapis.com">',
@@ -30,10 +29,12 @@ export const STIX_LINK = [
 export function svgFontStyle() {
   // SVG 는 XML 이므로 URL 의 '&' 를 반드시 이스케이프한다(resvg 파싱 오류 방지).
   const url = STIX_IMPORT_URL.replace(/&/g, '&amp;');
-  return `<style>@import url('${url}');`
-    + `text,tspan{font-family:${STIX_STACK};letter-spacing:${TYPE.letterSpacing}em;}`
-    + `foreignObject div,.katex,.katex math,math{font-family:${STIX_STACK};letter-spacing:${TYPE.letterSpacing}em;}`
-    + `</style>`;
+  return (
+    `<style>@import url('${url}');` +
+    `text,tspan{font-family:${STIX_STACK};letter-spacing:${TYPE.letterSpacing}em;}` +
+    `foreignObject div,.katex,.katex math,math{font-family:${STIX_STACK};letter-spacing:${TYPE.letterSpacing}em;}` +
+    `</style>`
+  );
 }
 
 /** resvg 래스터용 로컬 폰트 파일(있으면). */
@@ -72,4 +73,13 @@ export function resvgFontOptions() {
   };
 }
 
-export default { STIX_FAMILY, STIX_STACK, STIX_LINK, TYPE, svgFontStyle, stixFontFile, resvgFontOptions, SYSTEM_FONT_DIRS };
+export default {
+  STIX_FAMILY,
+  STIX_STACK,
+  STIX_LINK,
+  TYPE,
+  svgFontStyle,
+  stixFontFile,
+  resvgFontOptions,
+  SYSTEM_FONT_DIRS,
+};

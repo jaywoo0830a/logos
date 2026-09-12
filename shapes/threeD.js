@@ -14,23 +14,33 @@ export const project3 = (ctx, p) => (ctx.project ? ctx.project(p) : [p[0], p[1]]
 function hslLightAdjust(hex, delta) {
   if (!/^#[0-9a-fA-F]{6}$/.test(hex || '')) return hex;
   const n = parseInt(hex.slice(1), 16);
-  let r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
-  r /= 255; g /= 255; b /= 255;
-  const mx = Math.max(r, g, b), mn = Math.min(r, g, b);
-  let h = 0, s = 0, l = (mx + mn) / 2;
+  let r = (n >> 16) & 255,
+    g = (n >> 8) & 255,
+    b = n & 255;
+  r /= 255;
+  g /= 255;
+  b /= 255;
+  const mx = Math.max(r, g, b),
+    mn = Math.min(r, g, b);
+  let h = 0,
+    s = 0,
+    l = (mx + mn) / 2;
   const d = mx - mn;
   if (d > 0) {
     s = d / (1 - Math.abs(2 * l - 1));
     if (mx === r) h = ((g - b) / d) % 6;
     else if (mx === g) h = (b - r) / d + 2;
     else h = (r - g) / d + 4;
-    h *= 60; if (h < 0) h += 360;
+    h *= 60;
+    if (h < 0) h += 360;
   }
   l = Math.max(0, Math.min(1, l + delta / 100));
   const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
   const p = 2 * l - q;
   const hue2rgb = (t0) => {
-    let t = t0; if (t < 0) t += 1; if (t > 1) t -= 1;
+    let t = t0;
+    if (t < 0) t += 1;
+    if (t > 1) t -= 1;
     if (t < 1 / 6) return p + (q - p) * 6 * t;
     if (t < 1 / 2) return q;
     if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
@@ -39,43 +49,78 @@ function hslLightAdjust(hex, delta) {
   const to = (f) => Math.round(Math.min(255, Math.max(0, f * 255)));
   return `#${((to(hue2rgb(h / 360 + 1 / 3)) << 16) | (to(hue2rgb(h / 360)) << 8) | to(hue2rgb(h / 360 - 1 / 3))).toString(16).padStart(6, '0')}`;
 }
-function lightenHsl(c, d) { return hslLightAdjust(c, d); }
-function darkenHsl(c, d) { return hslLightAdjust(c, -d); }
+function lightenHsl(c, d) {
+  return hslLightAdjust(c, d);
+}
+function darkenHsl(c, d) {
+  return hslLightAdjust(c, -d);
+}
 /** depth(시선거리) → z 키. 뒤(큰 depth)일수록 작은 z → 먼저 그려진다. layer 는 미세 우선순위. */
 export function depthZ(depth, layer = 0) {
-  return -((Number.isFinite(depth) ? depth : 0)) * 0.1 + layer * 1e-3;
+  return -(Number.isFinite(depth) ? depth : 0) * 0.1 + layer * 1e-3;
 }
 
 export function polyline(pts, c, layer, nodeImp = node, pickImp = pick) {
   const ops = [];
   let started = false;
-  let ds = 0, dn = 0;
+  let ds = 0,
+    dn = 0;
   for (const p of pts) {
     const [x, y] = p;
-    if (Number.isFinite(p[2])) { ds += p[2]; dn++; }
-    if (!Number.isFinite(x) || !Number.isFinite(y)) { started = false; continue; }
+    if (Number.isFinite(p[2])) {
+      ds += p[2];
+      dn++;
+    }
+    if (!Number.isFinite(x) || !Number.isFinite(y)) {
+      started = false;
+      continue;
+    }
     ops.push({ op: started ? 'L' : 'M', x, y });
     started = true;
   }
   // P4-1: primitive 별 평균 depth 로 z 를 정해 painter's algorithm 정렬.
   const z = depthZ(dn ? ds / dn : 0, layer);
-  return nodeImp('path', { ops, color: c.color, stroke: c.stroke, dash: c.dash, opacity: c.opacity, z, style: pickImp(c) });
+  return nodeImp('path', {
+    ops,
+    color: c.color,
+    stroke: c.stroke,
+    dash: c.dash,
+    opacity: c.opacity,
+    z,
+    style: pickImp(c),
+  });
 }
 
 export class Sphere extends Drawable {
-  constructor(conf = {}) { super('sphere', { ...conf }); }
-  center() { return this._conf.center.coords; }
-  radius() { return this._conf.radius; }
+  constructor(conf = {}) {
+    super('sphere', { ...conf });
+  }
+  center() {
+    return this._conf.center.coords;
+  }
+  radius() {
+    return this._conf.radius;
+  }
   // 3D 자동 프레이밍용 코너점
   get vertices() {
-    const [cx, cy, cz] = this._conf.center.coords, r = this._conf.radius;
-    return [[cx - r, cy - r, cz - r], [cx + r, cy + r, cz + r]].map((v) => point(...v));
+    const [cx, cy, cz] = this._conf.center.coords,
+      r = this._conf.radius;
+    return [
+      [cx - r, cy - r, cz - r],
+      [cx + r, cy + r, cz + r],
+    ].map((v) => point(...v));
   }
-  label(l, o) { return this.set({ label: l, labelOff: o }); }
+  label(l, o) {
+    return this.set({ label: l, labelOff: o });
+  }
   /** 위도선 개수 — `rings(false|0)` 로 끄고, `rings(3)` 처럼 성기게. 기본 7. */
-  rings(n = 7) { return this.set({ rings: n }); }
+  rings(n = 7) {
+    return this.set({ rings: n });
+  }
   /** 경선 개수 — 기본 0(안 그림). `meridians(4)` 면 세로 반원 4개. */
-  meridians(n = 0) { return this.set({ meridians: n }); }
+  meridians(n = 0) {
+    return this.set({ meridians: n });
+  }
   toIR(ctx) {
     const [cx, cy, cz] = this._conf.center.coords;
     const r = this._conf.radius;
@@ -83,13 +128,20 @@ export class Sphere extends Drawable {
     const out = [];
     const CP = project3(ctx, [cx, cy, cz]);
     // 위도선(가로 원) — 기본 7개(양 극 제외). `rings(false|0)` 이면 실루엣만.
-    const rings = c.rings === false || c.rings === 0 ? 0 : (Number.isFinite(c.rings) ? Math.max(0, Math.floor(c.rings)) : 7);
+    const rings =
+      c.rings === false || c.rings === 0 ? 0 : Number.isFinite(c.rings) ? Math.max(0, Math.floor(c.rings)) : 7;
     for (let k = 1; k <= rings; k++) {
       const phi = (Math.PI * k) / (rings + 1);
       const pts = [];
       for (let i = 0; i <= 48; i++) {
         const th = (2 * Math.PI * i) / 48;
-        pts.push(project3(ctx, [cx + r * Math.sin(phi) * Math.cos(th), cy + r * Math.sin(phi) * Math.sin(th), cz + r * Math.cos(phi)]));
+        pts.push(
+          project3(ctx, [
+            cx + r * Math.sin(phi) * Math.cos(th),
+            cy + r * Math.sin(phi) * Math.sin(th),
+            cz + r * Math.cos(phi),
+          ]),
+        );
       }
       out.push(polyline(pts, c, -1));
     }
@@ -100,44 +152,88 @@ export class Sphere extends Drawable {
       const pts = [];
       for (let i = 0; i <= 48; i++) {
         const phi = (Math.PI * i) / 48;
-        pts.push(project3(ctx, [cx + r * Math.sin(phi) * Math.cos(th), cy + r * Math.sin(phi) * Math.sin(th), cz + r * Math.cos(phi)]));
+        pts.push(
+          project3(ctx, [
+            cx + r * Math.sin(phi) * Math.cos(th),
+            cy + r * Math.sin(phi) * Math.sin(th),
+            cz + r * Math.cos(phi),
+          ]),
+        );
       }
       out.push(polyline(pts, c, -1));
     }
     if (c.opacity != null || c.fill) {
       // 구 실루엣: 단색이 아니라 '방사 그라디언트'로 오목-볼록(half-tone) 입체감
       const base = c.fill || '#3b82f6';
-      out.push(node('fillcircle', {
-        cx: CP[0], cy: CP[1], r: r * 0.97, fill: base, opacity: c.opacity ?? 0.25, z: depthZ(CP[2], 0) - 1, style: pick(c),
-        gradient: { type: 'radial', stops: [
-          { offset: 0, color: lightenHsl(base, 30) },
-          { offset: 0.6, color: base },
-          { offset: 1, color: darkenHsl(base, 28) },
-        ] },
-      }));
+      out.push(
+        node('fillcircle', {
+          cx: CP[0],
+          cy: CP[1],
+          r: r * 0.97,
+          fill: base,
+          opacity: c.opacity ?? 0.25,
+          z: depthZ(CP[2], 0) - 1,
+          style: pick(c),
+          gradient: {
+            type: 'radial',
+            stops: [
+              { offset: 0, color: lightenHsl(base, 30) },
+              { offset: 0.6, color: base },
+              { offset: 1, color: darkenHsl(base, 28) },
+            ],
+          },
+        }),
+      );
     }
     return out;
   }
 }
 export const sphere = {
-  center(O) { return { radius: (r) => new Sphere({ center: O, radius: r }) }; },
+  center(O) {
+    return { radius: (r) => new Sphere({ center: O, radius: r }) };
+  },
 };
 
 export class Plane extends Drawable {
-  constructor(conf = {}) { super('plane', { ...conf }); }
+  constructor(conf = {}) {
+    super('plane', { ...conf });
+  }
   get vertices() {
     const half = this._conf.half || 2.2;
-    return [[-half, -half, 0], [half, half, 0]].map((v) => point(...v));
+    return [
+      [-half, -half, 0],
+      [half, half, 0],
+    ].map((v) => point(...v));
   }
   toIR(ctx) {
     const c = this._conf;
     const half = c.half || 2.2;
-    const pts = [[-half, -half, 0], [half, -half, 0], [half, half, 0], [-half, half, 0]].map((p) => project3(ctx, p));
+    const pts = [
+      [-half, -half, 0],
+      [half, -half, 0],
+      [half, half, 0],
+      [-half, half, 0],
+    ].map((p) => project3(ctx, p));
     const depth = pts.reduce((a, p) => a + (p[2] || 0), 0) / pts.length;
-    return [node('polygon', { pts, closed: true, fill: c.fill || '#eee', color: c.color, stroke: c.stroke, opacity: c.opacity ?? 0.4, z: depthZ(depth, -1), style: pick(c) })];
+    return [
+      node('polygon', {
+        pts,
+        closed: true,
+        fill: c.fill || '#eee',
+        color: c.color,
+        stroke: c.stroke,
+        opacity: c.opacity ?? 0.4,
+        z: depthZ(depth, -1),
+        style: pick(c),
+      }),
+    ];
   }
 }
 export const plane = {
-  coordinate(name) { return new Plane({ coord: name }); },
-  normal(v) { return new Plane({ normal: v }); },
+  coordinate(name) {
+    return new Plane({ coord: name });
+  },
+  normal(v) {
+    return new Plane({ normal: v });
+  },
 };

@@ -7,7 +7,7 @@ export function tex(strings, ...values) {
   const raw = strings.raw || strings;
   const latex = raw.reduce((acc, s, i) => {
     const v = values[i];
-    const val = v == null ? '' : (typeof v.toLatex === 'function' ? v.toLatex() : String(v));
+    const val = v == null ? '' : typeof v.toLatex === 'function' ? v.toLatex() : String(v);
     return acc + s + val;
   }, '');
   return new Sym(latex);

@@ -67,7 +67,7 @@ let SEQ = 0;
 export function resolveTarget(target) {
   if (typeof target === 'function') return { proto: target.prototype, key: target.name || 'anonymous', ctor: target };
   const t = TARGETS.get(target);
-  const ctor = (typeof t === 'function' && t.prototype) ? t : (t && t.ctor);
+  const ctor = typeof t === 'function' && t.prototype ? t : t && t.ctor;
   if (ctor && ctor.prototype) return { proto: ctor.prototype, key: target, ctor };
   if (NAMESPACES.has(target)) return { obj: NAMESPACES.get(target).obj, key: target };
   const f = FACTORIES.get(target);
@@ -85,7 +85,9 @@ export function registerTarget(name, ctor) {
 }
 
 /** 등록된 대상 이름들 */
-export function targets() { return [...TARGETS.keys()]; }
+export function targets() {
+  return [...TARGETS.keys()];
+}
 
 // ── ① 체이닝 메서드 ────────────────────────────────────────
 /**
@@ -94,21 +96,25 @@ export function targets() { return [...TARGETS.keys()]; }
  * @param {Object} self 인스턴스(this)
  * @param {*} out  플러그인 메서드의 반환값
  */
-export function chainable(self, out) { return toChainable(self, out); }
+export function chainable(self, out) {
+  return toChainable(self, out);
+}
 
 function toChainable(self, out) {
-  if (out === undefined || out === null) return self;                        // ① 체인 유지
-  if (typeof out === 'object' && typeof out.set === 'function') return out;  // ③ Drawable/Scene
-  if (typeof out === 'object') return self.set(out);                         // ② 패치 → 불변 복제
-  return self;                                                              // 원시값(숫자 등) → 체인 유지
+  if (out === undefined || out === null) return self; // ① 체인 유지
+  if (typeof out === 'object' && typeof out.set === 'function') return out; // ③ Drawable/Scene
+  if (typeof out === 'object') return self.set(out); // ② 패치 → 불변 복제
+  return self; // 원시값(숫자 등) → 체인 유지
 }
 
 function installMethods(plugin, target, methods, { conf = false } = {}) {
   const rt = resolveTarget(target);
   const dest = rt.proto || rt.obj;
   if (!rt.proto) {
-    throw new PluginError(`plugin(${plugin}): '${rt.key}' 는 네임스페이스라 체이닝 메서드를 붙일 수 없습니다.`,
-      `네임스페이스에는 api.static('${rt.key}', 'name', fn) 을 쓰세요.`);
+    throw new PluginError(
+      `plugin(${plugin}): '${rt.key}' 는 네임스페이스라 체이닝 메서드를 붙일 수 없습니다.`,
+      `네임스페이스에는 api.static('${rt.key}', 'name', fn) 을 쓰세요.`,
+    );
   }
   const names = [];
   for (const [name, fn] of Object.entries(methods)) {
@@ -118,8 +124,12 @@ function installMethods(plugin, target, methods, { conf = false } = {}) {
     // 선언형(chain): (conf, ...args) => patch — this.set 을 몰라도 체이닝 유지
     // 명령형(extend): 일반 메서드처럼 this 사용, 패치 객체를 돌려주면 자동 set
     const wrapped = conf
-      ? function (...args) { return toChainable(this, fn.call(this, this._conf, ...args)); }
-      : function (...args) { return toChainable(this, fn.apply(this, args)); };
+      ? function (...args) {
+          return toChainable(this, fn.call(this, this._conf, ...args));
+        }
+      : function (...args) {
+          return toChainable(this, fn.apply(this, args));
+        };
     Object.defineProperty(wrapped, 'pluginOf', { value: plugin, enumerable: false });
     dest[name] = wrapped;
     METHODS.set(name, wrapped);
@@ -131,7 +141,8 @@ function installMethods(plugin, target, methods, { conf = false } = {}) {
 
 // ── ③ IR 노드 + 백엔드 emitter ──────────────────────────────
 function registerNode(plugin, kind, emitters = {}) {
-  if (!kind || typeof kind !== 'string') throw new PluginError(`plugin(${plugin}): node(kind, emitters) 의 kind 가 필요합니다.`);
+  if (!kind || typeof kind !== 'string')
+    throw new PluginError(`plugin(${plugin}): node(kind, emitters) 의 kind 가 필요합니다.`);
   const prev = NODES.get(kind);
   NODES.set(kind, { svg: emitters.svg, tikz: emitters.tikz, plugin });
   if (prev) warn(plugin, `node('${kind}') 가 기존 등록을 덮어썼습니다.`);
@@ -152,7 +163,9 @@ export function nodeEmitter(backend, kind) {
 }
 
 /** 등록된 IR kind 목록 */
-export function nodeKinds() { return [...NODES.keys()]; }
+export function nodeKinds() {
+  return [...NODES.keys()];
+}
 
 // ── ④ 테마 ────────────────────────────────────────────────
 function registerTheme(plugin, name, tokens) {
@@ -164,15 +177,18 @@ function registerTheme(plugin, name, tokens) {
 }
 
 /** 테마 토큰 조회 — core/scene.js 가 내장 THEMES 사전 다음에 호출한다 */
-export function themeOf(name) { return THEMES.get(name) || null; }
+export function themeOf(name) {
+  return THEMES.get(name) || null;
+}
 /** 등록된 플러그인 테마 이름들 */
-export function themes() { return [...THEMES.keys()]; }
-
-
+export function themes() {
+  return [...THEMES.keys()];
+}
 
 // ── ⑤ 파이프라인 훅 ────────────────────────────────────────
 function registerHook(plugin, event, fn) {
-  if (typeof fn !== 'function') throw new PluginError(`plugin(${plugin}): hook('${event}', fn) 의 fn 이 함수여야 합니다.`);
+  if (typeof fn !== 'function')
+    throw new PluginError(`plugin(${plugin}): hook('${event}', fn) 의 fn 이 함수여야 합니다.`);
   if (!HOOKS.has(event)) HOOKS.set(event, []);
   HOOKS.get(event).push(fn);
   RECORDS.push({ kind: 'hook', event, fn, plugin });
@@ -214,15 +230,19 @@ function installAround(plugin, target, method, wrapper) {
   const dest = rt.proto || rt.obj;
   const prev = dest && dest[method];
   if (typeof prev !== 'function') throw new PluginError(`plugin(${plugin}): ${rt.key}.${method} 는 함수가 아닙니다.`);
-  dest[method] = function (...args) { return wrapper.call(this, prev.bind(this), ...args); };
+  dest[method] = function (...args) {
+    return wrapper.call(this, prev.bind(this), ...args);
+  };
   RECORDS.push({ kind: 'method', dest, name: method, prev, had: true, plugin });
 }
 
 // ── ⑦ 새 빌더 / 네임스페이스 정적 ──────────────────────────
 function defineFactory(plugin, name, factory, opts = {}) {
-  if (typeof factory !== 'function') throw new PluginError(`plugin(${plugin}): define('${name}', factory) 의 factory 가 함수여야 합니다.`);
+  if (typeof factory !== 'function')
+    throw new PluginError(`plugin(${plugin}): define('${name}', factory) 의 factory 가 함수여야 합니다.`);
   const exists = FACTORIES.get(name);
-  if (exists && exists.__plugin !== plugin) throw new PluginError(`plugin(${plugin}): 최상위 이름 '${name}' 는 이미 등록되어 있습니다.`);
+  if (exists && exists.__plugin !== plugin)
+    throw new PluginError(`plugin(${plugin}): 최상위 이름 '${name}' 는 이미 등록되어 있습니다.`);
   if (opts.ctor) factory.__ctor = opts.ctor;
   factory.__plugin = plugin;
   FACTORIES.set(name, factory);
@@ -249,9 +269,10 @@ export function registerNamespaceObject(name, obj) {
  * @param {Function} fn
  */
 function installStatic(plugin, target, name, fn) {
-  const obj = (target && typeof target === 'object')
-    ? registerNamespaceObject(target.__nsName || `ns${++SEQ}`, target)
-    : resolveNamespace(target);
+  const obj =
+    target && typeof target === 'object'
+      ? registerNamespaceObject(target.__nsName || `ns${++SEQ}`, target)
+      : resolveNamespace(target);
   const had = Object.prototype.hasOwnProperty.call(obj, name);
   const prev = obj[name];
   obj[name] = fn;
@@ -267,17 +288,25 @@ function resolveNamespace(target) {
     registerNamespaceObject(target, f);
     return f;
   }
-  throw new PluginError(`plugin: static('${target}', …) 의 대상 '${target}' 을 찾을 수 없습니다.`,
-    `팩토리 이름 · 네임스페이스 이름 · 객체 중 하나를 넘기세요. (팩토리: ${[...FACTORIES.keys()].join(', ') || '없음'})`);
+  throw new PluginError(
+    `plugin: static('${target}', …) 의 대상 '${target}' 을 찾을 수 없습니다.`,
+    `팩토리 이름 · 네임스페이스 이름 · 객체 중 하나를 넘기세요. (팩토리: ${[...FACTORIES.keys()].join(', ') || '없음'})`,
+  );
 }
 
 // ── ⑧ 조회 / 되돌리기 ─────────────────────────────────────
 /** 최상위 빌더 조회 (`logos.ray` 가 내부적으로 사용) */
-export function lookupFactory(name) { return FACTORIES.get(name) || null; }
+export function lookupFactory(name) {
+  return FACTORIES.get(name) || null;
+}
 /** 등록된 빌더 이름들 */
-export function factoryNames() { return [...new Set([...FACTORIES.keys()])]; }
+export function factoryNames() {
+  return [...new Set([...FACTORIES.keys()])];
+}
 /** 이름으로 등록된 플러그인 메서드 조회 (`d.plugin('slope')`) */
-export function lookupMethod(name) { return METHODS.get(name) || null; }
+export function lookupMethod(name) {
+  return METHODS.get(name) || null;
+}
 
 /**
  * 플러그인이 등록한 메서드를 이름으로 호출 — 코어 미수정 escape hatch.
@@ -296,27 +325,33 @@ export function unknownFeature(name, hint = '') {
   const e = new PluginError(
     `logos: '${name}' 은 코어에 없습니다.${hint ? ` (${hint})` : ''}`,
     `코어를 고치지 말고 플러그인으로 추가하세요:\n` +
-    `  import { use } from '@jaywoo0830a/logos';\n` +
-    `  use({ name: 'my-extras', install(api) {\n` +
-    `    api.define('${name}', (...args) => new MyShape(...args), { ctor: MyShape });\n` +
-    `    api.node('mynode', { svg: (n, ctx) => '<path .../>' });\n` +
-    `  } });\n` +
-    `  등록된 이름: ${factoryNames().join(', ') || '없음'}`,
+      `  import { use } from '@jaywoo0830a/logos';\n` +
+      `  use({ name: 'my-extras', install(api) {\n` +
+      `    api.define('${name}', (...args) => new MyShape(...args), { ctor: MyShape });\n` +
+      `    api.node('mynode', { svg: (n, ctx) => '<path .../>' });\n` +
+      `  } });\n` +
+      `  등록된 이름: ${factoryNames().join(', ') || '없음'}`,
   );
   return e;
 }
 
 /** 설치된 플러그인 이름들 */
-export function list() { return [...INSTALLED.keys()]; }
+export function list() {
+  return [...INSTALLED.keys()];
+}
 /** 설치 여부 */
-export function has(name) { return INSTALLED.has(name); }
+export function has(name) {
+  return INSTALLED.has(name);
+}
 
 /** 설치된 플러그인 정보 */
 export function info(name) {
   const p = INSTALLED.get(name);
   if (!p) return null;
   return {
-    name: p.name, version: p.version, opts: p.opts,
+    name: p.name,
+    version: p.version,
+    opts: p.opts,
     methods: [...METHODS.entries()].filter(([, fn]) => fn.pluginOf === name).map(([k]) => k),
     factories: factoryNames().filter((k) => FACTORIES.get(k).__plugin === name),
     nodes: nodeKinds().filter((k) => NODES.get(k).plugin === name),
@@ -340,7 +375,8 @@ export function help() {
 
 function warn(plugin, msg) {
   const p = INSTALLED.get(plugin);
-  if (p) p.warnings.push(msg); else console.warn(`[logos plugin:${plugin}] ${msg}`);
+  if (p) p.warnings.push(msg);
+  else console.warn(`[logos plugin:${plugin}] ${msg}`);
 }
 
 /**
@@ -353,13 +389,21 @@ export function uninstall(name, { keep = false } = {}) {
   for (let i = RECORDS.length - 1; i >= 0; i--) {
     const r = RECORDS[i];
     if (!matches(r)) continue;
-    if (r.kind === 'method') { if (r.had) r.dest[r.name] = r.prev; else delete r.dest[r.name]; }
-    else if (r.kind === 'static') { if (r.had) r.ns[r.name] = r.prev; else delete r.ns[r.name]; }
-    else if (r.kind === 'factory') { for (const k of [r.name, ...(r.aliases || [])]) FACTORIES.delete(k); }
-    else if (r.kind === 'node') NODES.delete(r.kindName);
+    if (r.kind === 'method') {
+      if (r.had) r.dest[r.name] = r.prev;
+      else delete r.dest[r.name];
+    } else if (r.kind === 'static') {
+      if (r.had) r.ns[r.name] = r.prev;
+      else delete r.ns[r.name];
+    } else if (r.kind === 'factory') {
+      for (const k of [r.name, ...(r.aliases || [])]) FACTORIES.delete(k);
+    } else if (r.kind === 'node') NODES.delete(r.kindName);
     else if (r.kind === 'theme') THEMES.delete(r.name);
-    else if (r.kind === 'hook') { const l = HOOKS.get(r.event); const j = l ? l.indexOf(r.fn) : -1; if (j >= 0) l.splice(j, 1); }
-    else if (r.kind === 'namespace') NAMESPACES.delete(r.name);
+    else if (r.kind === 'hook') {
+      const l = HOOKS.get(r.event);
+      const j = l ? l.indexOf(r.fn) : -1;
+      if (j >= 0) l.splice(j, 1);
+    } else if (r.kind === 'namespace') NAMESPACES.delete(r.name);
     RECORDS.splice(i, 1);
     if (r.kind === 'method') METHODS.delete(r.name);
   }
@@ -373,8 +417,6 @@ export function reset() {
   INSTALLED.clear();
   return true;
 }
-
-
 
 // ── 설치(use) ──────────────────────────────────────────────
 /**
@@ -396,16 +438,18 @@ export function use(plugin, opts = {}) {
   const install = isFn ? plugin : plugin.install;
   const name = (isFn ? plugin.__name : plugin.name) || `plugin${++SEQ}`;
   if (typeof install !== 'function') {
-    throw new PluginError(`plugin.use(${name}): install(api, opts) 함수가 없습니다.`,
-      `형식: { name: '...', install(api, opts) { ... } } 또는 (api) => { ... }`);
+    throw new PluginError(
+      `plugin.use(${name}): install(api, opts) 함수가 없습니다.`,
+      `형식: { name: '...', install(api, opts) { ... } } 또는 (api) => { ... }`,
+    );
   }
-  if (INSTALLED.has(name)) return INSTALLED.get(name);   // 멱등
+  if (INSTALLED.has(name)) return INSTALLED.get(name); // 멱등
   const entry = { name, version: (isFn ? plugin.__version : plugin.version) || '0.0.0', opts, warnings: [] };
   INSTALLED.set(name, entry);
   try {
     install(makeApi(name, opts), opts);
   } catch (e) {
-    uninstall(name);                                     // 부분 설치 롤백
+    uninstall(name); // 부분 설치 롤백
     throw e;
   }
   return entry;
@@ -474,8 +518,12 @@ export const plugins = new Proxy(PLUGIN_NS, {
     const f = FACTORIES.get(k);
     return f || undefined;
   },
-  has(t, k) { return (k in t) || FACTORIES.has(k); },
-  ownKeys(t) { return [...new Set([...Reflect.ownKeys(t), ...FACTORIES.keys()])]; },
+  has(t, k) {
+    return k in t || FACTORIES.has(k);
+  },
+  ownKeys(t) {
+    return [...new Set([...Reflect.ownKeys(t), ...FACTORIES.keys()])];
+  },
   getOwnPropertyDescriptor(t, k) {
     if (k in t) return Reflect.getOwnPropertyDescriptor(t, k);
     if (FACTORIES.has(k)) return { configurable: true, enumerable: true, value: FACTORIES.get(k) };

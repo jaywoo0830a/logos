@@ -7,5 +7,19 @@
     "strict": false,
     "allowJs": true
   },
-  "include": ["index.js", "kit.js", "annotate.js", "transform.js", "complex.js", "linalg.js", "sprite.js", "core/**/*.js", "shapes/**/*.js", "solver/**/*.js", "symbolic/**/*.js", "backend/**/*.js", "plugins/**/*.js"]
+  "include": [
+    "index.js",
+    "kit.js",
+    "annotate.js",
+    "transform.js",
+    "complex.js",
+    "linalg.js",
+    "sprite.js",
+    "core/**/*.js",
+    "shapes/**/*.js",
+    "solver/**/*.js",
+    "symbolic/**/*.js",
+    "backend/**/*.js",
+    "plugins/**/*.js"
+  ]
 }

@@ -12,12 +12,7 @@ import { scene, point } from '@jaywoo0830a/logos';
 
 const A = point(1, 2).label('A').dot();
 
-scene()
-  .axes()
-  .grid(1)
-  .add(A)
-  .compile()
-  .toSVG();
+scene().axes().grid(1).add(A).compile().toSVG();
 ```
 
 읽히는 그대로: "A라는 점을 (1,2)에 찍고, A라고 라벨 붙이고, 점으로 표시한다. 축과 격자 위에."
@@ -41,7 +36,9 @@ scene()
   .theme('textbook')
   .add(
     tri,
-    A, B, C,
+    A,
+    B,
+    C,
 
     // 내심과 내접원
     circle.inscribed(tri).color('#e11').dash([4, 3]),
@@ -78,7 +75,9 @@ scene()
   .theme('textbook')
   .add(
     C.stroke(2),
-    O, P, T,
+    O,
+    P,
+    T,
 
     // 접선과 반지름
     line.through(P, T).color('#c00'),
@@ -86,7 +85,10 @@ scene()
 
     // 직각 표시
     annotate.angle(O, T, P).rightAngle(),
-    annotate.dimension(O, P).label(tex`5`).units('cm'),
+    annotate
+      .dimension(O, P)
+      .label(tex`5`)
+      .units('cm'),
 
     // 정리 설명
     annotate.caption(tex`OT \perp PT \;\Rightarrow\; PT = \sqrt{OP^2 - OT^2} = 4`),
@@ -104,8 +106,8 @@ scene()
 ```js
 import { scene, point, line, curve, annotate, region, tex, tau } from '@jaywoo0830a/logos';
 
-const f  = tex`x^{2} - 1`;
-const df = f.diff('x').simplify();        // 2x
+const f = tex`x^{2} - 1`;
+const df = f.diff('x').simplify(); // 2x
 
 const F = curve.fn(f).on([-3, 3]).color('crimson').stroke(2);
 const T = line.tangent(F).at(1).dash([5, 3]).color('#666');
@@ -121,14 +123,19 @@ scene()
     T,
 
     // 접점
-    point.on(F, 1).dot().label(tex`(1, 0)`),
+    point
+      .on(F, 1)
+      .dot()
+      .label(tex`(1, 0)`),
 
     // 리만합 영역
-    region.riemann(f).on([0, 2]).n(8).left()
-      .fill('steelblue').opacity(0.35),
+    region.riemann(f).on([0, 2]).n(8).left().fill('steelblue').opacity(0.35),
 
     // 정적분 결과
-    annotate.integral(f).from(0).to(2)
+    annotate
+      .integral(f)
+      .from(0)
+      .to(2)
       .label(tex`\int_0^2 f(x)\,dx = \tfrac{2}{3}`),
   )
   .compile()
@@ -149,12 +156,19 @@ scene()
   .polarGrid()
   .theme('textbook')
   .add(
-    curve.polar(θ => Math.cos(3 * θ)).on([0, tau])
-      .stroke(2).color('#3b82f6')
+    curve
+      .polar((θ) => Math.cos(3 * θ))
+      .on([0, tau])
+      .stroke(2)
+      .color('#3b82f6')
       .label(tex`r = \cos 3\theta`),
 
-    curve.polar(θ => Math.cos(3 * θ)).on([0, Math.PI / 2])
-      .stroke(4).color('#f59e0b').opacity(0.6),
+    curve
+      .polar((θ) => Math.cos(3 * θ))
+      .on([0, Math.PI / 2])
+      .stroke(4)
+      .color('#f59e0b')
+      .opacity(0.6),
   )
   .compile();
 ```
@@ -182,9 +196,12 @@ scene()
   .light({ type: 'ambient', intensity: 0.7 })
   .theme('textbook')
   .add(
-    S, P,
+    S,
+    P,
     curve3.intersect(S, P).stroke(2.5).color('crimson'),
-    point(0, 0, 1).dot().label(tex`N`),
+    point(0, 0, 1)
+      .dot()
+      .label(tex`N`),
     annotate.caption(tex`S^2 \cap \{z = 0\} = S^1`),
   )
   .compile()
@@ -200,8 +217,8 @@ scene()
 ```js
 import { scene, curve, line, surface, annotate, tex, pi } from '@jaywoo0830a/logos';
 
-const f  = tex`\sqrt{x}`;
-const c  = curve.fn(f).on([0, 4]);
+const f = tex`\sqrt{x}`;
+const c = curve.fn(f).on([0, 4]);
 const ax = line.horizontal(0);
 
 scene()
@@ -211,8 +228,7 @@ scene()
   .light({ type: 'directional', direction: [1, -1, 1] })
   .theme('textbook')
   .add(
-    surface.revolution(c).about(ax)
-      .color('#93c5fd').opacity(0.85),
+    surface.revolution(c).about(ax).color('#93c5fd').opacity(0.85),
     c.color('crimson').stroke(2),
     ax.color('#333'),
 
@@ -230,7 +246,7 @@ scene()
 import { tex, scene, point, curve, annotate } from '@jaywoo0830a/logos';
 
 const eq = tex`x^{2} - 5x + 6 = 0`;
-const roots = eq.solve('x');        // [2, 3]
+const roots = eq.solve('x'); // [2, 3]
 
 scene()
   .view([-1, 5], [-1, 5])
@@ -238,13 +254,14 @@ scene()
   .axes()
   .theme('textbook')
   .add(
-    curve.fn(tex`x^2 - 5x + 6`).on([-1, 5]).color('crimson'),
+    curve
+      .fn(tex`x^2 - 5x + 6`)
+      .on([-1, 5])
+      .color('crimson'),
 
-    ...roots.map((r, i) =>
-      point(Number(r), 0).dot().label(`$${r.toLatex()}$`)
-    ),
+    ...roots.map((r, i) => point(Number(r), 0).dot().label(`$${r.toLatex()}$`)),
 
-    annotate.caption(`근: ${roots.map(r => `$${r.toLatex()}$`).join(', ')}`),
+    annotate.caption(`근: ${roots.map((r) => `$${r.toLatex()}$`).join(', ')}`),
   )
   .compile();
 ```
@@ -264,15 +281,10 @@ const C = point(2, 3);
 
 scene()
   .equal()
-  .add(
-    triangle(A, B, C),
-    segment(A, B),
-    segment(B, C),
-    segment(C, A),
-  )
+  .add(triangle(A, B, C), segment(A, B), segment(B, C), segment(C, A))
   .assert(
     { kind: 'equal-length', items: [segment(A, B), segment(B, C)] },
-    { kind: 'parallel',     items: [line.through(A, B), line.horizontal(0)] },
+    { kind: 'parallel', items: [line.through(A, B), line.horizontal(0)] },
   )
   .compile();
 ```
@@ -284,32 +296,38 @@ scene()
 ## 10. 교과서 한 페이지 통째로
 
 ```js
-import {
-  scene, point, triangle, circle, line, curve, region,
-  annotate, transform, tex, tau
-} from '@jaywoo0830a/logos';
+import { scene, point, triangle, circle, line, curve, region, annotate, transform, tex, tau } from '@jaywoo0830a/logos';
 
 // ─── 1) 원의 정의와 접선 ─────────────────────
 const fig1 = scene()
-  .equal().axes().theme('textbook')
+  .equal()
+  .axes()
+  .theme('textbook')
   .add(
     circle.center(point.origin()).radius(2).stroke(2),
     point.origin().dot().label('O'),
     point(2, 0).dot().label('P'),
-    line.tangent(circle.center(point.origin()).radius(2)).at(point(2, 0))
-      .color('#c00'),
+    line.tangent(circle.center(point.origin()).radius(2)).at(point(2, 0)).color('#c00'),
     annotate.angle(point.origin(), point(2, 0), point(2, 3)).rightAngle(),
   )
   .compile();
 
 // ─── 2) 삼각함수 그래프 ─────────────────────
 const fig2 = scene()
-  .view([-tau/2, tau], [-1.5, 1.5])
+  .view([-tau / 2, tau], [-1.5, 1.5])
   .axes({ x: { label: 'x', ticks: 'π/2' }, y: { label: 'y' } })
   .theme('textbook')
   .add(
-    curve.fn(Math.sin).on([-tau/2, tau]).color('crimson').label(tex`\sin x`),
-    curve.fn(Math.cos).on([-tau/2, tau]).color('steelblue').label(tex`\cos x`),
+    curve
+      .fn(Math.sin)
+      .on([-tau / 2, tau])
+      .color('crimson')
+      .label(tex`\sin x`),
+    curve
+      .fn(Math.cos)
+      .on([-tau / 2, tau])
+      .color('steelblue')
+      .label(tex`\cos x`),
   )
   .compile();
 
@@ -317,12 +335,17 @@ const fig2 = scene()
 const f = tex`x^{2}`;
 const fig3 = scene()
   .view([-0.5, 3], [-0.5, 10])
-  .equal().axes().grid(1).theme('textbook')
+  .equal()
+  .axes()
+  .grid(1)
+  .theme('textbook')
   .add(
     curve.fn(f).on([-0.5, 3]).color('crimson'),
-    region.riemann(f).on([0, 2]).n(12).midpoint()
-      .fill('steelblue').opacity(0.4),
-    annotate.integral(f).from(0).to(2)
+    region.riemann(f).on([0, 2]).n(12).midpoint().fill('steelblue').opacity(0.4),
+    annotate
+      .integral(f)
+      .from(0)
+      .to(2)
       .label(tex`\int_0^2 x^2\,dx = \tfrac{8}{3}`),
   )
   .compile();
@@ -334,8 +357,10 @@ const fig4 = scene()
   .light({ type: 'ambient', intensity: 0.7 })
   .theme('textbook')
   .add(
-    surface.revolution(curve.fn(tex`\sqrt{x}`).on([0, 4]))
-      .about(line.horizontal(0)).opacity(0.8),
+    surface
+      .revolution(curve.fn(tex`\sqrt{x}`).on([0, 4]))
+      .about(line.horizontal(0))
+      .opacity(0.8),
   )
   .compile();
 
@@ -344,7 +369,7 @@ export const chapter01 = {
   title: '미적분의 기초',
   figures: [fig1, fig2, fig3, fig4],
   toTikZ() {
-    return this.figures.map(f => f.toTikZ({ standalone: true })).join('\n\n');
+    return this.figures.map((f) => f.toTikZ({ standalone: true })).join('\n\n');
   },
 };
 ```
@@ -361,9 +386,16 @@ point(1, 2).label('A').dot().color('#e11');
 
 circle.center(O).radius(3).dash([4, 2]).label('C');
 
-curve.fn(tex`\sin x`).on([0, tau]).stroke(2).color('crimson');
+curve
+  .fn(tex`\sin x`)
+  .on([0, tau])
+  .stroke(2)
+  .color('crimson');
 
-triangle(A, B, C).fill('#eef3ff').stroke(2).apply(transform.rotate(Math.PI/4));
+triangle(A, B, C)
+  .fill('#eef3ff')
+  .stroke(2)
+  .apply(transform.rotate(Math.PI / 4));
 
 scene()
   .dim(3)
@@ -383,12 +415,14 @@ scene()
 
 ```js
 // 3D 씬에 평면 위에 있지 않은 2D 원
-scene().dim(3).add(circle.center(point(0,0,1)).radius(1));
+scene()
+  .dim(3)
+  .add(circle.center(point(0, 0, 1)).radius(1));
 // ❌ Error: 2D circle needs a plane in 3D scene.
 //    Hint: .on(plane.coordinate('xy'))  또는  sphere 로 바꾸세요.
 
 // 정의역이 없는 파라메트릭 곡선
-curve.parametric(t => [Math.cos(t), Math.sin(t)]);
+curve.parametric((t) => [Math.cos(t), Math.sin(t)]);
 // ⚠️ Warning: parametric curve without domain defaults to [-π, π].
 ```
 
@@ -467,30 +501,33 @@ annotate.angle(O, P, /* 접선 방향 */).rightAngle(),
 import { scene, point, circle, use, plugins } from '@jaywoo0830a/logos';
 import geometryExtras from './plugins/geometry-extras.js';
 
-use(geometryExtras, { watermark: true });      // ← 이 한 줄이 전부
+use(geometryExtras, { watermark: true }); // ← 이 한 줄이 전부
 
 scene()
-  .equal().axes().theme('chalk')
+  .equal()
+  .axes()
+  .theme('chalk')
   .add(
-    plugins.ray(point(0, 0), point.byDeg(1, 30)).arrowTip().dashed(),   // 코어에 없던 도형
-    plugins['arc.circular'](point(0, 0), 2, 30, 150),                   // index.js 스텁이 살아남
-    plugins.hatch(1, 1, 4, 1.6).text('A = ∫₀⁴ f(x) dx'),                // 새 IR 노드(SVG+TikZ)
-    circle.center(point.origin()).radius(1).tilt(15),                   // 새 체이닝 메서드
+    plugins.ray(point(0, 0), point.byDeg(1, 30)).arrowTip().dashed(), // 코어에 없던 도형
+    plugins['arc.circular'](point(0, 0), 2, 30, 150), // index.js 스텁이 살아남
+    plugins.hatch(1, 1, 4, 1.6).text('A = ∫₀⁴ f(x) dx'), // 새 IR 노드(SVG+TikZ)
+    circle.center(point.origin()).radius(1).tilt(15), // 새 체이닝 메서드
   )
-  .compile().toSVG();
+  .compile()
+  .toSVG();
 ```
 
 읽히는 그대로입니다 — “이름을 등록하면 그 이름이 DSL 이 된다.” 새 메서드가 코어 메서드와
 섞여도 체인이 끊기지 않고, 없는 이름을 부르면 **등록 방법을 알려주는 안내**가 나옵니다.
 
-| 하고 싶은 것 | 한 줄 |
-|---|---|
-| 새 체이닝 메서드 | `api.chain('drawable', { name: (conf, …) => ({…}) })` |
-| 새 도형 | `api.define('name', factory, { ctor })` |
-| 새 IR 노드(백엔드 무수정) | `api.node('kind', { svg, tikz })` |
-| 새 테마 | `api.theme('name', tokens)` |
-| 파이프라인 끼어들기 | `api.hook('svg', (svg) => …)` |
-| 기존 동작 보강 | `api.around('scene', 'title', (orig, t) => …)` |
+| 하고 싶은 것              | 한 줄                                                 |
+| ------------------------- | ----------------------------------------------------- |
+| 새 체이닝 메서드          | `api.chain('drawable', { name: (conf, …) => ({…}) })` |
+| 새 도형                   | `api.define('name', factory, { ctor })`               |
+| 새 IR 노드(백엔드 무수정) | `api.node('kind', { svg, tikz })`                     |
+| 새 테마                   | `api.theme('name', tokens)`                           |
+| 파이프라인 끼어들기       | `api.hook('svg', (svg) => …)`                         |
+| 기존 동작 보강            | `api.around('scene', 'title', (orig, t) => …)`        |
 
 전체 목록과 좌표 변환 규칙은 [`PLUGIN.md`](PLUGIN.md), 실제 8종 예시는
 `plugins/geometry-extras.js`(`npm run plugin-demo` → `output/plugin-demo/`)에 있습니다.

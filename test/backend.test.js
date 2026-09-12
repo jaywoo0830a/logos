@@ -2,38 +2,45 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync } from 'node:fs';
-import {
-  scene, point, circle, curve, tex, pi,
-  adapt,
-} from '../index.js';
+import { scene, point, circle, curve, tex, pi, adapt } from '../index.js';
 import { resvgFontOptions, STIX_FAMILY } from '../backend/fonts.js';
 
 test('TikZ: standalone 구조와 도형 포함', () => {
-  const out = scene().view([-2, 2], [-2, 2]).add(
-    circle.center(point(0, 0)).radius(1),
-    curve.fn((x) => x * x).on([-1, 1]),
-  ).compile().toTikZ({ standalone: true });
+  const out = scene()
+    .view([-2, 2], [-2, 2])
+    .add(circle.center(point(0, 0)).radius(1), curve.fn((x) => x * x).on([-1, 1]))
+    .compile()
+    .toTikZ({ standalone: true });
   assert.ok(out.includes('\\documentclass[tikz,border=2pt]{standalone}'));
   assert.ok(out.includes('\\begin{tikzpicture}') && out.includes('\\end{document}'));
   assert.ok(out.includes('circle') && out.includes('--'));
 });
 
 test('Asymptote: import/draw 골격 생성', () => {
-  const asy = scene().equal().add(
-    circle.center(point(0, 0)).radius(1),
-    curve.fn((x) => x * x).on([-1, 1]),
-  ).compile().toAsymptote();
+  const asy = scene()
+    .equal()
+    .add(circle.center(point(0, 0)).radius(1), curve.fn((x) => x * x).on([-1, 1]))
+    .compile()
+    .toAsymptote();
   assert.equal(typeof asy, 'string');
   assert.ok(asy.length > 0);
 });
 
 test('JSXGraph: 인터랙티브 HTML 생성', () => {
-  const html = scene().equal().add(circle.center(point(0, 0)).radius(1)).compile().toJSXGraphHTML();
+  const html = scene()
+    .equal()
+    .add(circle.center(point(0, 0)).radius(1))
+    .compile()
+    .toJSXGraphHTML();
   assert.ok(typeof html === 'string' && /board|jsxgraph/i.test(html));
 });
 
 test('KaTeX: latexToText 폴백이 기호를 보존', () => {
-  const svg = scene().equal().add(circle.center(point(0, 0)).radius(1)).compile().toSVG({ math: 'text' });
+  const svg = scene()
+    .equal()
+    .add(circle.center(point(0, 0)).radius(1))
+    .compile()
+    .toSVG({ math: 'text' });
   assert.ok(!svg.includes('<foreignObject'), 'math:text 모드는 foreignObject 미사용');
 });
 
@@ -53,17 +60,29 @@ test('latexToText: 악센트(\\bar·\\vec)가 결합 문자로 남는다', async
   assert.equal(latexToText('\\hat{x}').length, 2, '\\hat{x} → x + 결합 circumflex');
   assert.ok(!/[\\{}]/.test(latexToText('1/\\bar{z} = z/|z|^2')), '악센트 뒤에도 중괄호 없음');
   // 실제 라벨 경로에서도 NaN 이 나오지 않는다.
-  const svg = scene().view([-2, 2], [-2, 2]).add(
-    point(1, 1).dot().label(tex`\\bar{z}`),
-  ).compile().toSVG({ math: 'text' });
+  const svg = scene()
+    .view([-2, 2], [-2, 2])
+    .add(
+      point(1, 1)
+        .dot()
+        .label(tex`\\bar{z}`),
+    )
+    .compile()
+    .toSVG({ math: 'text' });
   assert.ok(!/NaN/.test(svg), '래스터 폴백 라벨에 NaN 없음');
 });
 
 test('PNG: resvg 있으면 실제 래스터, 없으면 명확한 에러', async () => {
-  const fig = scene().view([-0.5, pi + 0.5], [-0.5, 1.5]).axes().add(
-    curve.fn(Math.sin).on([0, pi]).color('crimson'),
-    point(1, Math.sin(1)).dot().label(tex`P`),
-  ).compile();
+  const fig = scene()
+    .view([-0.5, pi + 0.5], [-0.5, 1.5])
+    .axes()
+    .add(
+      curve.fn(Math.sin).on([0, pi]).color('crimson'),
+      point(1, Math.sin(1))
+        .dot()
+        .label(tex`P`),
+    )
+    .compile();
   try {
     const png = await fig.toPNG({ scale: 1 });
     assert.ok(png && (png.length ?? png.byteLength) > 0, 'PNG 바이트 생성');

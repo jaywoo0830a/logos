@@ -1,0 +1,21 @@
+# 의존성 · 락파일
+node_modules
+package-lock.json
+
+# 생성 산출물
+output
+out
+coverage
+test/fixtures
+test/visual
+
+# 바이너리/에셋 (prettier 미지원 또는 원본 보존)
+assets
+*.svg
+*.py
+*.ttf
+
+# 도구가 지원하지 않는 형식 (shfmt 등 별도 도구)
+scripts/**/*.sh
+Dockerfile
+Dockerfile.render

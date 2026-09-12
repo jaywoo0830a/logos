@@ -12,58 +12,80 @@ function make(applyFn, meta = {}) {
 // ── 2D/3D 회전 ────────────────────────────────
 function rotate2D(a, about) {
   const o = about ? about.coords : [0, 0];
-  return make((p, dim) => {
-    if (dim <= 2) return rotate2(p.slice(0, 2), a, o);
-    const [x, y] = rotate2([p[0], p[1]], a, o);
-    return [x, y, p[2]];
-  }, { kind: 'rotate', angle: a });
+  return make(
+    (p, dim) => {
+      if (dim <= 2) return rotate2(p.slice(0, 2), a, o);
+      const [x, y] = rotate2([p[0], p[1]], a, o);
+      return [x, y, p[2]];
+    },
+    { kind: 'rotate', angle: a },
+  );
 }
 function rotate3D(a, axis) {
   // axis: {p, d} 형태의 선(Line) → 정규화된 회전
-  return make((p, dim) => {
-    if (dim <= 2) return rotate2D(a, axis ? _axisPoint(axis) : null).apply(p, dim);
-    return p; // 3D 축 회전은 구현 범위 밖(좌표 동일) → 원본 유지
-  }, { kind: 'rotate3D', angle: a });
+  return make(
+    (p, dim) => {
+      if (dim <= 2) return rotate2D(a, axis ? _axisPoint(axis) : null).apply(p, dim);
+      return p; // 3D 축 회전은 구현 범위 밖(좌표 동일) → 원본 유지
+    },
+    { kind: 'rotate3D', angle: a },
+  );
 }
 
 export const transform = {
   rotate(a) {
     const t = rotate2D(a);
     return Object.assign(t, {
-      about(pt) { return rotate2D(a, pt); },
-      aroundAxis(axis) { return rotate3D(a, axis); },
+      about(pt) {
+        return rotate2D(a, pt);
+      },
+      aroundAxis(axis) {
+        return rotate3D(a, axis);
+      },
     });
   },
   scale(sx, sy = sx, sz) {
-    return make((p) => {
-      const [x, y, z] = p;
-      if (z === undefined) return [x * sx, y * sy];
-      return [x * sx, y * sy, z * (sz ?? 1)];
-    }, { kind: 'scale' });
+    return make(
+      (p) => {
+        const [x, y, z] = p;
+        if (z === undefined) return [x * sx, y * sy];
+        return [x * sx, y * sy, z * (sz ?? 1)];
+      },
+      { kind: 'scale' },
+    );
   },
   translate(dx, dy, dz) {
-    return make((p) => {
-      const [x, y, z] = p;
-      if (z === undefined) return [x + dx, y + dy];
-      return [x + dx, y + dy, z + (dz ?? 0)];
-    }, { kind: 'translate' });
+    return make(
+      (p) => {
+        const [x, y, z] = p;
+        if (z === undefined) return [x + dx, y + dy];
+        return [x + dx, y + dy, z + (dz ?? 0)];
+      },
+      { kind: 'translate' },
+    );
   },
   reflect: {
     over(l) {
       // 2D 직선 반사 (점·방향 형태)
-      return make((p) => {
-        if (p.length >= 3) return p; // 3D 평면 반사는 별도
-        const { p: q, d } = l.pointDir();
-        const [x, y] = projectOnLine(p, q, d);
-        return [2 * x - p[0], 2 * y - p[1]];
-      }, { kind: 'reflect' });
+      return make(
+        (p) => {
+          if (p.length >= 3) return p; // 3D 평면 반사는 별도
+          const { p: q, d } = l.pointDir();
+          const [x, y] = projectOnLine(p, q, d);
+          return [2 * x - p[0], 2 * y - p[1]];
+        },
+        { kind: 'reflect' },
+      );
     },
   },
   shear(k) {
-    return make((p) => {
-      const [x, y] = p;
-      return [x + k * y, y];
-    }, { kind: 'shear' });
+    return make(
+      (p) => {
+        const [x, y] = p;
+        return [x + k * y, y];
+      },
+      { kind: 'shear' },
+    );
   },
   homothety(center, k) {
     const c = center.coords;
@@ -102,8 +124,14 @@ export function applyTransforms(transforms, [x, y, z]) {
 }
 
 // ── 변환 팩토리 단일 노출(편의) ─────────────────
-export function rotate(a) { return transform.rotate(a); }
-export function translate(dx, dy, dz) { return transform.translate(dx, dy, dz); }
-export function scale(sx, sy) { return transform.scale(sx, sy); }
+export function rotate(a) {
+  return transform.rotate(a);
+}
+export function translate(dx, dy, dz) {
+  return transform.translate(dx, dy, dz);
+}
+export function scale(sx, sy) {
+  return transform.scale(sx, sy);
+}
 
 export default transform;

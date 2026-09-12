@@ -33,45 +33,45 @@
 import { point, scene } from '@jaywoo0830a/logos';
 
 // ── Cartesian ────────────────────────────
-point(1, 2)                              // 2D
-point(1, 2, 3)                           // 3D
-point.xyz(1, 2, 3)
+point(1, 2); // 2D
+point(1, 2, 3); // 3D
+point.xyz(1, 2, 3);
 
 // ── Polar (2D) ───────────────────────────
-point.polar(2, Math.PI / 3)              // r, θ
-point.polar(2, '60°')                    // 각도 문자열 허용
-point.polar(2, tex`\frac{\pi}{3}`)       // 심볼릭 각도
+point.polar(2, Math.PI / 3); // r, θ
+point.polar(2, '60°'); // 각도 문자열 허용
+point.polar(2, tex`\frac{\pi}{3}`); // 심볼릭 각도
 
 // ── Cylindrical (3D) ─────────────────────
-point.cylindrical(2, Math.PI/4, 3)       // r, θ, z
+point.cylindrical(2, Math.PI / 4, 3); // r, θ, z
 
 // ── Spherical (3D) ───────────────────────
-point.spherical(1, Math.PI/4, Math.PI/2) // r, θ(azimuth), φ(polar)
-point.spherical(1, '45°', '90°')
+point.spherical(1, Math.PI / 4, Math.PI / 2); // r, θ(azimuth), φ(polar)
+point.spherical(1, '45°', '90°');
 
 // ── 복소평면 ─────────────────────────────
-point.complex(3, -4)                     // 3 - 4i
+point.complex(3, -4); // 3 - 4i
 
 // ── 좌표계 변환 ─────────────────────────
-const P = point.polar(2, Math.PI/3);
-P.toCartesian();                          // point(1, √3)
-P.toPolar();                              // { r: 2, theta: π/3 }
+const P = point.polar(2, Math.PI / 3);
+P.toCartesian(); // point(1, √3)
+P.toPolar(); // { r: 2, theta: π/3 }
 
 // ── 곡선도 좌표계를 안다 ────────────────
-curve.polar(θ => 1 + Math.cos(θ))         // 극곡선
-curve.cylindrical(t => [1, t, t])         // 원통곡선
-curve.spherical(t => [1, t, t/2])         // 구면곡선
+curve.polar((θ) => 1 + Math.cos(θ)); // 극곡선
+curve.cylindrical((t) => [1, t, t]); // 원통곡선
+curve.spherical((t) => [1, t, t / 2]); // 구면곡선
 ```
 
 **씬 좌표계 vs 도형 좌표계**
 
 ```js
 scene()
-  .cartesian()        // 기본
-  .polarGrid()        // 극좌표 눈금 (r 원 + θ 방사선)
+  .cartesian() // 기본
+  .polarGrid() // 극좌표 눈금 (r 원 + θ 방사선)
   .add(
-    curve.polar(θ => 2 * Math.cos(θ)),      // 도형은 자기 좌표계 유지
-    curve.fn(x => x*x)                       // 데카르트 곡선도 함께
+    curve.polar((θ) => 2 * Math.cos(θ)), // 도형은 자기 좌표계 유지
+    curve.fn((x) => x * x), // 데카르트 곡선도 함께
   );
 ```
 
@@ -82,9 +82,9 @@ scene()
 ## 2. 2D / 3D / 혼합
 
 ```js
-scene().dim(2)     // 2D 캔버스
-scene().dim(3)     // 3D 카메라
-scene().auto()     // 도형 보고 자동 결정
+scene().dim(2); // 2D 캔버스
+scene().dim(3); // 3D 카메라
+scene().auto(); // 도형 보고 자동 결정
 ```
 
 3D 씬에서 2D 도형을 넣으면:
@@ -93,9 +93,9 @@ scene().auto()     // 도형 보고 자동 결정
 scene()
   .dim(3)
   .add(
-    plane.coordinate('xy'),               // z=0 평면
-    circle.center(O).radius(1),           // 자동으로 z=0 평면 위에 놓임
-    point(0, 0, 1).label('P')             // 3D 점
+    plane.coordinate('xy'), // z=0 평면
+    circle.center(O).radius(1), // 자동으로 z=0 평면 위에 놓임
+    point(0, 0, 1).label('P'), // 3D 점
   );
 ```
 
@@ -103,7 +103,10 @@ scene()
 
 ```js
 circle.center(O).radius(1).on(plane.coordinate('xy'));
-circle.center(O).radius(1).on(plane.normal(vector(1,1,1)));
+circle
+  .center(O)
+  .radius(1)
+  .on(plane.normal(vector(1, 1, 1)));
 ```
 
 ---
@@ -136,13 +139,16 @@ circle.center(O).radius(1).on(plane.normal(vector(1,1,1)));
 ```js
 import { point, use } from '@jaywoo0830a/logos';
 
-use({ name: 'my-extras', install(api) {
-  api.chain('drawable', { slope: (conf, m) => ({ slopeM: m }) });   // 모든 도형에 .slope()
-  api.define('ray', (O, P) => new Ray(O, P), { ctor: Ray });        // logos.ray(…) 가 살아난다
-  api.node('hatch', { svg: (n, ctx) => '…', tikz: (n) => '…' });    // 새 IR kind (백엔드 무수정)
-}});
+use({
+  name: 'my-extras',
+  install(api) {
+    api.chain('drawable', { slope: (conf, m) => ({ slopeM: m }) }); // 모든 도형에 .slope()
+    api.define('ray', (O, P) => new Ray(O, P), { ctor: Ray }); // logos.ray(…) 가 살아난다
+    api.node('hatch', { svg: (n, ctx) => '…', tikz: (n) => '…' }); // 새 IR kind (백엔드 무수정)
+  },
+});
 
-point(1, 2).slope(3).color('#c00').dot();     // 프로토콜 메서드와 섞여도 체인 유지
+point(1, 2).slope(3).color('#c00').dot(); // 프로토콜 메서드와 섞여도 체인 유지
 ```
 
 체이닝 규칙: 플러그인 메서드가 **패치 객체를 반환하면 자동 `this.set(patch)`**(불변 복제),
@@ -155,142 +161,152 @@ point(1, 2).slope(3).color('#c00').dot();     // 프로토콜 메서드와 섞�
 ### 4.1 점
 
 ```js
-point(1, 2)
-point.origin()
-point.polar(2, Math.PI/3)
-point.cylindrical(2, Math.PI/4, 3)
-point.spherical(1, Math.PI/4, Math.PI/2)
-point.complex(3, -4)
+point(1, 2);
+point.origin();
+point.polar(2, Math.PI / 3);
+point.cylindrical(2, Math.PI / 4, 3);
+point.spherical(1, Math.PI / 4, Math.PI / 2);
+point.complex(3, -4);
 
-point.midpoint(A, B)
-point.centroid(A, B, C)
-point.circumcenter(A, B, C)
-point.incenter(tri)
-point.orthocenter(tri)
-point.foot(P).onto(l)
-point.reflect(P).over(l)
-point.reflect(P).over(plane)
-point.intersect(l1, l2)
-point.intersectAll(circle, line)
-point.on(curve, 0.3)
+point.midpoint(A, B);
+point.centroid(A, B, C);
+point.circumcenter(A, B, C);
+point.incenter(tri);
+point.orthocenter(tri);
+point.foot(P).onto(l);
+point.reflect(P).over(l);
+point.reflect(P).over(plane);
+point.intersect(l1, l2);
+point.intersectAll(circle, line);
+point.on(curve, 0.3);
 ```
 
 ### 4.2 벡터
 
 ```js
-vector(3, 4)
-vector.between(A, B)
-vector.unit(Math.PI/6)
-vector.normal(A, B, C)
-vector.gradient(f).at(P)
-vector.curl(F).at(P)
-vector.div(F).at(P)
+vector(3, 4);
+vector.between(A, B);
+vector.unit(Math.PI / 6);
+vector.normal(A, B, C);
+vector.gradient(f).at(P);
+vector.curl(F).at(P);
+vector.div(F).at(P);
 ```
 
 ### 4.3 선 · 선분 · 반직선
 
 ```js
-line.through(A, B)
-line.through(A).direction(v)
-line.through(A).slope(2)
-line.slopeIntercept(2, -1)
-line.intercepts(3, 4)
-line.standard(2, 3, -6)
-line.vertical(2)
-line.horizontal(3)
+line.through(A, B);
+line.through(A).direction(v);
+line.through(A).slope(2);
+line.slopeIntercept(2, -1);
+line.intercepts(3, 4);
+line.standard(2, 3, -6);
+line.vertical(2);
+line.horizontal(3);
 
-line.perpendicular(l).through(P)
-line.parallel(l).through(P)
-line.angleBisector(A, B, C)
-line.tangent(circle).at(P)
-line.tangent(circle).slope(2)
-line.polar(circle, P)
-line.commonTangent(c1, c2)
+line.perpendicular(l).through(P);
+line.parallel(l).through(P);
+line.angleBisector(A, B, C);
+line.tangent(circle).at(P);
+line.tangent(circle).slope(2);
+line.polar(circle, P);
+line.commonTangent(c1, c2);
 
-segment(A, B)
-segment.ofLength(5).from(A).angle(Math.PI/4)
-segment.bisector(A, B)
+segment(A, B);
+segment
+  .ofLength(5)
+  .from(A)
+  .angle(Math.PI / 4);
+segment.bisector(A, B);
 
-ray.from(A).through(B)
-ray.from(A).direction(Math.PI/3)
+ray.from(A).through(B);
+ray.from(A).direction(Math.PI / 3);
 ```
 
 ### 4.4 곡선 (함수 · 파라메트릭 · 극 · 암시적)
 
 ```js
-curve.fn(x => x*x).on([-3, 3])
-curve.fn(tex`\sin(x) + \frac{1}{2}`)         // 심볼릭
-curve.parametric(t => [Math.cos(t), Math.sin(t)]).on([0, tau])
-curve.polar(θ => 1 + Math.cos(θ)).on([0, tau])
-curve.cylindrical(t => [1, t, t])
-curve.spherical(t => [1, t, t/2])
-curve.implicit((x, y) => x*x + y*y - 1)
-curve.piecewise([[0, 1, f], [1, 2, g]])
-curve.bezier(P0, P1, P2, P3)
-curve.spline(pts).tension(0.5)
-curve.ode({ dy: (x, y) => y, y0: 1 }).on([0, 10])
-curve.taylor(f, { at: 0, order: 5 })
+curve.fn((x) => x * x).on([-3, 3]);
+curve.fn(tex`\sin(x) + \frac{1}{2}`); // 심볼릭
+curve.parametric((t) => [Math.cos(t), Math.sin(t)]).on([0, tau]);
+curve.polar((θ) => 1 + Math.cos(θ)).on([0, tau]);
+curve.cylindrical((t) => [1, t, t]);
+curve.spherical((t) => [1, t, t / 2]);
+curve.implicit((x, y) => x * x + y * y - 1);
+curve.piecewise([
+  [0, 1, f],
+  [1, 2, g],
+]);
+curve.bezier(P0, P1, P2, P3);
+curve.spline(pts).tension(0.5);
+curve.ode({ dy: (x, y) => y, y0: 1 }).on([0, 10]);
+curve.taylor(f, { at: 0, order: 5 });
 
 // 곡선 위 파생
-curve.tangentAt(t)
-curve.normalAt(t)
-curve.arcLength({ from: 0, to: 1 })
-curve.curvature(t)
+curve.tangentAt(t);
+curve.normalAt(t);
+curve.arcLength({ from: 0, to: 1 });
+curve.curvature(t);
 ```
 
 ### 4.5 원 · 호 · 부채꼴
 
 ```js
-circle.center(O).radius(3)
-circle.center(O).through(P)
-circle.center(O).diameter(A, B)
-circle.through(A, B, C)
-circle.inscribed(tri)
-circle.excircle(tri, 'a')
-circle.unit()
+circle.center(O).radius(3);
+circle.center(O).through(P);
+circle.center(O).diameter(A, B);
+circle.through(A, B, C);
+circle.inscribed(tri);
+circle.excircle(tri, 'a');
+circle.unit();
 
-arc.ofCircle(c).from(A).to(B)
-arc.through(A, B, C)
-arc.circle(O, 3).from(0).to(Math.PI/2).cw()
+arc.ofCircle(c).from(A).to(B);
+arc.through(A, B, C);
+arc
+  .circle(O, 3)
+  .from(0)
+  .to(Math.PI / 2)
+  .cw();
 
-sector.ofCircle(c).angle(θ)
+sector.ofCircle(c).angle(θ);
 ```
 
 ### 4.6 원뿔곡선
 
 ```js
-ellipse.center(O).semi(3, 2)
-ellipse.center(O).semiMajor(5).eccentricity(0.6)
-ellipse.foci(F1, F2).major(10)
-ellipse.directrix(l).eccentricity(0.5)
+ellipse.center(O).semi(3, 2);
+ellipse.center(O).semiMajor(5).eccentricity(0.6);
+ellipse.foci(F1, F2).major(10);
+ellipse.directrix(l).eccentricity(0.5);
 
-parabola.focus(F).directrix(l)
-parabola.vertex(V).focus(F)
-parabola.polynomial(1, 0, 0)
+parabola.focus(F).directrix(l);
+parabola.vertex(V).focus(F);
+parabola.polynomial(1, 0, 0);
 
-hyperbola.center(O).semi(3, 2)
-hyperbola.foci(F1, F2).distance(10)
+hyperbola.center(O).semi(3, 2);
+hyperbola.foci(F1, F2).distance(10);
 ```
 
 ### 4.7 다각형 · 영역
 
 ```js
-polygon(A, B, C, D)
-triangle(A, B, C)
-triangle.equilateral(B, C).above()
-quad(A, B, C, D)
-regular.polygon(O, 6, 1)
-regular.star(5, 1, 0.4)
-regular.tessellation('hex').on(region)
+polygon(A, B, C, D);
+triangle(A, B, C);
+triangle.equilateral(B, C).above();
+quad(A, B, C, D);
+regular.polygon(O, 6, 1);
+regular.star(5, 1, 0.4);
+regular.tessellation('hex').on(region);
 
-region.inside(circle)
-region.below(curve)
-region.between(f, g).on([0, 1])
-region.inequality((x, y) => y <= x*x)
-region.union(r1, r2)
-region.difference(r1, r2)
-region.intersect(r1, r2)
-region.riemann(f).on([0, 2]).n(10).left()
+region.inside(circle);
+region.below(curve);
+region.between(f, g).on([0, 1]);
+region.inequality((x, y) => y <= x * x);
+region.union(r1, r2);
+region.difference(r1, r2);
+region.intersect(r1, r2);
+region.riemann(f).on([0, 2]).n(10).left();
 ```
 
 ### 4.8 3D — 평면 · 구 · 원기둥 · 원뿔 · 토러스 · 곡면 · 다면체
@@ -339,41 +355,49 @@ vectorField((x, y, z) => [.., .., ..]).on(region)
 ### 4.9 변환
 
 ```js
-transform.rotate(Math.PI/6).about(O)
-transform.rotate(Math.PI/6).about(axis)      // 3D
-transform.scale(2).about(O)
-transform.scale(1, 2)
-transform.translate(3, -1)
-transform.translate(3, -1, 2)                // 3D
-transform.reflect.over(l)
-transform.reflect.over(plane)
-transform.shear(0.5)
-transform.homothety(O, 2)
-transform.matrix([[1,2],[3,4]])
-transform.compose(t1, t2)
+transform.rotate(Math.PI / 6).about(O);
+transform.rotate(Math.PI / 6).about(axis); // 3D
+transform.scale(2).about(O);
+transform.scale(1, 2);
+transform.translate(3, -1);
+transform.translate(3, -1, 2); // 3D
+transform.reflect.over(l);
+transform.reflect.over(plane);
+transform.shear(0.5);
+transform.homothety(O, 2);
+transform.matrix([
+  [1, 2],
+  [3, 4],
+]);
+transform.compose(t1, t2);
 
-triangle(A, B, C).apply(transform.rotate(Math.PI/4).about(O));
+triangle(A, B, C).apply(transform.rotate(Math.PI / 4).about(O));
 ```
 
 ### 4.10 주석
 
 ```js
-annotate.angle(A, B, C).arc({ radius: 22, double: true }).label('θ').degrees()
-annotate.angle({ from: A, vertex: B, to: C }).arc({ radius: 22 })   // 같은 각 — 이름 지정형
-annotate.angle(A, B, C).rightAngle()          // 꼭짓점 B 에 두 광선이 그려져 있어야 표식이 제자리
+annotate.angle(A, B, C).arc({ radius: 22, double: true }).label('θ').degrees();
+annotate.angle({ from: A, vertex: B, to: C }).arc({ radius: 22 }); // 같은 각 — 이름 지정형
+annotate.angle(A, B, C).rightAngle(); // 꼭짓점 B 에 두 광선이 그려져 있어야 표식이 제자리
 // (발이 화살표 끝을 넘어가는 정사영 등은 안 그려진 쪽 선을 연장해 '모서리'로 만든 뒤 표시)
-annotate.dimension(A, B).offset(24).label('5').units('cm')
-annotate.tick(segment(A, B)).count(2)
-annotate.arrow(A, B).label('v')
-annotate.arrow(A, B).bend(0.3)                // 곡선 화살표 (mpl annotate arc3,rad) — 순환 표시
-                                              // rad>0 = 진행 방향 오른쪽으로 휨, 촉은 path 끝
-annotate.brace(curve).label('arc')
-annotate.shade(region).color('steelblue').opacity(.3)
-annotate.dot(P).label('A')
-annotate.integral(f).from(0).to(2).shade('steelblue').label(tex`\frac{8}{3}`)
-annotate.limit(f, x, 0).label('L')
-annotate.legend()
-annotate.caption('그림 1. 원과 접선')
+annotate.dimension(A, B).offset(24).label('5').units('cm');
+annotate.tick(segment(A, B)).count(2);
+annotate.arrow(A, B).label('v');
+annotate.arrow(A, B).bend(0.3); // 곡선 화살표 (mpl annotate arc3,rad) — 순환 표시
+// rad>0 = 진행 방향 오른쪽으로 휨, 촉은 path 끝
+annotate.brace(curve).label('arc');
+annotate.shade(region).color('steelblue').opacity(0.3);
+annotate.dot(P).label('A');
+annotate
+  .integral(f)
+  .from(0)
+  .to(2)
+  .shade('steelblue')
+  .label(tex`\frac{8}{3}`);
+annotate.limit(f, x, 0).label('L');
+annotate.legend();
+annotate.caption('그림 1. 원과 접선');
 ```
 
 ---
@@ -383,22 +407,22 @@ annotate.caption('그림 1. 원과 접선')
 ```js
 const fig = scene()
   // 좌표계
-  .dim(3)                                        // 또는 .dim(2) / .auto()
+  .dim(3) // 또는 .dim(2) / .auto()
   .view([-5, 5], [-5, 5], [-5, 5])
   .equal()
   .axes({ x: { label: 'x', ticks: 1 }, y: { label: 'y' } })
   .grid({ step: 1, minor: 0.5 })
-  .polarGrid()                                   // 극좌표 눈금
+  .polarGrid() // 극좌표 눈금
   // 눈금·격자·축선은 **데이터 영역 안쪽에만** 그려진다.
   // 제목·xlabel·ylabel 은 그 바깥 여백에 배치되므로 서로 겹치지 않는다(7차 수정).
-  .sphericalGrid()                               // 3D 구면 격자
+  .sphericalGrid() // 3D 구면 격자
 
   // 3D 카메라
   .camera({
     position: [5, 5, 5],
     target: [0, 0, 0],
     up: [0, 0, 1],
-    projection: 'perspective',   // 'orthographic' | 'isometric' | 'cabinet'
+    projection: 'perspective', // 'orthographic' | 'isometric' | 'cabinet'
     fov: 45,
   })
   .orbit({ theta: 0.6, phi: 1.1 })
@@ -410,7 +434,7 @@ const fig = scene()
   // 스타일
   .theme('textbook')
   .size(1200, 800)
-  .dpi(300)                                       // 인쇄용
+  .dpi(300) // 인쇄용
   .background('#ffffff')
   .font({ family: 'Latin Modern Math, STIX Two Math', size: 14 })
 
@@ -426,7 +450,7 @@ fig.toSVG();
 fig.toPNG();
 fig.toCanvas(ctx);
 fig.toTikZ({ standalone: true });
-fig.toPDF();                                      // 인쇄용 벡터
+fig.toPDF(); // 인쇄용 벡터
 fig.toJSON();
 fig.toReact();
 ```
@@ -437,20 +461,19 @@ fig.toReact();
 
 ### 6.1 렌더러 스택
 
-| 계층 | 기술 | 이유 |
-|---|---|---|
-| **기하 커널** | 자체 (2D) + `three.js` (3D) | 2D는 직접, 3D는 검증된 것 사용 |
-| **경로 생성** | 자체 path builder | SVG/TikZ/PDF 동시 출력 |
-| **텍스트/수식** | **KaTeX** (기본) → MathJax (fallback) | TeX 조판 품질 |
-| **벡터 출력** | SVG → **PDF (pdf-lib)** | 인쇄 시 화질 |
-| **래스터** | resvg (WASM) 또는 node-canvas | 300 DPI PNG |
-| **TikZ** | 자체 emitter | 논문/책 직접 삽입 |
+| 계층            | 기술                                  | 이유                           |
+| --------------- | ------------------------------------- | ------------------------------ |
+| **기하 커널**   | 자체 (2D) + `three.js` (3D)           | 2D는 직접, 3D는 검증된 것 사용 |
+| **경로 생성**   | 자체 path builder                     | SVG/TikZ/PDF 동시 출력         |
+| **텍스트/수식** | **KaTeX** (기본) → MathJax (fallback) | TeX 조판 품질                  |
+| **벡터 출력**   | SVG → **PDF (pdf-lib)**               | 인쇄 시 화질                   |
+| **래스터**      | resvg (WASM) 또는 node-canvas         | 300 DPI PNG                    |
+| **TikZ**        | 자체 emitter                          | 논문/책 직접 삽입              |
 
 ### 6.2 교과서급 디테일
 
 ```js
-scene()
-  .theme('textbook')     // 아래 프리셋 전부 활성화
+scene().theme('textbook'); // 아래 프리셋 전부 활성화
 ```
 
 **`textbook` 테마가 하는 일:**
@@ -471,7 +494,7 @@ scene()
 
 ```js
 scene()
-  .camera({ projection: 'orthographic' })       // 수학 교과서는 보통 정사영
+  .camera({ projection: 'orthographic' }) // 수학 교과서는 보통 정사영
   .add(sphere.opacity(0.25))
   .add(plane.coordinate('xy').opacity(0.4))
   .add(curve3.intersect(sphere, plane).stroke(2.5).color('crimson'));
@@ -524,7 +547,9 @@ export function tex(strings, ...values) {
 
 class Sym {
   #ast = null;
-  constructor(latex) { this.latex = latex; }
+  constructor(latex) {
+    this.latex = latex;
+  }
 
   get ast() {
     if (!this.#ast) this.#ast = ce.parse(this.latex);
@@ -537,25 +562,34 @@ class Sym {
   }
 
   integrate({ from, to, var: v = 'x' } = {}) {
-    const cmd = from !== undefined
-      ? ['Integrate', this.ast.json, ['Tuple', v, from, to]]
-      : ['Integrate', this.ast.json, v];
+    const cmd =
+      from !== undefined ? ['Integrate', this.ast.json, ['Tuple', v, from, to]] : ['Integrate', this.ast.json, v];
     return new Sym(ce.box(cmd).evaluate().toLatex());
   }
 
-  simplify() { return new Sym(this.ast.simplify().toLatex()); }
-  expand()   { return new Sym(this.ast.expand().toLatex()); }
-  factor()   { return new Sym(this.ast.factor().toLatex()); }
+  simplify() {
+    return new Sym(this.ast.simplify().toLatex());
+  }
+  expand() {
+    return new Sym(this.ast.expand().toLatex());
+  }
+  factor() {
+    return new Sym(this.ast.factor().toLatex());
+  }
 
   solve(v = 'x') {
     const r = ce.box(['Solve', this.ast.json, v]).evaluate();
-    return (r.json ?? []).map(j => new Sym(ce.box(j).toLatex()));
+    return (r.json ?? []).map((j) => new Sym(ce.box(j).toLatex()));
   }
 
   substitute(map) {
     const m = Object.entries(map).map(([k, v]) => [k, toJson(v)]);
-    return new Sym(ce.box(['ReplaceAll', this.ast.json, ['List', ...m]])
-      .evaluate().toLatex());
+    return new Sym(
+      ce
+        .box(['ReplaceAll', this.ast.json, ['List', ...m]])
+        .evaluate()
+        .toLatex(),
+    );
   }
 
   toFunction(v = 'x') {
@@ -563,8 +597,12 @@ class Sym {
     return (x) => Number(f.evaluate({ [v]: x }).numericValue ?? NaN);
   }
 
-  toLatex() { return this.ast.toLatex(); }
-  valueOf() { return Number(this.ast.N().numericValue ?? NaN); }
+  toLatex() {
+    return this.ast.toLatex();
+  }
+  valueOf() {
+    return Number(this.ast.N().numericValue ?? NaN);
+  }
 }
 
 function toJson(v) {
@@ -578,27 +616,26 @@ function toJson(v) {
 ## 8. 전체 예제 — 2D 교과서 그림
 
 ```js
-import { scene, point, line, segment, curve, circle,
-         annotate, region, tex, tau } from '@jaywoo0830a/logos';
+import { scene, point, line, segment, curve, circle, annotate, region, tex, tau } from '@jaywoo0830a/logos';
 
 // ── 심볼릭 ─────────────────────────────
-const f  = tex`x^{2} - 1`;
-const df = f.diff('x').simplify();            // 2x
+const f = tex`x^{2} - 1`;
+const df = f.diff('x').simplify(); // 2x
 
 // ── 도형 ───────────────────────────────
 const A = point(-2, 3).label('A').dot();
 const B = point(3, 8).label('B').dot();
 const l = line.through(A, B).color('#334');
 
-const F = curve.fn(f).on([-3, 3])
-  .color('crimson').stroke(2)
-  .label(`$f(x)=${f.toLatex()}$`);
+const F = curve.fn(f).on([-3, 3]).color('crimson').stroke(2).label(`$f(x)=${f.toLatex()}$`);
 
 const x0 = 1;
 const y0 = f.toFunction('x')(x0);
-const m  = df.toFunction('x')(x0);
-const tangent = line.slopeIntercept(m, y0 - m * x0)
-  .dash([5, 3]).color('#888');
+const m = df.toFunction('x')(x0);
+const tangent = line
+  .slopeIntercept(m, y0 - m * x0)
+  .dash([5, 3])
+  .color('#888');
 
 // ── 씬 ─────────────────────────────────
 const fig = scene()
@@ -611,10 +648,16 @@ const fig = scene()
   .size(900, 700)
   .dpi(300)
   .add(
-    F, tangent,
-    A, B,
+    F,
+    tangent,
+    A,
+    B,
     point(x0, y0).dot().label('$(1,0)$'),
-    annotate.integral(f).from(0).to(2).shade('steelblue')
+    annotate
+      .integral(f)
+      .from(0)
+      .to(2)
+      .shade('steelblue')
       .label(tex`\displaystyle\int_0^2 x^2\,dx = \frac{8}{3}`),
     annotate.angle(A, point.origin(), B).arc().degrees().label('θ'),
   )
@@ -631,7 +674,7 @@ console.log(fig.toTikZ({ standalone: true }));
 ```js
 import { scene, point, plane, sphere, curve3, vector } from '@jaywoo0830a/logos';
 
-const S  = sphere.center(point.origin()).radius(1).opacity(0.25);
+const S = sphere.center(point.origin()).radius(1).opacity(0.25);
 const pl = plane.coordinate('xy').color('#999').opacity(0.5);
 
 const fig = scene()
@@ -663,7 +706,7 @@ fig.toSVG();
 ```js
 import { scene, curve, annotate, tau, tex } from '@jaywoo0830a/logos';
 
-const rose = curve.polar(θ => Math.cos(3 * θ)).on([0, tau]);
+const rose = curve.polar((θ) => Math.cos(3 * θ)).on([0, tau]);
 
 const fig = scene()
   .dim(2)
@@ -672,10 +715,14 @@ const fig = scene()
   .polarGrid()
   .theme('textbook')
   .add(
-    rose.stroke(1.8).color('#3b82f6').label(tex`r = \cos 3\theta`),
-    annotate.angle(point.origin(),
-                   point.polar(1, 0),
-                   point.polar(1, Math.PI / 6)).arc().label(tex`\theta`),
+    rose
+      .stroke(1.8)
+      .color('#3b82f6')
+      .label(tex`r = \cos 3\theta`),
+    annotate
+      .angle(point.origin(), point.polar(1, 0), point.polar(1, Math.PI / 6))
+      .arc()
+      .label(tex`\theta`),
   )
   .compile();
 
@@ -686,22 +733,22 @@ fig.toSVG();
 
 ## 11. API 요약 — 좌표계별 지원표
 
-| 기능 | 2D Cartesian | Polar | 3D Cartesian | Cylindrical | Spherical | Complex |
-|---|---|---|---|---|---|---|
-| `point` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `vector` | ✅ | ✅ | ✅ | ✅ | ✅ | – |
-| `line` | ✅ | ✅ (r, θ 형태) | ✅ | ✅ | ✅ | – |
-| `curve` | ✅ | ✅ | ✅ | ✅ | ✅ | – |
-| `circle` | ✅ | ✅ | ✅ (평면 위) | ✅ | ✅ | – |
-| `ellipse` | ✅ | ✅ | – | – | – | – |
-| `plane` | – | – | ✅ | ✅ | ✅ | – |
-| `sphere` | – | – | ✅ | ✅ | ✅ | – |
-| `cylinder` | – | – | ✅ | ✅ | ✅ | – |
-| `cone` | – | – | ✅ | ✅ | ✅ | – |
-| `torus` | – | – | ✅ | ✅ | ✅ | – |
-| `surface` | – | – | ✅ | ✅ | ✅ | – |
-| `polyhedron` | – | – | ✅ | – | – | – |
-| `transform` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| 기능         | 2D Cartesian | Polar          | 3D Cartesian | Cylindrical | Spherical | Complex |
+| ------------ | ------------ | -------------- | ------------ | ----------- | --------- | ------- |
+| `point`      | ✅           | ✅             | ✅           | ✅          | ✅        | ✅      |
+| `vector`     | ✅           | ✅             | ✅           | ✅          | ✅        | –       |
+| `line`       | ✅           | ✅ (r, θ 형태) | ✅           | ✅          | ✅        | –       |
+| `curve`      | ✅           | ✅             | ✅           | ✅          | ✅        | –       |
+| `circle`     | ✅           | ✅             | ✅ (평면 위) | ✅          | ✅        | –       |
+| `ellipse`    | ✅           | ✅             | –            | –           | –         | –       |
+| `plane`      | –            | –              | ✅           | ✅          | ✅        | –       |
+| `sphere`     | –            | –              | ✅           | ✅          | ✅        | –       |
+| `cylinder`   | –            | –              | ✅           | ✅          | ✅        | –       |
+| `cone`       | –            | –              | ✅           | ✅          | ✅        | –       |
+| `torus`      | –            | –              | ✅           | ✅          | ✅        | –       |
+| `surface`    | –            | –              | ✅           | ✅          | ✅        | –       |
+| `polyhedron` | –            | –              | ✅           | –           | –         | –       |
+| `transform`  | ✅           | ✅             | ✅           | ✅          | ✅        | ✅      |
 
 ---
 

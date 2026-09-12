@@ -16,14 +16,23 @@ const n = (v) => {
 
 // 색상명/hex → Asymptote rgb() pen
 const NAMED = {
-  red: 'rgb(1,0,0)', blue: 'rgb(0,0,1)', green: 'rgb(0,1,0)',
-  black: 'rgb(0,0,0)', white: 'rgb(1,1,1)',
-  crimson: 'rgb(0.86,0.08,0.24)', steelblue: 'rgb(0.27,0.51,0.71)',
-  '#e11': 'rgb(0.93,0.07,0.07)', '#e63946': 'rgb(0.90,0.22,0.27)',
-  '#3b82f6': 'rgb(0.235,0.51,0.96)', '#1971c2': 'rgb(0.098,0.443,0.76)',
-  '#7c3aed': 'rgb(0.49,0.23,0.93)', '#e8590c': 'rgb(0.91,0.35,0.05)',
-  '#93c5fd': 'rgb(0.58,0.77,0.99)', '#94a3b8': 'rgb(0.58,0.64,0.72)',
-  '#4dabf7': 'rgb(0.30,0.67,0.97)', '#0f766e': 'rgb(0.06,0.46,0.43)',
+  red: 'rgb(1,0,0)',
+  blue: 'rgb(0,0,1)',
+  green: 'rgb(0,1,0)',
+  black: 'rgb(0,0,0)',
+  white: 'rgb(1,1,1)',
+  crimson: 'rgb(0.86,0.08,0.24)',
+  steelblue: 'rgb(0.27,0.51,0.71)',
+  '#e11': 'rgb(0.93,0.07,0.07)',
+  '#e63946': 'rgb(0.90,0.22,0.27)',
+  '#3b82f6': 'rgb(0.235,0.51,0.96)',
+  '#1971c2': 'rgb(0.098,0.443,0.76)',
+  '#7c3aed': 'rgb(0.49,0.23,0.93)',
+  '#e8590c': 'rgb(0.91,0.35,0.05)',
+  '#93c5fd': 'rgb(0.58,0.77,0.99)',
+  '#94a3b8': 'rgb(0.58,0.64,0.72)',
+  '#4dabf7': 'rgb(0.30,0.67,0.97)',
+  '#0f766e': 'rgb(0.06,0.46,0.43)',
 };
 function rgbPen(color) {
   if (!color) return 'rgb(0.2,0.2,0.2)';
@@ -51,10 +60,13 @@ function ltx(text) {
 function labelPos(off) {
   if (!off) return 'E';
   if (typeof off === 'string') return off;
-  const x = off.dx ?? 0, y = off.dy ?? 0;
+  const x = off.dx ?? 0,
+    y = off.dy ?? 0;
   let p = '';
-  if (y > 0) p += 'N'; else if (y < 0) p += 'S';
-  if (x > 0) p += 'E'; else if (x < 0) p += 'W';
+  if (y > 0) p += 'N';
+  else if (y < 0) p += 'S';
+  if (x > 0) p += 'E';
+  else if (x < 0) p += 'W';
   return p || 'E';
 }
 /**
@@ -85,7 +97,7 @@ export function irToAsymptote(nodes, opts = {}) {
         break;
       case 'circle': {
         const st = pen(d.color, d.stroke, d.style);
-        const fill = (d.fill && d.fill !== 'none') ? `+fill:${rgbPen(d.fill)}` : '';
+        const fill = d.fill && d.fill !== 'none' ? `+fill:${rgbPen(d.fill)}` : '';
         lines.push(`draw(circle((${n(d.cx)}, ${n(d.cy)}), ${n(d.r)}), ${st}${fill});`);
         break;
       }
@@ -112,13 +124,22 @@ export function irToAsymptote(nodes, opts = {}) {
         break;
       }
       case 'fillpath': {
-        const s = d.ops.filter((o) => o.op === 'M' || o.op === 'L').map((o) => `(${n(o.x)},${n(o.y)})`).join('--') + '--cycle';
+        const s =
+          d.ops
+            .filter((o) => o.op === 'M' || o.op === 'L')
+            .map((o) => `(${n(o.x)},${n(o.y)})`)
+            .join('--') + '--cycle';
         lines.push(`filldraw(${s}, ${rgbPen(d.fill)}, invisible);`);
         break;
       }
       case 'fillrect': {
-        const x0 = n(d.x), x1 = n(d.x + d.w), y0 = '0', y1 = n(d.y1);
-        lines.push(`filldraw((${x0},${y0})--(${x1},${y0})--(${x1},${y1})--(${x0},${y1})--cycle, ${rgbPen(d.fill)}, invisible);`);
+        const x0 = n(d.x),
+          x1 = n(d.x + d.w),
+          y0 = '0',
+          y1 = n(d.y1);
+        lines.push(
+          `filldraw((${x0},${y0})--(${x1},${y0})--(${x1},${y1})--(${x0},${y1})--cycle, ${rgbPen(d.fill)}, invisible);`,
+        );
         break;
       }
       case 'arrow': {
@@ -144,17 +165,30 @@ export async function compileAsymptote(asySource, { format = 'svg', cwd } = {}) 
   return new Promise((resolve, reject) => {
     const child = spawn('asy', [`-f${format}`, 'fig.asy'], { cwd: dir });
     let err = '';
-    child.stderr.on('data', (d) => { err += d; });
-    child.on('error', (e) => { reject(new Error(`asy 미설치: ${e.message}`)); });
+    child.stderr.on('data', (d) => {
+      err += d;
+    });
+    child.on('error', (e) => {
+      reject(new Error(`asy 미설치: ${e.message}`));
+    });
     child.on('close', (code) => {
-      if (code !== 0) { reject(new Error(`asy exit ${code}: ${err.slice(0, 400)}`)); return; }
+      if (code !== 0) {
+        reject(new Error(`asy exit ${code}: ${err.slice(0, 400)}`));
+        return;
+      }
       const out = file.replace(/\.asy$/, `.${format}`);
       let svg = '';
-      try { svg = readFileSync(out, 'utf8'); } catch (e) { /* 일부 버전은 다른 확장자 */ }
+      try {
+        svg = readFileSync(out, 'utf8');
+      } catch (e) {
+        /* 일부 버전은 다른 확장자 */
+      }
       resolve({ path: out, code: asySource, svg, dir });
     });
   });
 }
 
 export default irToAsymptote;
-export function asyColor(color) { return rgbPen(color); }
+export function asyColor(color) {
+  return rgbPen(color);
+}

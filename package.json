@@ -1,6 +1,6 @@
 {
   "name": "@jaywoo0830a/logos",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Matplotlib-parity math figure DSL in pure JavaScript (Node ESM) — one chainable scene emits SVG, PNG, TikZ, Asymptote and JSXGraph.",
   "type": "module",
   "main": "index.js",
@@ -57,11 +57,14 @@
     "INTERFACE.md"
   ],
   "scripts": {
-    "test": "node --test test/*.test.js",
+    "test": "bash scripts/test.sh",
+    "test:unit": "node --test test/*.test.js",
     "prepublishOnly": "npm test",
     "prepack": "node -e \"const p=require('./package.json');if(!/^@[a-z0-9-]+\\//.test(p.name))throw new Error('publishable name required: '+p.name)\"",
     "test:svg": "node --test test/senarios.test.js",
     "snap:update": "UPDATE=1 node --test test/snapshots.test.js",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "parity11ab": "node examples/mpl_parity_11ab.js",
     "parity9b": "node examples/mpl_parity_9b.js",
     "parity9c": "node examples/mpl_parity_9c.js",
@@ -72,7 +75,7 @@
     "serve:out": "bash scripts/serve.sh out 18080",
     "workflow": "bash scripts/install.sh --docker && bash scripts/render.sh -p examples/workflow -s sketches -o out",
     "examples": "node examples/mpl_parity_11ab.js && node examples/mpl_parity_9b.js && node examples/mpl_parity_9c.js && node examples/mpl_parity_12a2.js && node examples/mpl_parity_12a1.js && node examples/plugin_demo.js",
-    "serve": "node server.js"
+    "serve": "bash scripts/serve.sh"
   },
   "dependencies": {
     "@cortex-js/compute-engine": "^0.27.0",
@@ -117,5 +120,8 @@
   "homepage": "https://github.com/jaywoo0830a/logos#readme",
   "publishConfig": {
     "access": "public"
+  },
+  "devDependencies": {
+    "prettier": "3.9.6"
   }
 }

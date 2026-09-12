@@ -28,9 +28,15 @@ step() { printf '\n%s\n' "${C_BOLD}${*}$C_OFF"; }
 _common_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd -- "${_common_dir}/../.." && pwd)"
 export REPO_ROOT
-# 패키지 배포 이름(스코프 포함) — 심링크 경로 계산에 쓴다
-PKG_NAME="$(node -p "require('${REPO_ROOT}/package.json').name" 2>/dev/null || echo logos)"
-PKG_VERSION="$(node -p "require('${REPO_ROOT}/package.json').version" 2>/dev/null || echo 0.0.0)"
+# 패키지 배포 이름(스코프 포함) · 버전 — 이미지 태그/심링크 경로 계산에 쓴다.
+#   호스트에 Node 가 없어도 되도록 package.json 을 sed 로 읽는다(도커 전용 워크플로우).
+_pkg_field() {
+  sed -nE "s/^[[:space:]]*\"$1\"[[:space:]]*:[[:space:]]*\"([^\"]*)\".*/\\1/p" "$REPO_ROOT/package.json" | head -1
+}
+PKG_NAME="$(_pkg_field name)"
+PKG_VERSION="$(_pkg_field version)"
+PKG_NAME="${PKG_NAME:-logos}"
+PKG_VERSION="${PKG_VERSION:-0.0.0}"
 export PKG_NAME PKG_VERSION
 
 # 절대경로 정규화(존재하지 않아도 됨)
@@ -69,10 +75,11 @@ require_docker() {
 }
 
 # ── 도커 이미지 ────────────────────────────────────────────
+# 이미지 태그는 **패키지 버전**을 따른다 — 버전이 바뀌면 자동으로 다시 빌드된다.
 IMAGE_NAME="${LOGOS_IMAGE_NAME:-logos-render}"
-IMAGE_TAG="${LOGOS_IMAGE_TAG:-0.1.0}"
+IMAGE_TAG="${LOGOS_IMAGE_TAG:-$PKG_VERSION}"
 IMAGE_REF="${IMAGE_NAME}:${IMAGE_TAG}"
-BUILDER_IMAGE="${LOGOS_BUILDER_IMAGE:-logos-builder:0.1.0}"
+BUILDER_IMAGE="${LOGOS_BUILDER_IMAGE:-logos-builder:${PKG_VERSION}}"
 
 image_exists() { docker image inspect "$1" >/dev/null 2>&1; }
 

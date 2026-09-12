@@ -14,7 +14,11 @@ const NESTED_KEYS = ['box', 'marker', 'camera', 'labelOff', 'gradient', 'arc'];
 /** plain object/배열만 structuredClone. 클래스 인스턴스·함수는 그대로 둔다(프로토타입 보존). */
 function cloneNested(v) {
   if (v == null || typeof v !== 'object') return v;
-  try { return structuredClone(v); } catch { return v; }
+  try {
+    return structuredClone(v);
+  } catch {
+    return v;
+  }
 }
 
 /**
@@ -56,38 +60,80 @@ export class Drawable {
   }
 
   /** `set()` 의 별칭 — "뮤테이션"처럼 들리는 이름 대신 불변 업데이트임을 드러낸다(B4). */
-  with(changes) { return this.set(changes); }
+  with(changes) {
+    return this.set(changes);
+  }
 
   // ── Drawable 프로토콜 ───────────────────────────────
-  color(c) { return this.set({ color: c }); }
-  stroke(w) { return this.set({ stroke: w }); }
-  fill(f) { return this.set({ fill: f }); }
-  dash(d) { return this.set({ dash: d }); }
-  opacity(o) { return this.set({ opacity: o }); }
-  z(z) { return this.set({ z }); }
-  label(l, off) { return this.set({ label: l, labelOff: off }); }
-  font(f) { return this.set({ font: f }); }        // 텍스트/라벨 크기
+  color(c) {
+    return this.set({ color: c });
+  }
+  stroke(w) {
+    return this.set({ stroke: w });
+  }
+  fill(f) {
+    return this.set({ fill: f });
+  }
+  dash(d) {
+    return this.set({ dash: d });
+  }
+  opacity(o) {
+    return this.set({ opacity: o });
+  }
+  z(z) {
+    return this.set({ z });
+  }
+  label(l, off) {
+    return this.set({ label: l, labelOff: off });
+  }
+  font(f) {
+    return this.set({ font: f });
+  } // 텍스트/라벨 크기
   /** 행간(줄 간격 배수) — 여러 줄 텍스트의 'a\nb' 간격. 기본 1.32 (backend/fonts.js TYPE) */
-  lineHeight(x) { return this.set({ lineHeight: x }); }
+  lineHeight(x) {
+    return this.set({ lineHeight: x });
+  }
   /** 자간(px) — 기본은 스타일시트 값(0.01em). 예: .letterSpacing(0.5) */
-  letterSpacing(px) { return this.set({ letterSpacing: px }); }
-  bold(on = true) { return this.set({ bold: on }); }
-  as(name) { return this.set({ name }); }
-  apply(...ts) { return this.set({ transforms: [...(this._conf.transforms || []), ...ts] }); }
-  symbolic(s) { return this.set({ sym: s }); }
-  gradient(g) { return this.set({ gradient: g }); }   // I3: { type:'radial'|'linear', stops:[{offset,color}] }
-  clip(r) { return this.set({ clip: r }); }           // I5: 클리핑 영역(Region/Drawable)
+  letterSpacing(px) {
+    return this.set({ letterSpacing: px });
+  }
+  bold(on = true) {
+    return this.set({ bold: on });
+  }
+  as(name) {
+    return this.set({ name });
+  }
+  apply(...ts) {
+    return this.set({ transforms: [...(this._conf.transforms || []), ...ts] });
+  }
+  symbolic(s) {
+    return this.set({ sym: s });
+  }
+  gradient(g) {
+    return this.set({ gradient: g });
+  } // I3: { type:'radial'|'linear', stops:[{offset,color}] }
+  clip(r) {
+    return this.set({ clip: r });
+  } // I5: 클리핑 영역(Region/Drawable)
 
-  get conf() { return this._conf; }
-  get order() { return this._order; }
-  get kind() { return this._kind; }
+  get conf() {
+    return this._conf;
+  }
+  get order() {
+    return this._order;
+  }
+  get kind() {
+    return this._kind;
+  }
 
   /**
    * 플러그인이 등록한 메서드를 **이름으로** 호출하는 escape hatch.
    * 코어에 없는 기능을 이름만 알아도 쓸 수 있게 한다(`d.plugin('slope', 2)` ≡ `d.slope(2)`).
    * 미등록이면 "어떻게 등록하는지" 안내하는 PluginError 를 던진다.
    */
-  plugin(name, ...args) { return callPlugin(this, name, args); }
+  plugin(name, ...args) {
+    return callPlugin(this, name, args);
+  }
 }
 
 // 플러그인 대상 공개 — `api.extend('drawable', …)` 가 모든 도형(서브클래스 포함)에 붙는다.

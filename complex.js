@@ -45,24 +45,44 @@ export class Complex {
   }
 
   /** `[x, y]` (=복소평면의 점) */
-  toArray() { return [this.re, this.im]; }
+  toArray() {
+    return [this.re, this.im];
+  }
   /** |z| = √(a² + b²) */
-  get abs() { return Math.hypot(this.re, this.im); }
+  get abs() {
+    return Math.hypot(this.re, this.im);
+  }
   /** arg z — 라디안 (−π, π] */
-  get arg() { return Math.atan2(this.im, this.re); }
+  get arg() {
+    return Math.atan2(this.im, this.re);
+  }
   /** arg z — 도(degree) */
-  get argDeg() { return (this.arg * 180) / Math.PI; }
+  get argDeg() {
+    return (this.arg * 180) / Math.PI;
+  }
   /** 켤레 z̄ = a − bi (실축 반사) */
-  get conj() { return new Complex(this.re, -this.im); }
+  get conj() {
+    return new Complex(this.re, -this.im);
+  }
   /** 실수인가 (허수부 ≈ 0) */
-  get isReal() { return Math.abs(this.im) < EPS; }
+  get isReal() {
+    return Math.abs(this.im) < EPS;
+  }
   /** 극형식 { r, theta, thetaDeg } */
-  toPolar() { return { r: this.abs, theta: this.arg, thetaDeg: this.argDeg }; }
+  toPolar() {
+    return { r: this.abs, theta: this.arg, thetaDeg: this.argDeg };
+  }
 
   /** z₁ + z₂ (벡터 덧셈과 동일) */
-  add(z) { const w = of(z); return new Complex(this.re + w.re, this.im + w.im); }
+  add(z) {
+    const w = of(z);
+    return new Complex(this.re + w.re, this.im + w.im);
+  }
   /** z₁ − z₂ */
-  sub(z) { const w = of(z); return new Complex(this.re - w.re, this.im - w.im); }
+  sub(z) {
+    const w = of(z);
+    return new Complex(this.re - w.re, this.im - w.im);
+  }
   /** z₁ · z₂ — |z₁z₂| = |z₁||z₂|, arg(z₁z₂) = arg z₁ + arg z₂ */
   mul(z) {
     const w = of(z);
@@ -76,9 +96,13 @@ export class Complex {
     return new Complex((this.re * w.re + this.im * w.im) / d, (this.im * w.re - this.re * w.im) / d);
   }
   /** k·z (실수배) */
-  scale(k) { return new Complex(this.re * k, this.im * k); }
+  scale(k) {
+    return new Complex(this.re * k, this.im * k);
+  }
   /** −z (원점 대칭 = 180° 회전) */
-  neg() { return new Complex(-this.re, -this.im); }
+  neg() {
+    return new Complex(-this.re, -this.im);
+  }
   /** zⁿ — 음수 지수도 허용 (z=0 과 n≤0 은 예외) */
   pow(n) {
     if (!Number.isInteger(n)) throw new Error('cplx.pow: 정수 지수만 가능합니다.');
@@ -119,7 +143,9 @@ function of(v) {
 }
 
 /** 복소수 생성 — `cplx(3, 2)` = 3+2i */
-export function cplx(re, im = 0) { return new Complex(re, im); }
+export function cplx(re, im = 0) {
+  return new Complex(re, im);
+}
 /** 극형식 — `cplx.polar(2, 60)` = 2e^{i60°} (θ 는 도) */
 cplx.polar = (r, deg) => Complex.polar(r, deg);
 /** 입력 정규화 (`[x, y]` → Complex) */
@@ -166,7 +192,10 @@ cplx.round = (a, d = 2) => {
  */
 cplx.matrix = (a) => {
   const w = of(a);
-  return mat([[w.re, -w.im], [w.im, w.re]]);
+  return mat([
+    [w.re, -w.im],
+    [w.im, w.re],
+  ]);
 };
 
 export default { cplx, Complex };

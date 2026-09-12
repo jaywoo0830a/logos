@@ -12,36 +12,36 @@
 ```js
 import { scene, point, circle, kit } from '@jaywoo0830a/logos';
 
-const fig = kit.plot2d([-3, 3], [-3, 3], { equal: true })
+const fig = kit
+  .plot2d([-3, 3], [-3, 3], { equal: true })
   .title('원 위의 점과 반지름')
   .add(
     circle.center(point(0, 0)).radius(2).color(kit.palette.blue).stroke(2),
-    kit.seg(point(0, 0), point(2, 0), { dash: [4, 3] }),   // 반지름(직선)
+    kit.seg(point(0, 0), point(2, 0), { dash: [4, 3] }), // 반지름(직선)
     point(2, 0).dot().label('P'),
   );
 
-await kit.saveFigures([['radius', () => fig, '원 위의 점과 반지름']],
-  { dir: 'output/demo', index: true });
+await kit.saveFigures([['radius', () => fig, '원 위의 점과 반지름']], { dir: 'output/demo', index: true });
 ```
 
 ---
 
 ## 1. 문서 지도
 
-| 문서 | 무엇을 담고 있나 |
-|---|---|
-| **`README.md`** (이 문서) | 저장소 안내 — 실행 방법·구조·검증 |
-| [`KIT.md`](KIT.md) | **예제/그림 작성 가이드** — `kit.js`, 3D 도우미, `linalg`(행렬·벡터), 타이포그래피(행간·자간) |
-| [`DSL.md`](DSL.md) | 언어 스펙 — Scene/도형/주석/영역, IR, 백엔드 파이프라인 |
-| [`INTERFACE.md`](INTERFACE.md) | 사용자 코드 미리보기(읽히는 코드 모음) |
-| [`SENARIOS.md`](SENARIOS.md) | 검증 시나리오 A–L (초·중·고 / 미적분 / 3D) |
-| [`ADAPT.md`](ADAPT.md) | 외부엔진 어댑터 — SymPy · Asymptote · TikZJax · JSXGraph · KaTeX |
-| [`PLUGIN.md`](PLUGIN.md) | **플러그인(체이너블 확장) 아키텍처** — 코어 수정 없이 기능을 붙이는 8가지 확장 지점 |
-| [`WORKFLOW.md`](WORKFLOW.md) | **워크플로우(도커+배시, 리눅스 전용)** — 설치 → 작성 → 실행 → 렌더 4단계, CLI/스크립트 레퍼런스 |
-| [`0911-PLAN.md`](0911-PLAN.md) | 작업 계획·이력(무엇을 왜 바꿨는지) |
-| [`test/COVERAGE.md`](test/COVERAGE.md) | 테스트 커버리지 매트릭스 |
-| [`CHANGELOG.md`](CHANGELOG.md) | 버전별 변경 이력 (Keep a Changelog) |
-| [`LICENSE`](LICENSE) | MIT |
+| 문서                                   | 무엇을 담고 있나                                                                                |
+| -------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| **`README.md`** (이 문서)              | 저장소 안내 — 실행 방법·구조·검증                                                               |
+| [`KIT.md`](KIT.md)                     | **예제/그림 작성 가이드** — `kit.js`, 3D 도우미, `linalg`(행렬·벡터), 타이포그래피(행간·자간)   |
+| [`DSL.md`](DSL.md)                     | 언어 스펙 — Scene/도형/주석/영역, IR, 백엔드 파이프라인                                         |
+| [`INTERFACE.md`](INTERFACE.md)         | 사용자 코드 미리보기(읽히는 코드 모음)                                                          |
+| [`SENARIOS.md`](SENARIOS.md)           | 검증 시나리오 A–L (초·중·고 / 미적분 / 3D)                                                      |
+| [`ADAPT.md`](ADAPT.md)                 | 외부엔진 어댑터 — SymPy · Asymptote · TikZJax · JSXGraph · KaTeX                                |
+| [`PLUGIN.md`](PLUGIN.md)               | **플러그인(체이너블 확장) 아키텍처** — 코어 수정 없이 기능을 붙이는 8가지 확장 지점             |
+| [`WORKFLOW.md`](WORKFLOW.md)           | **워크플로우(도커+배시, 리눅스 전용)** — 설치 → 작성 → 실행 → 렌더 4단계, CLI/스크립트 레퍼런스 |
+| [`0911-PLAN.md`](0911-PLAN.md)         | 작업 계획·이력(무엇을 왜 바꿨는지)                                                              |
+| [`test/COVERAGE.md`](test/COVERAGE.md) | 테스트 커버리지 매트릭스                                                                        |
+| [`CHANGELOG.md`](CHANGELOG.md)         | 버전별 변경 이력 (Keep a Changelog)                                                             |
+| [`LICENSE`](LICENSE)                   | MIT                                                                                             |
 
 ---
 
@@ -61,39 +61,46 @@ npx logos render sketches --out out --scale 2 --no-png --clean
 import { kit, point, circle } from '@jaywoo0830a/logos';
 
 export const figures = [
-  ['radius', () => kit.plot2d([-3, 3], [-3, 3], { equal: true })
-    .add(circle.center(point(0, 0)).radius(2), point(2, 0).dot().label('P'))],
+  [
+    'radius',
+    () =>
+      kit
+        .plot2d([-3, 3], [-3, 3], { equal: true })
+        .add(circle.center(point(0, 0)).radius(2), point(2, 0).dot().label('P')),
+  ],
 ];
 ```
 
-* PNG 출력은 선택입니다 — `@resvg/resvg-js`(선택 의존성)가 설치돼 있으면 자동으로 켜집니다
+- PNG 출력은 선택입니다 — `@resvg/resvg-js`(선택 의존성)가 설치돼 있으면 자동으로 켜집니다
   (`--no-png` 로 끌 수 있습니다). SVG 는 의존성 없이 항상 나옵니다.
-* 플러그인은 `@jaywoo0830a/logos/plugins/geometry-extras.js` 처럼 하위 경로로 가져옵니다.
+- 플러그인은 `@jaywoo0830a/logos/plugins/geometry-extras.js` 처럼 하위 경로로 가져옵니다.
 
 ### 2.2 리포지토리에서 (개발 · 예제 재현 · 도커 워크플로)
 
 ```bash
 git clone https://github.com/jaywoo0830a/logos.git && cd logos
 npm install
-npm test              # 전체 테스트 (194개)
+npm test              # 전체 테스트를 도커에서 (210개)
+npm run format        # prettier 3.9.6 로 전체 포맷
 npm run examples      # 대표 예제 5개 + 플러그인 데모 → output/…
 npm run workflow      # 워크플로우 4단계(도커+배시) → examples/workflow/out
-npm run serve         # http://localhost:18080/  (렌더 갤러리)
+npm run serve         # http://localhost:18080/  (렌더 갤러리 · 도커)
 ```
 
-| 스크립트 | 설명 |
-|---|---|
-| `npm test` | 단위 + 시나리오 + 불변식 + 스냅샷 + 백엔드 + 플러그인 + CLI (총 194) |
-| `npm run parity11ab` | 삼각함수 **31 figure**(11A 19 + 11B 12) 재현 — `output/parity11a`, `output/parity11b` |
-| `npm run parity9b` / `parity9c` / `parity12a2` / `parity12a1` | 2D 기하 25 / 3D 기하 35 / 행렬과 벡터 20 / 복소수 12 figure 재현 |
-| `npm run plugin-demo` | **플러그인 데모 4 figure**(코어 수정 0 — `ray`·`arc.circular`·`hatch` 노드·체이닝 확장) — `output/plugin-demo` |
-| `npm run workflow` | **워크플로우 4단계**(도커+배시 · 리눅스) — `examples/workflow/sketches` → `examples/workflow/out` ([`WORKFLOW.md`](WORKFLOW.md)) |
-| `npm run render` | `bash scripts/render.sh` (스케치 폴더 → 원하는 출력 디렉토리) |
-| `npm run serve:out` | `bash scripts/serve.sh out 18080` (렌더 결과를 브라우저로) |
-| `npm run examples` | 위 여섯을 연속 실행 |
-| `npm run snap:update` | 골든 SVG 스냅샷 재생성(`test/fixtures/`, 로컬 전용) |
-| `npm run serve` | `output/` 정적 서버(갤러리 + SVG/PNG) |
-| `npm run test:svg` | SENARIOS SVG 문자열 회귀만 |
+| 스크립트                                                      | 설명                                                                                                                             |
+| ------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `npm test`                                                    | **도커에서** 단위 + 시나리오 + 불변식 + 스냅샷 + 백엔드 + 플러그인 + CLI (총 210) · 호스트에서 돌리려면 `npm run test:unit`      |
+| `npm run format`                                              | prettier 3.9.6 로 전체 포맷 (`format:check` 는 검사만)                                                                           |
+| `npm run parity11ab`                                          | 삼각함수 **31 figure**(11A 19 + 11B 12) 재현 — `output/parity11a`, `output/parity11b`                                            |
+| `npm run parity9b` / `parity9c` / `parity12a2` / `parity12a1` | 2D 기하 25 / 3D 기하 35 / 행렬과 벡터 20 / 복소수 12 figure 재현                                                                 |
+| `npm run plugin-demo`                                         | **플러그인 데모 4 figure**(코어 수정 0 — `ray`·`arc.circular`·`hatch` 노드·체이닝 확장) — `output/plugin-demo`                   |
+| `npm run workflow`                                            | **워크플로우 4단계**(도커+배시 · 리눅스) — `examples/workflow/sketches` → `examples/workflow/out` ([`WORKFLOW.md`](WORKFLOW.md)) |
+| `npm run render`                                              | `bash scripts/render.sh` (스케치 폴더 → 원하는 출력 디렉토리)                                                                    |
+| `npm run serve:out`                                           | `bash scripts/serve.sh out 18080` (렌더 결과를 브라우저로)                                                                       |
+| `npm run examples`                                            | 위 여섯을 연속 실행                                                                                                              |
+| `npm run snap:update`                                         | 골든 SVG 스냅샷 재생성(`test/fixtures/`, 로컬 전용)                                                                              |
+| `npm run serve`                                               | `output/` 정적 서버(갤러리 + SVG/PNG)                                                                                            |
+| `npm run test:svg`                                            | SENARIOS SVG 문자열 회귀만                                                                                                       |
 
 Docker(선택): `docker compose up web` → 같은 갤러리 서버,
 `docker compose run --rm logos` → 컨테이너 안에서 `npm test`.
@@ -109,24 +116,24 @@ npm 설치 사용자도 패키지에 `scripts/` · `Dockerfile.render` 가 함�
 대표 예제 5개 + 플러그인 데모 1개만 유지합니다 — 전부 "matplotlib 그림을 logos 로 재현"하거나
 "코어 수정 없이 확장"하는 회귀 기준입니다.
 
-* **`plugin_demo.js`** — **플러그인 데모 4 figure**. `plugins/geometry-extras.js` 를 `use()` 한 것만으로
+- **`plugin_demo.js`** — **플러그인 데모 4 figure**. `plugins/geometry-extras.js` 를 `use()` 한 것만으로
   `ray`(반직선) · `arc.circular`(원호) · `hatch`(사선 음영 — 새 IR 노드, SVG+TikZ) ·
   체이닝 확장(`.tilt/.dashed/.arrowTip`) · `point.byDeg` · `theme('chalk')` ·
   SVG 훅(워터마크) · `scene.title` 래핑을 씁니다. **코어 파일 수정 0줄** → [`PLUGIN.md`](PLUGIN.md)
 
-* **`mpl_parity_11ab.js`** — 삼각함수 **31 figure** (`example5.py` 재현 · 11A 19 + 11B 12)
+- **`mpl_parity_11ab.js`** — 삼각함수 **31 figure** (`example5.py` 재현 · 11A 19 + 11B 12)
   (라디안 정의 · 특수각 · 단위원에서 sin/cos/tan · 그래프 4종 · 역삼각함수 ·
-   변환 5단계 · arcsin(sin θ) · 합공식 기하 · 조화합성 · 맥놀이 · 오일러 공식 ·
-   바이어슈트라스 치환 · 체비쇼프 · 삼각방정식 · 사인/코사인 법칙 …)
+  변환 5단계 · arcsin(sin θ) · 합공식 기하 · 조화합성 · 맥놀이 · 오일러 공식 ·
+  바이어슈트라스 치환 · 체비쇼프 · 삼각방정식 · 사인/코사인 법칙 …)
 
-* **`mpl_parity_9b.js`** — Session 9B, 2D 기하 **25 figure**
+- **`mpl_parity_9b.js`** — Session 9B, 2D 기하 **25 figure**
   (직선의 다섯 표현 · 단계별 작도 · 평행/수직 · 원뿔곡선 · 매개곡선 · 신발끈 …)
-* **`mpl_parity_9c.js`** — Session 9C, 3D 기하 **35 figure**
+- **`mpl_parity_9c.js`** — Session 9C, 3D 기하 **35 figure**
   (좌표계 · 평면/법선 · 구 · 등위곡선 · 이차곡면 총람 · 교선 · 단계별 작도 …)
-* **`mpl_parity_12a2.js`** — 12A2, **행렬과 벡터** **20 figure**
+- **`mpl_parity_12a2.js`** — 12A2, **행렬과 벡터** **20 figure**
   (선형변환 · 행렬식 · 합성/역행렬 · 회전/반사/전단 · 내적/정사영/외적 ·
   3D 부피 · 연립방정식 · 행렬의 거듭제곱 · 차원 축소 · 격자 변형 …)
-* **`mpl_parity_12a1.js`** — 12A1, **복소수** **12 figure**
+- **`mpl_parity_12a1.js`** — 12A1, **복소수** **12 figure**
   (복소평면·극형식 · i 의 거듭제곱 · 켤레 · 덧셈 · 곱 = 회전+확대 ·
   a+bi ↔ 회전·확대 행렬 · 드무아브르 나선 · 1 의 n제곱근 · 1/z 반전+반사 ·
   이차방정식의 복소근 · 편각의 덧셈 · 복소평면 요약)
@@ -173,15 +180,15 @@ output/             렌더 산출물(재생성 가능, git 추적 제외)
 
 ## 5. 무엇이 검증되나
 
-| 층 | 내용 |
-|---|---|
-| 결정성 | 같은 씬 → 같은 문자열(렌더 단위 id 리셋) |
-| 기하 불변식 | 원/타원/implicit/영역/샘플링, 라벨이 캔버스 안 |
-| 시나리오 | SENARIOS A–L(48) + 1.md(50) + `example1/2/3/4/5.py` 재현(25+35+20+12+31) |
-| 백엔드 정합 | TikZ/Asymptote/JSXGraph/KaTeX/PNG |
-| 확장성 | 플러그인 8종(빌더·체이닝·IR 노드·테마·훅·래핑·정적·되돌리기) + 미등록 안내 + 원복 격리 |
-| 워크플로우 | CLI(`new`/`render`/`serve`) + 배시·도커 4단계(설치 → 작성 → 실행 → 렌더) — 임시 프로젝트 실제 실행 |
-| 스냅샷 | 골든 SVG 문자열 비교(`npm run snap:update`) |
+| 층          | 내용                                                                                               |
+| ----------- | -------------------------------------------------------------------------------------------------- |
+| 결정성      | 같은 씬 → 같은 문자열(렌더 단위 id 리셋)                                                           |
+| 기하 불변식 | 원/타원/implicit/영역/샘플링, 라벨이 캔버스 안                                                     |
+| 시나리오    | SENARIOS A–L(48) + 1.md(50) + `example1/2/3/4/5.py` 재현(25+35+20+12+31)                           |
+| 백엔드 정합 | TikZ/Asymptote/JSXGraph/KaTeX/PNG                                                                  |
+| 확장성      | 플러그인 8종(빌더·체이닝·IR 노드·테마·훅·래핑·정적·되돌리기) + 미등록 안내 + 원복 격리             |
+| 워크플로우  | CLI(`new`/`render`/`serve`) + 배시·도커 4단계(설치 → 작성 → 실행 → 렌더) — 임시 프로젝트 실제 실행 |
+| 스냅샷      | 골든 SVG 문자열 비교(`npm run snap:update`)                                                        |
 
 ---
 

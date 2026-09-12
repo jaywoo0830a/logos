@@ -4,12 +4,15 @@ import { applyTransforms } from '../transform.js';
 import { nodeEmitter } from '../core/plugin.js';
 
 function pt(d, x, y) {
-  const [nx, ny] = (d.transforms && d.transforms.length) ? applyTransforms(d.transforms, [x, y]) : [x, y];
+  const [nx, ny] = d.transforms && d.transforms.length ? applyTransforms(d.transforms, [x, y]) : [x, y];
   const dx = nx < 1e-9 && nx > -1e-9 ? 0 : nx;
   const dy = ny < 1e-9 && ny > -1e-9 ? 0 : ny;
   return `${fmt(dx)},${fmt(dy)}`;
 }
-const fmt = (v) => { const n = Math.round(v * 1000) / 1000; return n === 0 ? '0' : String(n); };
+const fmt = (v) => {
+  const n = Math.round(v * 1000) / 1000;
+  return n === 0 ? '0' : String(n);
+};
 
 function stroke(d) {
   let s = [];
@@ -57,7 +60,7 @@ export function emitTikZ(nodes, opts = {}) {
         break;
       }
       case 'arrow': {
-        const opt = (d.headless ? '' : '->');
+        const opt = d.headless ? '' : '->';
         body.push(`\\draw[${opt}] (${pt(d, d.x1, d.y1)}) -- (${pt(d, d.x2, d.y2)});`);
         break;
       }

@@ -19,19 +19,31 @@ import { basename, extname, join, resolve, relative, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 const HERE = import.meta.dirname;
-const PKG_ROOT = resolve(HERE, '..');            // 패키지 루트(설치본이면 node_modules/@…/logos/)
+const PKG_ROOT = resolve(HERE, '..'); // 패키지 루트(설치본이면 node_modules/@…/logos/)
 const PKG_JSON = readJson(join(PKG_ROOT, 'package.json')) || {};
-const PKG_NAME = PKG_JSON.name || 'logos';       // 배포 이름 — 스코프 포함(@scope/name)
+const PKG_NAME = PKG_JSON.name || 'logos'; // 배포 이름 — 스코프 포함(@scope/name)
 const VERSION = PKG_JSON.version || '0.0.0';
 
 /** JSON 파일을 안전하게 읽는다(없거나 깨지면 null) */
 function readJson(p) {
-  try { return JSON.parse(readFileSync(p, 'utf8')); } catch { return null; }
+  try {
+    return JSON.parse(readFileSync(p, 'utf8'));
+  } catch {
+    return null;
+  }
 }
 
 // ── 로그 ────────────────────────────────────────────────────
 const C = process.stdout.isTTY
-  ? { dim: '\x1b[2m', red: '\x1b[31m', green: '\x1b[32m', yellow: '\x1b[33m', cyan: '\x1b[36m', bold: '\x1b[1m', off: '\x1b[0m' }
+  ? {
+      dim: '\x1b[2m',
+      red: '\x1b[31m',
+      green: '\x1b[32m',
+      yellow: '\x1b[33m',
+      cyan: '\x1b[36m',
+      bold: '\x1b[1m',
+      off: '\x1b[0m',
+    }
   : { dim: '', red: '', green: '', yellow: '', cyan: '', bold: '', off: '' };
 const log = (...a) => console.log(...a);
 const ok = (m) => log(`${C.green}✓${C.off} ${m}`);
@@ -55,7 +67,10 @@ function parseArgs(argv, spec) {
   const rest = [];
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
-    if (a === '--') { rest.push(...argv.slice(i + 1)); break; }
+    if (a === '--') {
+      rest.push(...argv.slice(i + 1));
+      break;
+    }
     if (a.startsWith('-')) {
       const neg = a.startsWith('--no-');
       const raw = neg ? a.slice(5) : a.replace(/^-+/, '');
@@ -63,8 +78,14 @@ function parseArgs(argv, spec) {
       const name = alias[name0] || name0;
       if (!(name in spec)) throw new CliError(`알 수 없는 옵션: ${a}`);
       const s = spec[name];
-      if (neg) { out[name] = false; continue; }
-      if (s.type === 'bool') { out[name] = inline === undefined ? true : inline !== 'false'; continue; }
+      if (neg) {
+        out[name] = false;
+        continue;
+      }
+      if (s.type === 'bool') {
+        out[name] = inline === undefined ? true : inline !== 'false';
+        continue;
+      }
       const val = inline !== undefined ? inline : argv[++i];
       if (val === undefined) throw new CliError(`옵션 ${a} 에 값이 필요합니다`);
       if (s.type === 'number') {
@@ -72,13 +93,15 @@ function parseArgs(argv, spec) {
         if (!Number.isFinite(n)) throw new CliError(`옵션 ${a} 는 숫자여야 합니다: ${val}`);
         out[name] = n;
       } else if (s.type === 'list') {
-        out[name] = String(val).split(',').map((x) => x.trim()).filter(Boolean);
+        out[name] = String(val)
+          .split(',')
+          .map((x) => x.trim())
+          .filter(Boolean);
       } else out[name] = val;
     } else rest.push(a);
   }
   return { opts: out, rest };
 }
-
 
 // ── 스케치 탐색 · 로딩 ──────────────────────────────────────
 const SKETCH_EXT = new Set(['.js', '.mjs']);
@@ -153,7 +176,6 @@ function removeGenerated(outDir) {
   }
 }
 
-
 /** 사람에게 보여줄 경로 — cwd 밖이면 절대경로 그대로(‘../../..’ 방지) */
 function pretty(p) {
   const r = relative(process.cwd(), p);
@@ -167,7 +189,11 @@ async function cmdRender(argv) {
     out: { type: 'string', alias: ['o'], default: 'out', desc: '출력 폴더' },
     png: { type: 'bool', default: true, desc: 'PNG 도 생성(기본 on)' },
     scale: { type: 'number', default: 1, desc: 'PNG 배율' },
-    layout: { type: 'bool', default: false, desc: '라벨 자동 배치(scene.layout()) — 겹치는 어노테이션을 눈금까지 피해 밀어낸다' },
+    layout: {
+      type: 'bool',
+      default: false,
+      desc: '라벨 자동 배치(scene.layout()) — 겹치는 어노테이션을 눈금까지 피해 밀어낸다',
+    },
     index: { type: 'bool', default: true, desc: 'index.html 갤러리 생성' },
     title: { type: 'string', default: null, desc: '갤러리 제목' },
     recursive: { type: 'bool', alias: ['r'], default: false, desc: '하위 폴더까지' },
@@ -188,7 +214,7 @@ async function cmdRender(argv) {
     else if (SKETCH_EXT.has(extname(t))) found.push(t);
     else throw new CliError(`스케치(*.js/*.mjs) 또는 폴더여야 합니다: ${t}`);
   }
-  const files = [...new Set(found)];   // 같은 파일을 두 번 넘겨도 한 번만
+  const files = [...new Set(found)]; // 같은 파일을 두 번 넘겨도 한 번만
   if (!files.length) throw new CliError(`스케치를 찾지 못했습니다: ${targets.join(', ')} (*.js / *.mjs)`);
   const srcDir = targets.length === 1 ? targets[0] : resolve('.');
 
@@ -212,7 +238,10 @@ async function cmdRender(argv) {
       continue;
     }
     const ents = entriesOf(mod, file);
-    if (!ents.length) { warn(`${rel}: export default / figures 가 없어 건너뜁니다`); continue; }
+    if (!ents.length) {
+      warn(`${rel}: export default / figures 가 없어 건너뜁니다`);
+      continue;
+    }
     for (const [name, fig, title] of ents) figures.push({ name, title: title || name, fig, src: rel });
   }
   const failed = figures.filter((f) => f.error);
@@ -220,7 +249,8 @@ async function cmdRender(argv) {
   if (!usable.length) throw new CliError(`렌더할 figure 가 없습니다: ${srcDir}`);
 
   if (opts['dry-run']) {
-    for (const f of figures) log(`  ${f.error ? `${C.red}✗${C.off}` : `${C.green}✓${C.off}`} ${f.name}  ${C.dim}${f.src}${C.off}`);
+    for (const f of figures)
+      log(`  ${f.error ? `${C.red}✗${C.off}` : `${C.green}✓${C.off}`} ${f.name}  ${C.dim}${f.src}${C.off}`);
     log(`\n${C.bold}${usable.length}${C.off} figure (실패 ${failed.length}) — dry-run 이라 렌더하지 않았습니다`);
     return failed.length ? 1 : 0;
   }
@@ -228,7 +258,8 @@ async function cmdRender(argv) {
   mkdirSync(outDir, { recursive: true });
   if (opts.clean) removeGenerated(outDir);
 
-  let okN = 0, failN = failed.length;
+  let okN = 0,
+    failN = failed.length;
   const entries = [];
   for (const f of figures) {
     if (f.error) continue;
@@ -332,20 +363,27 @@ function cmdNew(argv) {
   const dep = local ? `file:${PKG_ROOT}` : `^${VERSION}`;
   const files = {
     'sketch.js': SKETCH_TEMPLATE,
-    'package.json': `${JSON.stringify({
-      name: opts.name || `${basename(dir)}-sketches`,
-      private: true,
-      type: 'module',
-      scripts: { render: 'logos render . --out out', serve: `logos serve out` },
-      dependencies: { [PKG_NAME]: dep },
-    }, null, 2)}\n`,
+    'package.json': `${JSON.stringify(
+      {
+        name: opts.name || `${basename(dir)}-sketches`,
+        private: true,
+        type: 'module',
+        scripts: { render: 'logos render . --out out', serve: `logos serve out` },
+        dependencies: { [PKG_NAME]: dep },
+      },
+      null,
+      2,
+    )}\n`,
     '.gitignore': 'node_modules/\nout/\n',
     'README.md': README_TEMPLATE(basename(dir)),
   };
   const wrote = [];
   for (const [f, body] of Object.entries(files)) {
     const p = join(dir, f);
-    if (existsSync(p) && !opts.force) { warn(`${pretty(p)} 이미 있습니다 (--force 로 덮어쓰기)`); continue; }
+    if (existsSync(p) && !opts.force) {
+      warn(`${pretty(p)} 이미 있습니다 (--force 로 덮어쓰기)`);
+      continue;
+    }
     writeFileSync(p, body);
     wrote.push(f);
   }
@@ -367,7 +405,7 @@ async function cmdServe(argv) {
   process.env.PORT = String(opts.port);
   if (opts.host) process.env.HOST = opts.host;
   await import(pathToFileURL(join(PKG_ROOT, 'server.js')).href);
-  return -1;      // 서버가 계속 실행됨(종료하지 않음)
+  return -1; // 서버가 계속 실행됨(종료하지 않음)
 }
 
 // ── 사용법 ─────────────────────────────────────────────────
@@ -403,7 +441,7 @@ ${C.bold}스케치 계약${C.off} (파일 하나가 그림 1장 이상)
 
 ${C.bold}도커/배시 워크플로우${C.off} (리눅스 전용)
   bash scripts/install.sh [--docker]     패키지 설치 / 렌더 이미지 빌드
-  bash scripts/render.sh -s . -o out     렌더(기본 docker, --local 로 호스트 실행)
+  bash scripts/render.sh -s . -o out     렌더(도커 컨테이너에서 실행)
   bash scripts/serve.sh out 18080        결과 서빙
 `);
 }
@@ -413,22 +451,44 @@ async function main() {
   const argv = process.argv.slice(2);
   const [cmd, ...rest] = argv;
   // 하위 명령 뒤의 --help/-h 도 도움말로 (예: `logos render --help`)
-  if (rest.includes('--help') || rest.includes('-h')) { usage(); return 0; }
+  if (rest.includes('--help') || rest.includes('-h')) {
+    usage();
+    return 0;
+  }
   switch (cmd) {
-    case 'render': case 'r': return cmdRender(rest);
-    case 'new': case 'init': return cmdNew(rest);
-    case 'serve': case 's': return cmdServe(rest);
-    case 'list': case 'ls': return cmdRender([...rest, '--dry-run']);
-    case '--version': case '-v': log(VERSION); return 0;
-    case undefined: case 'help': case '--help': case '-h': usage(); return cmd ? 0 : 2;
-    default: throw new CliError(`알 수 없는 명령: ${cmd}  (logos --help)`);
+    case 'render':
+    case 'r':
+      return cmdRender(rest);
+    case 'new':
+    case 'init':
+      return cmdNew(rest);
+    case 'serve':
+    case 's':
+      return cmdServe(rest);
+    case 'list':
+    case 'ls':
+      return cmdRender([...rest, '--dry-run']);
+    case '--version':
+    case '-v':
+      log(VERSION);
+      return 0;
+    case undefined:
+    case 'help':
+    case '--help':
+    case '-h':
+      usage();
+      return cmd ? 0 : 2;
+    default:
+      throw new CliError(`알 수 없는 명령: ${cmd}  (logos --help)`);
   }
 }
 
 main()
   // 종료 코드만 남기고 프로세스가 스스로 끝나게 한다 — `process.exit()` 는 파이프로 나가는
   // stdout 버퍼를 잘라먹을 수 있어(출력 유실) 성공 경로에서는 쓰지 않는다.
-  .then((code) => { if (typeof code === 'number' && code >= 0) process.exitCode = code; })
+  .then((code) => {
+    if (typeof code === 'number' && code >= 0) process.exitCode = code;
+  })
   .catch((e) => {
     if (e instanceof CliError) {
       fail(e.message);
@@ -439,4 +499,3 @@ main()
     fail(e.stack || e.message);
     process.exitCode = 1;
   });
-

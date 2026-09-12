@@ -21,13 +21,14 @@ function rasterTri(buf, W, H, a, b, c) {
       if (w0 < -0.001 || w1 < -0.001 || w2 < -0.001) continue;
       const z = w0 * a[2] + w1 * b[2] + w2 * c[2];
       const idx = y * W + x;
-      if (z < buf[idx]) buf[idx] = z;   // 가장 가까운(작은 depth) 면 유지
+      if (z < buf[idx]) buf[idx] = z; // 가장 가까운(작은 depth) 면 유지
     }
   }
 }
 
 function depthAt(buf, W, H, x, y) {
-  const xi = Math.round(x), yi = Math.round(y);
+  const xi = Math.round(x),
+    yi = Math.round(y);
   if (xi < 0 || yi < 0 || xi >= W || yi >= H) return Infinity;
   return buf[yi * W + xi];
 }
@@ -40,31 +41,43 @@ function clipPath(n, buf, W, H, map) {
   let run = null;
   const fin = (p) => Number.isFinite(p.x) && Number.isFinite(p.y) && Number.isFinite(p.depth);
   const vis = (x, y, depth) => depth <= depthAt(buf, W, H, x, y) + 0.5 + Math.abs(depth) * 1e-3;
-  const flush = () => { if (run && run.length >= 2) out.push({ ...n, data: { ...d, ops: run } }); run = null; };
+  const flush = () => {
+    if (run && run.length >= 2) out.push({ ...n, data: { ...d, ops: run } });
+    run = null;
+  };
   for (let i = 0; i < d.ops.length; i++) {
     const p = d.ops[i];
     if (p.op === 'M') {
       flush();
-      if (fin(p)) { const [sx, sy] = map(p.x, p.y); if (vis(sx, sy, p.depth)) run = [{ op: 'M', x: p.x, y: p.y }]; }
+      if (fin(p)) {
+        const [sx, sy] = map(p.x, p.y);
+        if (vis(sx, sy, p.depth)) run = [{ op: 'M', x: p.x, y: p.y }];
+      }
       continue;
     }
     const q = d.ops[i - 1];
-    if (!fin(p) || !fin(q)) { flush(); continue; }
+    if (!fin(p) || !fin(q)) {
+      flush();
+      continue;
+    }
     const [x0, y0] = map(q.x, q.y);
     const [x1, y1] = map(p.x, p.y);
     const steps = Math.max(1, Math.ceil(Math.hypot(x1 - x0, y1 - y0) / 1.5));
     let prevVis = vis(x0, y0, q.depth);
     for (let s = 1; s <= steps; s++) {
       const t = s / steps;
-      const sx = x0 + (x1 - x0) * t, sy = y0 + (y1 - y0) * t;
+      const sx = x0 + (x1 - x0) * t,
+        sy = y0 + (y1 - y0) * t;
       const dep = q.depth + (p.depth - q.depth) * t;
       const v = vis(sx, sy, dep);
-      const wx = q.x + (p.x - q.x) * t, wy = q.y + (p.y - q.y) * t;
+      const wx = q.x + (p.x - q.x) * t,
+        wy = q.y + (p.y - q.y) * t;
       if (v) {
-        if (!run) run = [{ op: 'M', x: wx, y: wy }];      // 가시 시작
-        else if (s === steps) run.push({ op: 'L', x: wx, y: wy });  // 끝점까지 연장
+        if (!run)
+          run = [{ op: 'M', x: wx, y: wy }]; // 가시 시작
+        else if (s === steps) run.push({ op: 'L', x: wx, y: wy }); // 끝점까지 연장
       } else if (run) {
-        flush();                                            // 가시 끝
+        flush(); // 가시 끝
       }
       prevVis = v;
     }
@@ -85,12 +98,18 @@ export function applyHiddenLines(nodes, map, W, H) {
   const buf = new Float32Array(W * H).fill(Infinity);
   for (const n of occ) {
     const { pts, depths } = n.data;
-    const s = pts.map((p, i) => { const [sx, sy] = map(p[0], p[1]); return [sx, sy, depths[i] ?? 0]; });
+    const s = pts.map((p, i) => {
+      const [sx, sy] = map(p[0], p[1]);
+      return [sx, sy, depths[i] ?? 0];
+    });
     for (let k = 1; k + 1 < s.length; k++) rasterTri(buf, W, H, s[0], s[k], s[k + 1]);
   }
   const out = [];
   for (const n of nodes) {
-    if (!(n.data && n.data.hiddenTest)) { out.push(n); continue; }
+    if (!(n.data && n.data.hiddenTest)) {
+      out.push(n);
+      continue;
+    }
     out.push(...clipPath(n, buf, W, H, map));
   }
   return out;

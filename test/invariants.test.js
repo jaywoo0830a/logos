@@ -2,20 +2,21 @@
 // "테스트는 초록인데 좌표가 화면 밖" 회귀를 잡는다.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import {
-  scene, point, circle, ellipse, curve, triangle, line, region, annotate,
-  tex, pi, tau,
-} from '../index.js';
+import { scene, point, circle, ellipse, curve, triangle, line, region, annotate, tex, pi, tau } from '../index.js';
 import { scenes } from './scenes.js';
 
-const W = 600, H = 600, MARGIN = 160;
+const W = 600,
+  H = 600,
+  MARGIN = 160;
 
 /** 라벨/점/원 중심이 캔버스를 벗어나면 실패. NaN/Infinity 도 금지. */
 function lint(svg, label) {
   assert.ok(!/NaN|Infinity/.test(svg), `${label}: NaN/Infinity 좌표 없음`);
   const coords = [];
-  for (const m of svg.matchAll(/<(?:text|foreignObject)\b[^>]*\bx="(-?[\d.]+)"[^>]*\by="(-?[\d.]+)"/g)) coords.push([+m[1], +m[2], 'text']);
-  for (const m of svg.matchAll(/<(?:circle|ellipse)\b[^>]*\bcx="(-?[\d.]+)"[^>]*\bcy="(-?[\d.]+)"/g)) coords.push([+m[1], +m[2], 'center']);
+  for (const m of svg.matchAll(/<(?:text|foreignObject)\b[^>]*\bx="(-?[\d.]+)"[^>]*\by="(-?[\d.]+)"/g))
+    coords.push([+m[1], +m[2], 'text']);
+  for (const m of svg.matchAll(/<(?:circle|ellipse)\b[^>]*\bcx="(-?[\d.]+)"[^>]*\bcy="(-?[\d.]+)"/g))
+    coords.push([+m[1], +m[2], 'center']);
   for (const [x, y, kind] of coords) {
     assert.ok(x >= -MARGIN && x <= W + MARGIN, `${label}: ${kind} x=${x.toFixed(1)} 캔버스 밖`);
     assert.ok(y >= -MARGIN && y <= H + MARGIN, `${label}: ${kind} y=${y.toFixed(1)} 캔버스 밖`);
@@ -42,8 +43,10 @@ test('P0-6 축 눈금 길이가 데이터 종횡비와 무관 (증거 B)', () =>
   // x 범위가 y 범위보다 훨씬 큰 플롯(급수 그림: x 0..50, y 0..1)에서
   // 눈금 길이를 max(spanX, spanY) 로 잡으면 세로 눈금이 캔버스 높이의 절반까지
   // 자라 패널 밖(축 라벨 자리)으로 삐져나온다.
-  const tickLens = (svg) => [...svg.matchAll(/<path d="M ([\d.]+) ([\d.]+) L ([\d.]+) ([\d.]+)"[^>]*stroke="#333"/g)]
-    .map((m) => Math.hypot(+m[3] - +m[1], +m[4] - +m[2]));
+  const tickLens = (svg) =>
+    [...svg.matchAll(/<path d="M ([\d.]+) ([\d.]+) L ([\d.]+) ([\d.]+)"[^>]*stroke="#333"/g)].map((m) =>
+      Math.hypot(+m[3] - +m[1], +m[4] - +m[2]),
+    );
   const mk = (xr, yr) => tickLens(scene().view(xr, yr).axes().grid(1).compile().toSVG());
   const wide = mk([0, 50], [0, 1]);
   const tall = mk([0, 1], [0, 50]);
@@ -59,35 +62,61 @@ test('P0-6 축 눈금 길이가 데이터 종횡비와 무관 (증거 B)', () =>
 });
 
 test('P0-5 equal 씬의 원은 진짜 원(rx===ry)', () => {
-  const svg = scene().equal().axes().add(circle.center(point(0, 0)).radius(3)).compile().toSVG();
+  const svg = scene()
+    .equal()
+    .axes()
+    .add(circle.center(point(0, 0)).radius(3))
+    .compile()
+    .toSVG();
   const c = svg.match(/<circle[^>]*\br="([\d.]+)"/);
   const e = svg.match(/<ellipse[^>]*\brx="([\d.]+)"[^>]*\bry="([\d.]+)"/);
-  if (c) { /* circle 태그면 무조건 진짜 원 */ }
-  else { assert.ok(e, 'circle/ellipse 존재'); assert.ok(Math.abs(parseFloat(e[1]) - parseFloat(e[2])) < 1e-6, 'rx===ry'); }
+  if (c) {
+    /* circle 태그면 무조건 진짜 원 */
+  } else {
+    assert.ok(e, 'circle/ellipse 존재');
+    assert.ok(Math.abs(parseFloat(e[1]) - parseFloat(e[2])) < 1e-6, 'rx===ry');
+  }
 });
 
 test('P1-3 non-equal 씬에서는 원이 타원으로 방출(비등방 스케일 보존)', () => {
-  const svg = scene().view([-5, 5], [-2, 2]).add(circle.center(point(0, 0)).radius(1)).compile().toSVG();
+  const svg = scene()
+    .view([-5, 5], [-2, 2])
+    .add(circle.center(point(0, 0)).radius(1))
+    .compile()
+    .toSVG();
   const e = svg.match(/<ellipse[^>]*\brx="([\d.]+)"[^>]*\bry="([\d.]+)"/);
   assert.ok(e, 'non-equal: ellipse 로 방출');
   assert.ok(Math.abs(parseFloat(e[1]) - parseFloat(e[2])) > 1, 'rx ≠ ry');
 });
 
 test('P2-4 implicit 곡선은 닫힌 폴리라인으로 병합(Z 포함)', () => {
-  const svg = scene().equal().add(curve.implicit((x, y) => x * x + y * y - 1)).compile().toSVG();
+  const svg = scene()
+    .equal()
+    .add(curve.implicit((x, y) => x * x + y * y - 1))
+    .compile()
+    .toSVG();
   const closed = [...svg.matchAll(/<path[^>]*\bd="([^"]*)"/g)].filter((m) => /Z\s*$/.test(m[1].trim()));
   assert.ok(closed.length >= 1, '닫힌 implicit contour 존재');
 });
 
 test('P2-1 adaptive 샘플링이 곡률에 비례해 점을 배분', () => {
   const N = (segs) => segs.reduce((a, s) => a + s.length, 0);
-  const straight = curve.fn((x) => 2 * x).on([-3, 3]).segments({ world: { xmin: -3, xmax: 3, ymin: -6, ymax: 6 } });
-  const wiggly = curve.fn((x) => Math.sin(20 * x)).on([-3, 3]).segments({ world: { xmin: -3, xmax: 3, ymin: -1.5, ymax: 1.5 } });
+  const straight = curve
+    .fn((x) => 2 * x)
+    .on([-3, 3])
+    .segments({ world: { xmin: -3, xmax: 3, ymin: -6, ymax: 6 } });
+  const wiggly = curve
+    .fn((x) => Math.sin(20 * x))
+    .on([-3, 3])
+    .segments({ world: { xmin: -3, xmax: 3, ymin: -1.5, ymax: 1.5 } });
   assert.ok(N(straight) < N(wiggly), `직선(${N(straight)}) < 고곡률(${N(wiggly)})`);
 });
 
 test('P2-2 step 함수의 점프가 수직 연결선 없이 끊김', () => {
-  const segs = curve.fn((x) => (x < 0 ? -1 : 1)).on([-2, 2]).segments({ world: { xmin: -2, xmax: 2, ymin: -1.5, ymax: 1.5 } });
+  const segs = curve
+    .fn((x) => (x < 0 ? -1 : 1))
+    .on([-2, 2])
+    .segments({ world: { xmin: -2, xmax: 2, ymin: -1.5, ymax: 1.5 } });
   assert.ok(segs.length >= 2, `점프에서 분리된 segment (${segs.length})`);
 });
 
@@ -98,13 +127,28 @@ test('P2-3 region.below 가 곡선 domain 을 상속', () => {
 });
 
 test('figure 데코레이션: 제목/축라벨/범례/임의 텍스트/화살표 수식', () => {
-  const svg = scene().view([-6, 6], [-5, 6]).equal().axes()
-    .title('T').xlabel(tex`x`).ylabel(tex`y`).legend('upper left')
+  const svg = scene()
+    .view([-6, 6], [-5, 6])
+    .equal()
+    .axes()
+    .title('T')
+    .xlabel(tex`x`)
+    .ylabel(tex`y`)
+    .legend('upper left')
     .add(
-      circle.center(point(0, 0)).radius(5).color('#1a73e8').label(tex`r=5`),
+      circle
+        .center(point(0, 0))
+        .radius(5)
+        .color('#1a73e8')
+        .label(tex`r=5`),
       annotate.text(point(1, 1)).label('hello').color('#d93025').font(12).bold(),
-      annotate.arrow(point(1, 1), point(2, 2)).color('#d93025').label(tex`\tfrac{a}{b}`),
-    ).compile().toSVG({ math: 'text' });
+      annotate
+        .arrow(point(1, 1), point(2, 2))
+        .color('#d93025')
+        .label(tex`\tfrac{a}{b}`),
+    )
+    .compile()
+    .toSVG({ math: 'text' });
   assert.ok(svg.includes('hello'), '임의 텍스트 주석');
   assert.ok(/font-weight="bold"/.test(svg), 'bold');
   assert.ok(svg.includes('>T<'), '제목');
@@ -114,7 +158,12 @@ test('figure 데코레이션: 제목/축라벨/범례/임의 텍스트/화살표
 });
 
 test('P1-2 auto-framing: 타원 bounds 가 view 에 반영', () => {
-  const svg = scene().equal().axes().add(ellipse.center(point(0, 0)).semi(3, 2)).compile().toSVG();
+  const svg = scene()
+    .equal()
+    .axes()
+    .add(ellipse.center(point(0, 0)).semi(3, 2))
+    .compile()
+    .toSVG();
   // 눈금 범위가 대략 ±3.6 (semi 3 + 10% pad) 이어야 한다.
   const nums = [...svg.matchAll(/>(-?\d+(?:\.\d+)?)<\/text>/g)].map((m) => Math.abs(parseFloat(m[1])));
   const maxTick = Math.max(...nums.filter((n) => Number.isFinite(n)));
