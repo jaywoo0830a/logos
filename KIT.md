@@ -139,6 +139,7 @@ kit.poly3([[0, 0, 0], [3, 2, 4]], { color: '#000', stroke: 0.8, dash: [4, 3] });
 
 * `seg` 는 2D 좌표면 `line.through`(**직선**), z 가 있으면 `curve3.through`(선분)로 분기합니다.
   2D 선분은 `segment(A, B)` 를 쓰세요.
+* 두 점은 `point` 객체와 **좌표 배열**(`[x, y]` / `[x, y, z]`) 둘 다 됩니다 — 예: `kit.seg([0, 0], [3, 4])`.
 * `poly3` 는 3D 꺾은선(`curve3.through`)입니다.
 
 ### 3.7 `linalg` — 행렬·벡터 계산 (`mat` · `vec`)
@@ -413,7 +414,14 @@ KaTeX 는 SVG `foreignObject` 로 들어가는데 resvg 래스터에서는 사�
 
 **Q. 라벨이 서로 겹쳐요.**
 `scene.layout()` 을 켜면 텍스트 충돌을 그리디하게 회피합니다(기본 꺼짐).
+축 **눈금·축 라벨은 움직이지 않고 장애물로만** 쓰이므로, 어노테이션이 눈금 위에 얹히면 눈금을 피해 밀립니다.
+CLI 에서는 `logos render sketches --out out --layout` 한 줄로 켭니다.
 `annotate.text(...).offset(dx, dy)` 로 픽셀 단위 미세 조정도 가능합니다.
+
+**Q. 눈금 숫자가 전부 ‘2.02’ 로 뭉개져요.**
+눈금 간격이 좁을 때(예: y ∈ [2.019, 2.031]) 예전에는 소수 2자리로 반올림해 라벨이 겹쳤습니다.
+이제 **눈금 간격에서 자릿수를 유도**합니다(step 0.002 → 3자리). 직접 정하려면
+`axes({ y: { decimals: 4 } })` 또는 `axes({ y: { format: (v) => v.toFixed(4) } })` 를 쓰세요.
 
 **Q. y 눈금만 끄고 싶어요.**
 `axes({ y: { ticks: false } })` (6차에서 추가 — mpl `ax.set_yticks([])` 대응).

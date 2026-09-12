@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { point, vector, line, segment, curve, circle, triangle, tex, tau, pi } from '../index.js';
+import { scene, point, vector, line, segment, curve, circle, triangle, tex, tau, pi, sphere } from '../index.js';
 
 const approx = (a, b, eps = 1e-6) => assert.ok(Math.abs(a - b) < eps, `${a} ≈ ${b}`);
 
@@ -97,4 +97,14 @@ test('circle: through / inscribed', () => {
   const tri = triangle(point(0, 0), point(4, 0), point(2, 3));
   const inc = circle.inscribed(tri);
   assert.ok(inc.radius() > 0 && inc.radius() < 2);
+});
+
+test('sphere.rings()/meridians(): 위선·경선 개수를 제어한다 (기본은 위선 7개)', () => {
+  // sphere 가 내는 IR 조각(path 노드)만 센다 — 위선/경선이 각각 path 하나.
+  const paths = (s) => s.compile().o.nodes.filter((n) => n.kind === 'path').length;
+  const S = () => sphere.center(point(0, 0, 0)).radius(2);
+  assert.equal(paths(scene().add(S().rings(false))), 0, 'rings(false) → 위선 없음(실루엣만)');
+  assert.equal(paths(scene().add(S().rings(3))), 3, 'rings(3) → 위선 3개');
+  assert.equal(paths(scene().add(S())), 7, '기본 위선 7개(기존 출력 보존)');
+  assert.equal(paths(scene().add(S().rings(2).meridians(4))), 6, 'rings(2)+meridians(4) → 6개');
 });

@@ -306,6 +306,8 @@ sphere.center(O).radius(2)
 sphere.center(O).through(P)
 sphere.through(A, B, C, D)
 sphere.unit()
+sphere.center(O).radius(2).rings(3)        // 위선(가로 원) 개수 — 기본 7, rings(false)면 실루엣만
+sphere.center(O).radius(2).meridians(4)    // 경선(세로 반원) 개수 — 기본 0(안 그림)
 
 cylinder.axis(l).radius(1)
 cylinder.center(O).axis(v).radius(1).height(5)

@@ -209,3 +209,44 @@ test('cli: bash 워크플로우 스크립트가 리눅스에서 문법/도움말
   assert.equal(lib.status, 0, 'common.sh 문법');
 });
 
+
+const SKETCH_TWO = `
+import { scene, point } from '@jaywoo0830a/logos';
+export default scene().view([0, 2], [0, 2]).add(point(0.5, 0.5).dot());
+`;
+
+const SKETCH_LABEL = `
+import { scene, point, annotate } from '@jaywoo0830a/logos';
+export default scene().axes({ y: { label: 'y' } }).view([0, 1], [0, 1])
+  .add(annotate.text(point(0.06, 0.6)).label('AAA').font(11).anchor('end'));
+`;
+
+test('cli render: 파일 하나만 / 여러 대상(셸이 펼친 glob)을 렌더한다', () => {
+  const dir = project({ 'one.js': SKETCH_ONE, 'two.js': SKETCH_TWO });
+  try {
+    const one = cli(['render', 'sketches/one.js', '--out', 'out', '--no-png'], { cwd: dir });
+    assert.equal(one.status, 0, one.stderr);
+    assert.ok(existsSync(join(dir, 'out', 'one.svg')), 'one.js 는 렌더');
+    assert.ok(!existsSync(join(dir, 'out', 'two.svg')), 'two.js 는 렌더하지 않음');
+
+    const both = cli(['render', 'sketches/one.js', 'sketches/two.js', '--out', 'out2', '--no-png'], { cwd: dir });
+    assert.equal(both.status, 0, both.stderr);
+    assert.ok(existsSync(join(dir, 'out2', 'one.svg')) && existsSync(join(dir, 'out2', 'two.svg')), '두 파일 모두');
+
+    const miss = cli(['render', 'sketches/nope.js', '--out', 'out3'], { cwd: dir });
+    assert.equal(miss.status, 2, '없는 파일 → 2');
+    assert.match(miss.stderr, /대상이 없습니다/);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('cli render: --layout 이 라벨 자동 배치를 켠다', () => {
+  const dir = project({ 'label.js': SKETCH_LABEL });
+  try {
+    assert.equal(cli(['render', 'sketches/label.js', '--out', 'plain', '--no-png'], { cwd: dir }).status, 0);
+    assert.equal(cli(['render', 'sketches/label.js', '--out', 'laid', '--no-png', '--layout'], { cwd: dir }).status, 0);
+    const plain = readFileSync(join(dir, 'plain', 'label.svg'), 'utf8');
+    const laid = readFileSync(join(dir, 'laid', 'label.svg'), 'utf8');
+    assert.notEqual(plain, laid, '--layout 이 어노테이션 오프셋을 바꾼다');
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+

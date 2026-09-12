@@ -484,3 +484,18 @@ test('cplx.matrix: 곱셈 = 행렬 곱 (복소수 ↔ 회전·확대 행렬 동�
   const det = cplx.matrix(a).rows[0][0] * cplx.matrix(a).rows[1][1] - cplx.matrix(a).rows[0][1] * cplx.matrix(a).rows[1][0];
   assert.ok(Math.abs(det - a.abs ** 2) < 1e-12, 'det = |z|²');
 });
+
+test('kit.seg(): 좌표 배열도 받는다 — 2D 에서 컴파일 크래시(line.pointDir) 회귀 방지', () => {
+  const withArray = scene().view([0, 4], [0, 4]).add(kit.seg([1, 1], [3, 2])).compile().toSVG();
+  const withPoint = scene().view([0, 4], [0, 4]).add(kit.seg(point(1, 1), point(3, 2))).compile().toSVG();
+  assert.equal(withArray, withPoint, '배열 인자와 point 인자가 같은 그림');
+  const a3 = kit.seg([0, 0, 0], [1, 1, 1]);   // 3D 는 선분(curve3.through) — 배열 인자
+  assert.ok(a3, '3D 배열 인자도 생성된다');
+});
+
+test('kit.palette.tab: 이름 있는 tab10 (tab10 배열과 같은 값·순서)', () => {
+  assert.deepEqual(Object.values(kit.palette.tab), kit.palette.tab10);
+  assert.equal(kit.palette.tab.blue, '#1f77b4');
+  assert.equal(kit.palette.tab.red, '#d62728');
+});
+
