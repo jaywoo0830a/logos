@@ -124,9 +124,14 @@ function entriesOf(mod, file) {
 }
 
 /** Scene | SceneIR | 팩토리 함수 → SceneIR 로 정규화 */
-function toIR(fig, { label = '' } = {}) {
-  const v = typeof fig === 'function' ? fig() : fig;
+function toIR(fig, { label = '', layout = false } = {}) {
+  let v = typeof fig === 'function' ? fig() : fig;
   if (v == null) throw new CliError(`${label}: 그림을 만들지 못했습니다(팩토리가 빈 값을 반환)`);
+  // --layout: 컴파일 전에 라벨 자동 배치를 켠다. IR 로 이미 컴파일된 스케치면 옵션만 덮어쓴다.
+  if (layout) {
+    if (typeof v.layout === 'function') v = v.layout('auto');
+    else if (v.o) v.o = { ...v.o, layout: 'auto' };
+  }
   if (typeof v.compile === 'function') return v.compile();
   if (typeof v.toSVG === 'function') return v;
   throw new CliError(`${label}: Scene 또는 SceneIR 이어야 합니다(받은 값: ${v?.constructor?.name || typeof v})`);
@@ -158,6 +163,7 @@ async function cmdRender(argv) {
     out: { type: 'string', alias: ['o'], default: 'out', desc: '출력 폴더' },
     png: { type: 'bool', default: true, desc: 'PNG 도 생성(기본 on)' },
     scale: { type: 'number', default: 1, desc: 'PNG 배율' },
+    layout: { type: 'bool', default: false, desc: '라벨 자동 배치(scene.layout()) — 겹치는 어노테이션을 눈금까지 피해 밀어낸다' },
     index: { type: 'bool', default: true, desc: 'index.html 갤러리 생성' },
     title: { type: 'string', default: null, desc: '갤러리 제목' },
     recursive: { type: 'bool', alias: ['r'], default: false, desc: '하위 폴더까지' },
@@ -166,12 +172,21 @@ async function cmdRender(argv) {
     'dry-run': { type: 'bool', default: false, desc: '렌더 없이 목록만' },
     clean: { type: 'bool', default: false, desc: '이전 생성물(manifest 기준)을 지우고 시작' },
   });
-  const srcDir = resolve(rest[0] || opts.src || 'sketches');
+  // 대상은 **여러 개**일 수 있다 — 폴더 · 파일 · 셸이 펼친 glob(sketches/*.js).
+  const targets = (rest.length ? rest : [opts.src || 'sketches']).map((t) => resolve(t));
   const outDir = resolve(opts.out);
 
   const kit = await import(pathToFileURL(join(PKG_ROOT, 'kit.js')).href);
-  const files = findSketches(srcDir, { recursive: opts.recursive });
-  if (!files.length) throw new CliError(`스케치를 찾지 못했습니다: ${srcDir} (*.js / *.mjs)`);
+  const found = [];
+  for (const t of targets) {
+    if (!existsSync(t)) throw new CliError(`대상이 없습니다: ${t}`);
+    if (statSync(t).isDirectory()) found.push(...findSketches(t, { recursive: opts.recursive }));
+    else if (SKETCH_EXT.has(extname(t))) found.push(t);
+    else throw new CliError(`스케치(*.js/*.mjs) 또는 폴더여야 합니다: ${t}`);
+  }
+  const files = [...new Set(found)];   // 같은 파일을 두 번 넘겨도 한 번만
+  if (!files.length) throw new CliError(`스케치를 찾지 못했습니다: ${targets.join(', ')} (*.js / *.mjs)`);
+  const srcDir = targets.length === 1 ? targets[0] : resolve('.');
 
   // 로딩 — 한 파일이 여러 그림을 낼 수 있다
   const figures = [];
@@ -214,7 +229,7 @@ async function cmdRender(argv) {
   for (const f of figures) {
     if (f.error) continue;
     try {
-      const ir = toIR(f.fig, { label: f.name });
+      const ir = toIR(f.fig, { label: f.name, layout: opts.layout });
       await kit.saveFigure(ir, { dir: outDir, name: f.name, png: opts.png, scale: opts.scale, log: false });
       entries.push({ name: f.name, title: f.title });
       okN++;
