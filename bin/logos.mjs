@@ -15,10 +15,10 @@
 //     `export const figures = {…}` 로 한 파일에서 여러 그림을 낼 수도 있다.
 //   · 렌더링은 라이브러리의 `kit.saveFigures` 를 그대로 재사용한다(CLI 는 얇은 껍데기).
 import { existsSync, mkdirSync, readdirSync, statSync, writeFileSync, readFileSync, rmSync } from 'node:fs';
-import { basename, dirname, extname, join, resolve, relative } from 'node:path';
-import { pathToFileURL, fileURLToPath } from 'node:url';
+import { basename, extname, join, resolve, relative, sep } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
-const HERE = dirname(fileURLToPath(import.meta.url));
+const HERE = import.meta.dirname;
 const PKG_ROOT = resolve(HERE, '..');            // 패키지 루트(설치본이면 node_modules/@…/logos/)
 const PKG_JSON = readJson(join(PKG_ROOT, 'package.json')) || {};
 const PKG_NAME = PKG_JSON.name || 'logos';       // 배포 이름 — 스코프 포함(@scope/name)
@@ -87,19 +87,23 @@ const SKETCH_EXT = new Set(['.js', '.mjs']);
 function findSketches(srcDir, { recursive = false } = {}) {
   if (!existsSync(srcDir)) throw new CliError(`소스 폴더가 없습니다: ${srcDir}`);
   if (!statSync(srcDir).isDirectory()) throw new CliError(`소스 경로가 폴더가 아닙니다: ${srcDir}`);
+  // A2: Node 20.1+ 의 재귀 읽기로 수동 재귀(20줄)를 대체한다.
+  //     재귀 모드에서 `Dirent.name` 은 **상대 경로**이고 `Dirent.parentPath`(Node 20.12+)가 실제 폴더다.
+  const ents = readdirSync(srcDir, { recursive, withFileTypes: true });
   const out = [];
-  for (const ent of readdirSync(srcDir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
-    const p = join(srcDir, ent.name);
-    if (ent.isDirectory()) {
-      if (recursive && ent.name !== 'node_modules' && !ent.name.startsWith('.')) out.push(...findSketches(p, { recursive }));
-      continue;
-    }
+  for (const ent of ents) {
+    if (!ent.isFile()) continue;
+    const dir = ent.parentPath || srcDir;
+    const rel = relative(srcDir, dir);
+    // 숨김 폴더 · node_modules 는 재귀에서도 건너뛴다(수동 재귀와 동일한 규칙).
+    if (rel && rel.split(sep).some((seg) => seg === 'node_modules' || seg.startsWith('.'))) continue;
     if (!SKETCH_EXT.has(extname(ent.name))) continue;
     if (ent.name.startsWith('_') || ent.name.startsWith('.')) continue;
     if (/\.(test|spec)\.(js|mjs)$/.test(ent.name)) continue;
-    out.push(p);
+    out.push(join(dir, ent.name));
   }
-  return out;
+  // 상대 경로 기준 정렬 — 결과 순서를 결정적으로 유지한다(manifest/갤러리 순서).
+  return out.toSorted((a, b) => relative(srcDir, a).localeCompare(relative(srcDir, b)));
 }
 
 /** 스케치 모듈에서 (name, factory, title) 항목들을 뽑는다 */

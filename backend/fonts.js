@@ -1,8 +1,7 @@
 // STIX Two Math — 전 영역(텍스트·수식·축) 기본 폰트.
 // 브라우저: Google Fonts(@import / <link>) · 래스터(resvg): 로컬 TTF(assets/).
 import { existsSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
 
 export const STIX_FAMILY = 'STIX Two Math';
 export const STIX_STACK = "'STIX Two Math', 'STIX Two Text', Georgia, 'Times New Roman', serif";
@@ -39,7 +38,7 @@ export function svgFontStyle() {
 
 /** resvg 래스터용 로컬 폰트 파일(있으면). */
 export function stixFontFile() {
-  const p = join(dirname(fileURLToPath(import.meta.url)), '..', 'assets', 'STIXTwoMath-Regular.ttf');
+  const p = join(import.meta.dirname, '..', 'assets', 'STIXTwoMath-Regular.ttf');
   return existsSync(p) ? p : null;
 }
 

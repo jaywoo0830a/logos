@@ -5,11 +5,26 @@
 
 ## [Unreleased]
 
+## [0.2.0] — 2026-09-12
+
+`FEEDBACK.md`(모던 JS 기반 구문·DX 제안)의 **A·B 항목**을 반영하고, 아직 배포되지 않았던
+눈금 라벨 정밀도·축 눈금 길이 수정·CLI 다중 대상까지 함께 담은 마이너 릴리즈입니다.
+출력은 결정적 그대로이며(스냅샷 123 figure 포함 전체 테스트 통과), 새 문법은 모두 기존 API 위의
+얇은 별칭입니다. C(실험)·D(비권장) 항목은 반영하지 않았습니다.
+
 mathbook(`math/graph/phase2` — 미분 해석) 실사용에서 올라온 피드백 반영. 기존 그림 출력은 변하지 않습니다
 (스냅샷 포함 전체 테스트 통과).
 
 ### Added
 
+- **`toPoint()` 좌표 정규화(B1)** — 배열 · `{x, y[, z]}` · `Point` 를 어디서나 받습니다.
+  이제 `point([1,2])`(예전엔 조용히 `[[1,2]]` 로 뭉갰습니다), `annotate.text([x,y])`,
+  `segment([x,y], [x,y])`, `line.through([x,y], [x,y])`, `vector.between([..], [..])` 가 자연스럽게 동작합니다.
+- **태그드 템플릿 `xy` · `range` · `view`(B3)** — 교재 문맥을 코드에 그대로:
+  `xy\`3, 4\`` · `range\`0..10 step 2\`` · `view\`x∈[-3, 3]  y∈[-1, 4]\``. (파서 없음 — 좁은 문법, 실패 시 안내)
+- **`Drawable#with(changes)`(B4)** — "뮤테이션"처럼 들리는 `set()` 의 별칭(불변 업데이트).
+- **`Segment#ends`(B2)** — `const [a, b] = segment(A, B).ends`. (`Point#x/#y/#z` 게터는 기존)
+- **`SceneIR` 이터레이터(A7)** — `[...ir]` · `for (const n of ir)` 로 IR 노드를 바로 순회합니다.
 - **눈금 라벨 정밀도** — `fmtTick` 이 **눈금 간격(step)** 에서 소수 자릿수를 유도합니다.
   좁은 범위(예: y ∈ [2.019, 2.031], step 0.002)에서 눈금 12개가 전부 '2.02' 로 뭉개지던 문제가
   사라집니다(→ 2.02·2.021·…·2.03). 축별 재정의: `axes({ y: { decimals: 3 } })`,
@@ -20,6 +35,18 @@ mathbook(`math/graph/phase2` — 미분 해석) 실사용에서 올라온 피드
   (`logos render sketches/a.js sketches/b.js --out out`). 셸이 펼친 glob 도 그대로 동작합니다.
 - **CLI `--layout`** — 컴파일 전에 `scene.layout()`(라벨 자동 배치)을 켭니다.
 - **`kit.palette.tab`** — tab10 을 이름으로 접근합니다(`palette.tab.blue`). `palette.tab10` 배열은 그대로.
+
+### Changed
+
+- **`add()` / `addAll()` 평탄화(B5)** — `scene().add([a, b])` 처럼 배열을 통째로 넘겨도 됩니다.
+  예전에는 배열이 그대로 IR 에 들어가 "그림이 안 나오는" 조용한 실패를 냈습니다.
+- **중첩 설정 깊은 복사(A4)** — `box`·`marker`·`gradient`·`labelOff` 등은 `set()` 에서 복제합니다.
+  `const BOX = {…}` 같은 상수를 여러 그림이 공유해도 한 곳의 변경이 전부를 오염시키지 않습니다.
+- **CLI 스케치 탐색 단순화(A2)** — `fs.readdir(dir, { recursive })` 로 수동 재귀(20줄)를 대체했습니다.
+  정렬은 상대 경로 기준으로 결정적이며, `node_modules`·`.`·`_` 접두 규칙은 그대로입니다.
+- **비파괴 정렬(A3)** — `backend/layout.js` 가 `items.toSorted(...)` 를 써서 넘겨받은 배열을 변형하지 않습니다.
+- **DX(A1 · A7 · B6)** — `import.meta.dirname` 로 보일러플레이트 정리(9곳), `inspect.custom` 한 줄 요약
+  (`Scene(2D, shapes: 1, view: …)`), JSDoc `@returns {this}`, `jsconfig` target `ES2023` + `include` 확대.
 
 ### Fixed
 

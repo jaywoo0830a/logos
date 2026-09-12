@@ -14,6 +14,9 @@ const katexNs = { katexRender, katexify };
 export class SceneIR {
   constructor(o) { this.o = o; }
 
+  /** IR 노드 순회 — `[...ir]` · `for (const n of ir)` 로 노드에 바로 접근한다(A7). */
+  [Symbol.iterator]() { return this.o.nodes[Symbol.iterator](); }
+
   _map() {
     const { world, size, equal } = this.o;
     const [W, H] = size;

@@ -2,7 +2,7 @@
 import { Drawable, renderText } from '../core/drawable.js';
 import { node } from '../core/node.js';
 import { norm2, perp2 } from '../solver/coords.js';
-import { point as _point } from './point.js';
+import { point as _point, toPoint } from './point.js';
 
 export class Line extends Drawable {
   constructor(conf = {}) {
@@ -96,7 +96,7 @@ function clipSeg([x0, y0], [x1, y1], w) {
 // ── line 네임스페이스 ────────────────────────────
 export const line = {
   through(a, b) {
-    if (b !== undefined) return new Line({ form: 'two-point', a, b });
+    if (b !== undefined) return new Line({ form: 'two-point', a: toPoint(a), b: toPoint(b) });
     return new Builder(a);
   },
   slopeIntercept(m, b) { return new Line({ form: 'slope', m, intercept: b }); },
@@ -127,8 +127,7 @@ class Builder {
   direction(d) { return new Line({ form: 'point-dir', p: _point(0, 0), d }); }
   slope(m) { return new Line({ form: 'slope', m, intercept: 0 }); }
   through(p) {
-    if (Array.isArray(p)) p = _point(p[0], p[1]);
-    return new Line({ form: 'point-dir', p, d: refDir(this._ref) });
+    return new Line({ form: 'point-dir', p: toPoint(p), d: refDir(this._ref) });
   }
   perpendicular() {
     return {

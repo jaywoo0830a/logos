@@ -62,14 +62,13 @@
 //   33 symmetry-3d              3D 대칭
 //   34 step-intersection        교선 작도 3단계
 //   35 step-quadrics            이차곡면 작도 3×3
-import { join, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
 import {
   scene, point, line, segment, circle, curve, region, annotate, tau,
   arrow3, curve3, surfaceParam, axes3, quadrics, circle3, frame3, kit,
 } from '../index.js';
 
-const OUT = join(dirname(fileURLToPath(import.meta.url)), '..', 'output', 'parity9c');
+const OUT = join(import.meta.dirname, '..', 'output', 'parity9c');
 
 // 색 팔레트 — matplotlib 한 글자 이름만 벗겨 온다(값은 hex 로 고정).
 const {

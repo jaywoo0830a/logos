@@ -43,13 +43,12 @@
 // ── 참고 ────────────────────────────────────────────────────────
 //   · 색은 mpl 원본이 쓴 hex 그대로 고정 — 두 그림을 눈으로 비교할 수 있다.
 //   · mpl 원본의 표기/수치 문제는 주석 `mpl 대비` 로 표시하고 고쳤다.
-import { join, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
 import {
   point, circle, polygon, segment, curve, annotate, cplx, cmapColor, tex, kit,
 } from '../index.js';
 
-const OUT = join(dirname(fileURLToPath(import.meta.url)), '..', 'output', 'parity12a1');
+const OUT = join(import.meta.dirname, '..', 'output', 'parity12a1');
 
 // ── 색 — mpl 원본이 쓴 hex 그대로 ────────────────────────────────
 const RED = '#e74c3c', BLUE = '#3498db', GREEN = '#27ae60', PURPLE = '#8e44ad';

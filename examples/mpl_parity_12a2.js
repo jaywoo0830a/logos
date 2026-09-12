@@ -59,14 +59,13 @@
 //   · 색은 mpl 원본이 쓴 색을 그대로 hex 로 고정 — 두 그림을 눈으로 비교할 수 있다.
 //   · 난수 그림(17~19)은 np.random 과 **값이 같지는 않다**(난수 알고리즘이 다름).
 //     대신 시드 고정 PRNG 로 매 실행 동일한 그림이 나온다.
-import { join, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
 import {
   point, polygon, line, segment, annotate, mat, vec, cmapColor,
   arrow3, curve3, surfaceParam, axes3, frame3, kit, transform,
 } from '../index.js';
 
-const OUT = join(dirname(fileURLToPath(import.meta.url)), '..', 'output', 'parity12a2');
+const OUT = join(import.meta.dirname, '..', 'output', 'parity12a2');
 
 
 // ── 색 — mpl 원본이 쓴 hex 그대로 ────────────────────────────────

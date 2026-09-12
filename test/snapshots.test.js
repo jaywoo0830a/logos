@@ -6,11 +6,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
-import { join, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
 import { scenes } from './scenes.js';
 
-const DIR = join(dirname(fileURLToPath(import.meta.url)), 'fixtures');
+const DIR = join(import.meta.dirname, 'fixtures');
 const UPDATE = !!process.env.UPDATE;
 
 test('골든 SVG 스냅샷 (test/fixtures/*.svg)', (t) => {
