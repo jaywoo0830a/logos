@@ -11,6 +11,20 @@ import { STIX_STACK, STIX_LINK, resvgFontOptions } from './fonts.js';
 
 const katexNs = { katexRender, katexify };
 
+/**
+ * 화면 밖이라 제외된 도형을 사용자에게 1회 알린다.
+ * 조용히 잘라내면 "왜 안 보이지?" 로 이어지고, 대개 **단위 실수**가 원인이다
+ * (예: world 단위인 `annotate.angle().arc({ radius })` 에 px 값을 준 경우).
+ */
+export function warnOutOfView(kinds) {
+  const uniq = [...new Set(kinds)];
+  const head = uniq.slice(0, 6).join(', ');
+  console.warn(
+    `logos: 화면(뷰) 밖 도형 ${kinds.length}개를 렌더에서 제외했습니다 [${head}${uniq.length > 6 ? ', …' : ''}]. ` +
+      '좌표/단위를 확인하세요 (예: arc({radius}) · dimension().offset() 은 world 단위).',
+  );
+}
+
 export class SceneIR {
   constructor(o) {
     this.o = o;
@@ -57,6 +71,8 @@ export class SceneIR {
     if (this.o.layout && opts.layout !== false) nodes = relayout(nodes, m.map, m.W, m.H);
     // 플러그인 훅 — 'ir:svg'(노드 손질) · 'svg'(완성된 SVG 문자열 후처리)
     nodes = apply('ir:svg', nodes, { ir: this, map: m.map, W: m.W, H: m.H }) || nodes;
+    // 화면 밖 primitive 는 방출하지 않는다(resvg 래스터 패닉 방지) — 무엇이 잘렸는지 기록.
+    const cullReport = [];
     const svg = emitSVG(nodes, {
       ...m,
       world: this.o.world,
@@ -69,7 +85,14 @@ export class SceneIR {
       labelColor: td.labelColor,
       pointColor: td.pointColor,
       strokeDefault: td.strokeDefault,
+      cull: opts.cull,
+      cullMargin: opts.cullMargin,
+      safe: opts.safe,
+      cullReport,
     });
+    /** 마지막 `toSVG()`/`toPNG()` 에서 화면 밖이라 제외된 노드 종류 목록. */
+    this.cullReport = cullReport;
+    if (opts.warnOutOfView && cullReport.length) warnOutOfView(cullReport);
     return apply('svg', svg, { ir: this, map: m.map }) || svg;
   }
 
@@ -144,7 +167,10 @@ export class SceneIR {
         'toPNG() 는 @resvg/resvg-js 가 필요합니다. `npm i -D @resvg/resvg-js` 후 사용하세요. (대안: toSVG())',
       );
     }
-    const svg = this.toSVG({ math: opts.math || 'text' });
+    // safe: 화면 밖 도형 제거 + 뷰 클리핑 — resvg 래스터의 하드 크래시(abort) 방지 패스.
+    const svg = this.toSVG({ math: opts.math || 'text', safe: true });
+    // 3D 씬은 투영상 화면 밖 도형이 정상적으로 흔하다 — 경고는 2D 에서만(단위 실수 신호).
+    if (opts.warnOutOfView !== false && this.o.dim !== 3 && this.cullReport?.length) warnOutOfView(this.cullReport);
     const r = new Resvg(svg, {
       background: opts.background || 'white',
       fitTo: { mode: 'zoom', value: opts.scale || 1 },
@@ -212,7 +238,13 @@ export function panels(figures, opts = {}) {
       } catch {
         throw new Error('toPNG() 는 @resvg/resvg-js 가 필요합니다. `npm i -D @resvg/resvg-js`');
       }
-      const r = new Resvg(this.toSVG({ math: o.math || 'text' }), {
+      const svg = this.toSVG({ math: o.math || 'text', safe: true });
+      // 패널 안에서 잘린 도형도 알린다(각 figure 가 자기 cullReport 를 들고 있다).
+      if (o.warnOutOfView !== false) {
+        const culled = figures.flatMap((f) => (f && f.o && f.o.dim !== 3 ? f.cullReport || [] : []));
+        if (culled.length) warnOutOfView(culled);
+      }
+      const r = new Resvg(svg, {
         background: o.background || 'white',
         fitTo: { mode: 'zoom', value: o.scale || 1 },
         ...resvgFontOptions(),

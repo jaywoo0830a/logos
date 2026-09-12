@@ -52,7 +52,7 @@ const bisector = () => {
       line.through(A, B).color(palette.gray).stroke(1.5),
       line.through(A, C).color(palette.gray).stroke(1.5),
       line.angleBisector(A, B, C).color(palette.purple).stroke(2.5).label('bisector'),
-      annotate.angle(B, A, C).arc({ radius: 26 }).degrees().label('θ'),
+      annotate.angle(B, A, C).arc({ radius: 1.0 }).degrees().label('θ'),
     );
 };
 
