@@ -5,6 +5,29 @@
 
 ## [Unreleased]
 
+## [0.4.0] — 2026-09-12
+
+**이미지를 하나로 통합**했습니다 — 렌더·서빙·테스트·개발이 모두 `logos:<버전>` **단일 이미지**에서
+동작합니다. 사용자는 이미지를 한 번 받고 코드만 쓰면 됩니다.
+
+> 참고: 통합 이미지는 이전 "렌더 슬림" 이미지보다 큽니다(한글/수학 폰트 + SymPy/Asymptote 포함).
+> 대신 "설치 한 번 → 코드 작성 → 렌더" 로 단순해집니다.
+
+### Changed
+
+- **단일 `Dockerfile`** — 폰트(한글·수학) + SymPy/Asymptote + 모든 의존성(dev 포함)을 담아
+  렌더·서빙·테스트·포맷을 한 이미지로 처리합니다.
+- **이미지 이름** — `logos:<버전>`(기본). `LOGOS_IMAGE_NAME`·`LOGOS_IMAGE_TAG` 로 바꿀 수 있습니다.
+- **`scripts/install.sh`** — 기본 동작이 "단일 이미지 빌드"가 되었습니다. 호스트 `npm install` 은
+  `--host-npm` 로 선택(기여자용). `--docker`/`--dev`/`--skip-npm` 은 호환용으로 계속 받습니다.
+- **`scripts/build-image.sh`** — 이미지 하나만 빌드(`--render`/`--dev`/`--both` 는 호환 옵션).
+- **`docker-compose.yml`** — 4개 서비스(`web`·`logos`·`render`·`render-serve`)가 같은 이미지를 공유합니다.
+
+### Removed
+
+- **`Dockerfile.render`**(렌더 전용 슬림 이미지)와 `logos-builder` 개발 이미지 — 단일 `Dockerfile` 로 대체.
+  `scripts/lib/common.sh` 의 `BUILDER_IMAGE` 도 제거.
+
 ## [0.3.0] — 2026-09-12
 
 **워크플로우(테스트·렌더·서빙)를 전부 도커 컨테이너로 통일**하고, **prettier 3.9.6** 으로 저장소 전체를

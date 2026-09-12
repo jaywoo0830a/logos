@@ -15,7 +15,7 @@ examples/workflow/
 
 ```bash
 # 저장소 루트에서
-bash scripts/install.sh --docker          # ① 패키지 설치 + 렌더 이미지 빌드
+bash scripts/install.sh                   # ① 단일 이미지 빌드(렌더·서빙·테스트 공용)
 bash scripts/render.sh -p examples/workflow -s sketches -o out   # ③ 렌더 (도커)
 bash scripts/serve.sh examples/workflow/out 18080                # ④ 브라우저로 확인
 ```

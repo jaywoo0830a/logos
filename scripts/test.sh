@@ -28,13 +28,17 @@ done
 require_linux
 require_docker
 
-step "테스트 (docker · $BUILDER_IMAGE)"
-ensure_image "$BUILDER_IMAGE" "$REPO_ROOT/Dockerfile" "$FORCE"
+step "테스트 (docker · $IMAGE_REF)"
+ensure_image "$IMAGE_REF" "$DOCKERFILE" "$FORCE"
 
+# 단일 이미지의 ENTRYPOINT 는 `logos` CLI 이므로 npm 으로 덮어써 테스트를 돌린다.
+#   · 소스는 이미지의 패키지 경로(/opt/logos)에 마운트하고,
+#     node_modules 는 이미지에 구워진 것을 쓴다(익명 볼륨).
 exec docker run --rm \
   -u "$(id -u):$(id -g)" \
   -e HOME=/tmp -e npm_config_cache=/tmp/npm-cache \
   -e NO_COLOR="${NO_COLOR:-}" \
-  -v "$REPO_ROOT":/app -w /app \
-  -v /app/node_modules \
-  "$BUILDER_IMAGE" npm run test:unit
+  -v "$REPO_ROOT":/opt/logos -w /opt/logos \
+  -v /opt/logos/node_modules \
+  --entrypoint npm \
+  "$IMAGE_REF" run test:unit
