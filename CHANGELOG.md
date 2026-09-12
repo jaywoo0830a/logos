@@ -5,6 +5,29 @@
 
 ## [Unreleased]
 
+mathbook(`math/graph/phase2` — 미분 해석) 실사용에서 올라온 피드백 반영. 기존 그림 출력은 변하지 않습니다
+(스냅샷 포함 전체 테스트 통과).
+
+### Added
+
+- **눈금 라벨 정밀도** — `fmtTick` 이 **눈금 간격(step)** 에서 소수 자릿수를 유도합니다.
+  좁은 범위(예: y ∈ [2.019, 2.031], step 0.002)에서 눈금 12개가 전부 '2.02' 로 뭉개지던 문제가
+  사라집니다(→ 2.02·2.021·…·2.03). 축별 재정의: `axes({ y: { decimals: 3 } })`,
+  `axes({ y: { format: (v) => … } })`. step 을 못 주는 곳(극좌표 반지름)은 예전과 같은 2자리.
+- **`sphere.rings(n|false)` · `sphere.meridians(n)`** — 위선(가로 원) 개수(기본 7)와
+  경선(세로 반원) 개수(기본 0)를 제어합니다. 껍질·실루엣 도식에서 "동전 더미" 위선을 끌 수 있습니다.
+- **CLI `render` 다중 대상** — 폴더뿐 아니라 **파일**도, 여러 대상도 받습니다
+  (`logos render sketches/a.js sketches/b.js --out out`). 셸이 펼친 glob 도 그대로 동작합니다.
+- **CLI `--layout`** — 컴파일 전에 `scene.layout()`(라벨 자동 배치)을 켭니다.
+- **`kit.palette.tab`** — tab10 을 이름으로 접근합니다(`palette.tab.blue`). `palette.tab10` 배열은 그대로.
+
+### Fixed
+
+- **자동 라벨 배치가 눈금을 피합니다** — `backend/layout.js` 가 축 눈금·축 라벨(z<0)을 **고정 장애물**로
+  취급합니다. 이전에는 회피 대상에서 빠져 있어 켜도 어노테이션이 눈금 위에 겹쳤습니다(눈금은 밀지 않습니다).
+- **`kit.seg` 좌표 배열** — 2D 에서 `[x, y]` 배열을 주면 컴파일 때 `shapes/line.js` 의 `pointDir` 에서
+  `TypeError` 로 죽던 문제를 고쳤습니다(`point` 객체와 동일한 출력).
+
 ## [0.1.0] — 2026-09-11
 
 첫 공개 배포. `example1.py` ~ `example5.py`(2D 기하 · 3D 기하 · 행렬과 벡터 · 복소수 · 삼각함수)
