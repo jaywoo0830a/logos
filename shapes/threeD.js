@@ -72,17 +72,34 @@ export class Sphere extends Drawable {
     return [[cx - r, cy - r, cz - r], [cx + r, cy + r, cz + r]].map((v) => point(...v));
   }
   label(l, o) { return this.set({ label: l, labelOff: o }); }
+  /** 위도선 개수 — `rings(false|0)` 로 끄고, `rings(3)` 처럼 성기게. 기본 7. */
+  rings(n = 7) { return this.set({ rings: n }); }
+  /** 경선 개수 — 기본 0(안 그림). `meridians(4)` 면 세로 반원 4개. */
+  meridians(n = 0) { return this.set({ meridians: n }); }
   toIR(ctx) {
     const [cx, cy, cz] = this._conf.center.coords;
     const r = this._conf.radius;
     const c = this._conf;
     const out = [];
     const CP = project3(ctx, [cx, cy, cz]);
-    for (let k = 1; k < 8; k++) {
-      const phi = (Math.PI * k) / 8;
+    // 위도선(가로 원) — 기본 7개(양 극 제외). `rings(false|0)` 이면 실루엣만.
+    const rings = c.rings === false || c.rings === 0 ? 0 : (Number.isFinite(c.rings) ? Math.max(0, Math.floor(c.rings)) : 7);
+    for (let k = 1; k <= rings; k++) {
+      const phi = (Math.PI * k) / (rings + 1);
       const pts = [];
       for (let i = 0; i <= 48; i++) {
         const th = (2 * Math.PI * i) / 48;
+        pts.push(project3(ctx, [cx + r * Math.sin(phi) * Math.cos(th), cy + r * Math.sin(phi) * Math.sin(th), cz + r * Math.cos(phi)]));
+      }
+      out.push(polyline(pts, c, -1));
+    }
+    // 경선(세로 반원) — 기본 0. 남북극을 잇는 반원 n 개.
+    const mer = Number.isFinite(c.meridians) ? Math.max(0, Math.floor(c.meridians)) : 0;
+    for (let j = 0; j < mer; j++) {
+      const th = (Math.PI * j) / mer;
+      const pts = [];
+      for (let i = 0; i <= 48; i++) {
+        const phi = (Math.PI * i) / 48;
         pts.push(project3(ctx, [cx + r * Math.sin(phi) * Math.cos(th), cy + r * Math.sin(phi) * Math.sin(th), cz + r * Math.cos(phi)]));
       }
       out.push(polyline(pts, c, -1));
