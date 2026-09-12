@@ -31,6 +31,15 @@ import {
 } from './shapes/threeD2.js';
 import { curve3, arrow3, surfaceParam, axes3, quadrics, circle3, frame3, Curve3 } from './shapes/threeD3.js';
 import { cmapColor, shade } from './shapes/threeD3.js';
+import { arcCore, sectorCore, rayCore, ArcShape, RayShape } from './shapes/arc.js';
+import {
+  cube as cubeCore,
+  prism as prismCore,
+  pyramid as pyramidCore,
+  torus as torusCore,
+  surfaceExtra,
+  CustomPolyhedron,
+} from './shapes/solids.js';
 import { mat, vec, Matrix } from './linalg.js';
 import { cplx, Complex } from './complex.js';
 import transform from './transform.js';
@@ -168,55 +177,83 @@ function scene() {
 }
 scene.cartesian = () => new Scene();
 
-// ── 미구현 도형 (사용 시 명확한 안내) ──────────────
-//   중요한 건 "안내"다 — 플러그인이 `api.define('ray', …)` 로 등록하는 순간 이 이름들은
-//   **코어 수정 없이** 살아난다(아래 dispatch 가 레지스트리를 먼저 본다).
-/** 코어에 없는 이름의 힌트 — 플러그인 등록 안내에 함께 실린다 */
+// ── 확장 지점: 플러그인이 우선, 없으면 코어 기본 구현 ──────────────
+//   `ray`/`arc`/`sector`/`torus`/`cube`/`prism`/`pyramid` 는 **코어 기본 구현**을 가진다
+//   (DSL.md 대로 동작). 플러그인이 `api.define('ray', …)` 로 등록하면 그쪽이 우선되고,
+//   `arc.semicircle` 처럼 코어에 없는 하위 이름은 아래 힌트와 함께 등록을 안내한다.
+/** 코어에도 플러그인에도 없는 이름의 힌트 — 등록 안내에 함께 실린다 */
 const TODO_HINT = {
-  ray: '직선(line) 등으로 대체할 수 있습니다.',
-  arc: '원호. circle 위에서 표현할 수 있습니다.',
-  sector: '부채꼴. region.wedge 로 대체할 수 있습니다.',
-  torus: '토러스(3D).',
-  cube: '정육면체(3D).',
-  prism: '각기둥(3D).',
-  pyramid: '각뿔(3D).',
+  ray: '코어 기본값은 ray(A,B) / ray.from(A).through(B) 입니다. 더 필요하면 플러그인으로 등록하세요.',
+  arc: '코어 기본값은 arc.circular / ofCircle / through / circle 입니다.',
+  sector: '코어 기본값은 sector.ofCircle(c).angle(θ) / sector.circular(O,r,a0,a1) 입니다.',
+  torus: '코어 기본값은 torus.center(O).radii(R, r) 입니다.',
+  cube: '코어 기본값은 cube.center(O).edge(e) 입니다.',
+  prism: '코어 기본값은 prism.base(polygon).height(h) 입니다.',
+  pyramid: '코어 기본값은 pyramid.base(polygon).apex(P) 입니다.',
 };
 
 /** 레지스트리 우선 호출 — `api.define` 으로 등록된 이름이면 그것을 쓴다 */
-function dispatch(name, args) {
+function dispatch(name, args, fallback) {
   const f = lookupFactory(name);
   if (f) return f(...args);
+  if (typeof fallback === 'function') return fallback(...args);
   const hint = TODO_HINT[name] || '';
   throw unknownFeature(name, hint);
 }
 
 /**
  * 네임스페이스형 스텁 — `arc.circular(...)` 처럼 하위 이름까지 레지스트리에서 찾는다.
- * 등록 전에는 호출 시 PluginError(등록 방법 안내), 등록 후에는 즉시 동작.
+ * 플러그인이 등록하면 **플러그인이 우선**하고, 없으면 코어 기본 구현(`core`)을 쓴다.
  */
-function ns(name, hint) {
+function ns(name, hint, core) {
   const missing = (k) => () => {
     throw unknownFeature(`${name}.${k}`, hint || '');
+  };
+  const pick = (k) => {
+    const hit = lookupFactory(`${name}.${k}`);
+    if (hit) return (...a) => lookupFactory(`${name}.${k}`)(...a);
+    if (core && typeof core[k] === 'function') return (...a) => core[k](...a);
+    return missing(k);
   };
   return new Proxy(function () {}, {
     get: (_, k) => {
       if (k === '$$') return true;
-      const hit = lookupFactory(`${name}.${k}`);
-      return hit ? (...a) => lookupFactory(`${name}.${k}`)(...a) : missing(k);
+      return pick(k);
     },
     apply: () => {
+      const hit = lookupFactory(name);
+      if (hit) return hit();
+      if (typeof core === 'function') return core();
       throw unknownFeature(name, hint || '');
     },
   });
 }
 
-export const ray = (...a) => dispatch('ray', a);
-export const arc = ns('arc', TODO_HINT.arc);
-export const sector = ns('sector', TODO_HINT.sector);
-export const torus = ns('torus', TODO_HINT.torus);
-export const cube = ns('cube', TODO_HINT.cube);
-export const prism = ns('prism', TODO_HINT.prism);
-export const pyramid = ns('pyramid', TODO_HINT.pyramid);
+/** 플러그인 우선 + 코어 기본값(ray.from 등) */
+const withFallback = (name, coreFn) =>
+  Object.assign(
+    (...a) => dispatch(name, a, coreFn),
+    Object.fromEntries(
+      Object.keys(coreFn).map((k) => [k, (...a) => (lookupFactory(`${name}.${k}`) || coreFn[k])(...a)]),
+    ),
+  );
+
+export const ray = withFallback('ray', rayCore);
+export const arc = ns('arc', TODO_HINT.arc, arcCore);
+export const sector = ns('sector', TODO_HINT.sector, sectorCore);
+export const torus = ns('torus', TODO_HINT.torus, torusCore);
+export const cube = ns('cube', TODO_HINT.cube, cubeCore);
+export const prism = ns('prism', TODO_HINT.prism, prismCore);
+export const pyramid = ns('pyramid', TODO_HINT.pyramid, pyramidCore);
+
+// 코어 기본값으로 문서 API 를 채운다(플러그인이 등록하면 그쪽이 우선한다).
+Object.assign(surface, surfaceExtra); // surface.of / surface.ruled / surface.implicit
+polyhedron.vertices = (...pts) =>
+  new CustomPolyhedron({
+    vertices: pts
+      .map((p) => (Array.isArray(p) ? p : (p.coords ?? [0, 0, 0])))
+      .map((c) => [c[0] ?? 0, c[1] ?? 0, c[2] ?? 0]),
+  });
 
 // ── 플러그인 네임스페이스 공개 ─────────────────────
 //   `api.static('point', 'hex', fn)` / `api.static('annotate', …)` 가 동작하도록

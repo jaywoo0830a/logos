@@ -4,6 +4,7 @@ import { Drawable } from '../core/drawable.js';
 import { node } from '../core/node.js';
 import { project3, depthZ } from './threeD.js';
 import { point } from './point.js';
+import { curve } from './curve.js';
 import { TAU } from '../solver/coords.js';
 
 // ── 간이 컬러맵 (matplotlib cmap 근사) ──────────────
@@ -137,7 +138,55 @@ export const curve3 = {
   through(pts) {
     return new Curve3({ kind: 'through', points: pts });
   },
+  /**
+   * 두 3D 곡선의 교차점(수치) — 각 곡선을 샘플해 가장 가까운 쌍이 tol 이내면 교점으로 본다.
+   * 반환은 Point 배열(0개 이상). `curve3.intersect(c1, c2)` / `.tol(t)` 형태의 옵션.
+   */
+  intersect(c1, c2, opts = {}) {
+    const tol = opts.tol ?? 0.05;
+    const A = c1 && typeof c1._sample === 'function' ? c1._sample() : [];
+    const B = c2 && typeof c2._sample === 'function' ? c2._sample() : [];
+    const out = [];
+    for (const a of A) {
+      let best = null,
+        bestD = Infinity;
+      for (const b of B) {
+        const d = Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+        if (d < bestD) {
+          bestD = d;
+          best = b;
+        }
+      }
+      if (best && bestD <= tol) {
+        const mid = [(a[0] + best[0]) / 2, (a[1] + best[1]) / 2, (a[2] + best[2]) / 2];
+        // 중복 제거
+        if (!out.some((p) => Math.hypot(p.coords[0] - mid[0], p.coords[1] - mid[1], p.coords[2] - mid[2]) < tol)) {
+          out.push(point(mid[0], mid[1], mid[2]));
+        }
+      }
+    }
+    return out;
+  },
 };
+
+// ── curve.cylindrical / curve.spherical — 좌표계를 아는 3D 곡선 (DSL §4.4) ──
+//   2D 의 `curve.polar` 와 짝을 이룬다. 반환은 3D 곡선(Curve3)이라 `plot3d` 씬에서 쓴다.
+Object.assign(curve, {
+  /** `curve.cylindrical((t) => [r, θ, z])` — 원통좌표를 (x,y,z) 로. `[1, t, t]` 는 나선. */
+  cylindrical(f) {
+    return curve3.parametric((t) => {
+      const [r, th, z] = f(t);
+      return [r * Math.cos(th), r * Math.sin(th), z];
+    });
+  },
+  /** `curve.spherical((t) => [ρ, θ, φ])` — 구면좌표를 (x,y,z) 로 (φ 는 z 축에서 잰 각). */
+  spherical(f) {
+    return curve3.parametric((t) => {
+      const [rho, th, ph] = f(t);
+      return [rho * Math.sin(ph) * Math.cos(th), rho * Math.sin(ph) * Math.sin(th), rho * Math.cos(ph)];
+    });
+  },
+});
 
 // ── arrow3 — 3D 화살표(quiver) ───────────────────────
 export class Arrow3 extends Drawable {

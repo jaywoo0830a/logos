@@ -169,7 +169,70 @@ export const line = {
     const BC = normalize2([C.coords[0] - B.coords[0], C.coords[1] - B.coords[1]]);
     return new Line({ form: 'point-dir', p: B, d: [BA[0] + BC[0], BA[1] + BC[1]] });
   },
+  /**
+   * 극선(polar) — 원 `c` 에 대한 점 `P` 의 극선: (X−O)·(P−O) = r².
+   *   P 가 원 위 → 접선, 원 밖 → 두 접점을 잇는 직선, 중심 → 정의되지 않음(null).
+   */
+  polar(c, P) {
+    const O = circleCenter(c);
+    const r = circleRadius(c);
+    const px = P.coords[0] - O[0],
+      py = P.coords[1] - O[1];
+    const d2 = px * px + py * py;
+    if (d2 < 1e-12) return null;
+    const t = (r * r) / d2;
+    return new Line({ form: 'point-dir', p: _point(O[0] + px * t, O[1] + py * t), d: [-py, px] });
+  },
+  /**
+   * 두 원의 공통 접선 — 바깥 접선부터, 이어서 안쪽(교차) 접선.
+   * 반환값에 `.all` 로 전체 목록이 붙는다(없으면 null).
+   */
+  commonTangent(c1, c2) {
+    const list = commonTangents(c1, c2);
+    if (!list.length) return null;
+    return Object.assign(list[0], { all: list });
+  },
 };
+
+function circleCenter(c) {
+  return typeof c.center === 'function' ? c.center() : c._conf.center.coords;
+}
+function circleRadius(c) {
+  return typeof c.radius === 'function' ? c.radius() : c._conf.radius;
+}
+
+/**
+ * 공통 접선 계산 — 단위 법선 n 과 상수 k 로 직선 n·X = k 를 만든다.
+ *   바깥 접선: n·(O2−O1) = r2 − r1,  k = n·O1 − r1
+ *   안쪽 접선: n·(O2−O1) = r2 + r1
+ */
+function commonTangents(c1, c2) {
+  const [x1, y1] = circleCenter(c1);
+  const [x2, y2] = circleCenter(c2);
+  const r1 = circleRadius(c1),
+    r2 = circleRadius(c2);
+  const dx = x2 - x1,
+    dy = y2 - y1;
+  const d = Math.hypot(dx, dy);
+  if (d < 1e-12) return [];
+  const ux = dx / d,
+    uy = dy / d;
+  const out = [];
+  const add = (alpha) => {
+    if (Math.abs(alpha) > 1 + 1e-9) return;
+    const beta = Math.sqrt(Math.max(0, 1 - alpha * alpha));
+    for (const sgn of [1, -1]) {
+      // n = α·u + β·u⊥   (u⊥ = (-uy, ux))
+      const nx = alpha * ux + sgn * beta * -uy;
+      const ny = alpha * uy + sgn * beta * ux;
+      const k = nx * x1 + ny * y1 - r1; // 표준형: nx·x + ny·y − k = 0
+      out.push(line.standard(nx, ny, -k));
+    }
+  };
+  add((r2 - r1) / d); // 바깥 접선 2개
+  add((r1 + r2) / d); // 안쪽 접선 2개
+  return out;
+}
 
 function normalize2(v) {
   const l = norm2(v);

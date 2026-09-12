@@ -230,20 +230,22 @@ test('around(): 기존 메서드 보강 (scene.title)', () => {
       assert.equal(point(1, 2).dim(), 2, 'uninstall 로 원복');
     });
 
-    test('미등록 이름: 코어 수정 대신 플러그인 등록을 안내한다', () => {
+    test('코어 기본값: ray/arc 는 등록 없이도 동작, 미등록 이름은 안내', () => {
+      // 코어가 문서 API(ray/arc/sector/cube/prism/pyramid/torus)의 기본 구현을 제공한다.
+      const r = rayStub(point(0, 0), point(1, 1));
+      assert.ok(r && typeof r.toIR === 'function', 'ray 코어 기본값');
+      assert.ok(arcStub.circular(point(0, 0), 1, 0, Math.PI)?.toIR, 'arc 코어 기본값');
+      // 정말 없는 이름은 여전히 PluginError + 등록 안내
       let err = null;
       try {
-        rayStub(point(0, 0), point(1, 1));
+        arcStub.semicircle();
       } catch (e) {
         err = e;
       }
       assert.ok(err instanceof PluginError, 'PluginError');
       assert.match(err.hint, /api\.define/, '등록 방법 안내');
       assert.match(err.hint, /use\(\{ name:/, 'use() 사용 예시');
-      assert.match(err.message, /ray/, '이름 포함');
-      // 네임스페이스 스텁(arc)도 등록 전에는 호출 시 안내한다
-      assert.throws(() => arcStub.semicircle(), PluginError);
-      assert.throws(() => arcStub(), PluginError);
+      assert.throws(() => arcStub(), PluginError, '이름 자체 호출은 여전히 미등록 안내');
     });
 
     test('plugins Proxy: 등록 이름 조회 + `in` 연산', () => {

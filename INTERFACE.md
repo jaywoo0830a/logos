@@ -508,8 +508,8 @@ scene()
   .axes()
   .theme('chalk')
   .add(
-    plugins.ray(point(0, 0), point.byDeg(1, 30)).arrowTip().dashed(), // 코어에 없던 도형
-    plugins['arc.circular'](point(0, 0), 2, 30, 150), // index.js 스텁이 살아남
+    plugins.ray(point(0, 0), point.byDeg(1, 30)).arrowTip().dashed(), // 플러그인 등록이 코어 기본값을 덮어씀
+    plugins['arc.circular'](point(0, 0), 2, 30, 150), // 코어에도 기본 구현이 있고, 플러그인이 우선
     plugins.hatch(1, 1, 4, 1.6).text('A = ∫₀⁴ f(x) dx'), // 새 IR 노드(SVG+TikZ)
     circle.center(point.origin()).radius(1).tilt(15), // 새 체이닝 메서드
   )

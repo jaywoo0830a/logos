@@ -16,6 +16,79 @@ const katexNs = { katexRender, katexify };
  * 조용히 잘라내면 "왜 안 보이지?" 로 이어지고, 대개 **단위 실수**가 원인이다
  * (예: world 단위인 `annotate.angle().arc({ radius })` 에 px 값을 준 경우).
  */
+/**
+ * 범례 확장 — `annotate.legend()` 표시자를 라벨 있는 도형들의 목록 상자로 바꾼다.
+ * 상자는 월드 좌표 오른쪽 위에 놓인다(스케일/뷰와 무관하게 같은 자리).
+ */
+function expandLegend(nodes, world) {
+  const marker = nodes.find((n) => n.kind === 'legend');
+  const title = marker?.data?.title ?? null;
+  const entries = [];
+  for (const n of nodes) {
+    if (n.kind === 'legend' || !n.data) continue;
+    const label = n.data.label;
+    if (!label) continue;
+    const color = n.data.color || n.data.style?.color || n.data.fill || '#333';
+    if (entries.some((e) => e.label === label)) continue; // 같은 라벨은 한 번만
+    entries.push({ label: String(label), color });
+  }
+  if (!entries.length) return nodes.filter((n) => n.kind !== 'legend');
+  const w = world || { xmin: -1, xmax: 1, ymin: -1, ymax: 1 };
+  const spanY = Math.abs(w.ymax - w.ymin) || 1;
+  const spanX = Math.abs(w.xmax - w.xmin) || 1;
+  const rowH = spanY / 14;
+  const boxW = spanX * 0.3;
+  const x1 = w.xmax - spanX * 0.02;
+  const x0 = x1 - boxW;
+  const top = w.ymax - spanY * 0.04 - (title ? rowH * 0.6 : 0);
+  const box = {
+    kind: 'rect',
+    data: {
+      x0,
+      x1,
+      y0: top - entries.length * rowH - rowH * 0.4,
+      y1: top + rowH * 0.4,
+      fill: '#ffffff',
+      opacity: 0.85,
+      style: { color: '#94a3b8', stroke: 1 },
+    },
+  };
+  const out = [box];
+  if (title)
+    out.push({
+      kind: 'text',
+      data: { x: x0 + boxW * 0.06, y: top, text: String(title), font: 13, bold: true, anchor: 'start', color: '#111' },
+    });
+  entries.forEach((e, i) => {
+    const y = top - (i + 0.5) * rowH;
+    out.push({
+      kind: 'rect',
+      data: {
+        x0: x0 + boxW * 0.06,
+        x1: x0 + boxW * 0.06 + spanX * 0.03,
+        y0: y - rowH * 0.22,
+        y1: y + rowH * 0.22,
+        fill: e.color,
+        opacity: 1,
+        style: {},
+      },
+    });
+    out.push({
+      kind: 'text',
+      data: {
+        x: x0 + boxW * 0.14,
+        y,
+        text: e.label,
+        font: 12,
+        anchor: 'start',
+        color: '#222',
+        math: /\\|\^|_/.test(e.label),
+      },
+    });
+  });
+  return nodes.filter((n) => n.kind !== 'legend').concat(out);
+}
+
 export function warnOutOfView(kinds) {
   const uniq = [...new Set(kinds)];
   const head = uniq.slice(0, 6).join(', ');
@@ -71,6 +144,8 @@ export class SceneIR {
     if (this.o.layout && opts.layout !== false) nodes = relayout(nodes, m.map, m.W, m.H);
     // 플러그인 훅 — 'ir:svg'(노드 손질) · 'svg'(완성된 SVG 문자열 후처리)
     nodes = apply('ir:svg', nodes, { ir: this, map: m.map, W: m.W, H: m.H }) || nodes;
+    // 범례(`annotate.legend()`) — 라벨 달린 도형을 모아 오른쪽 위에 상자를 만든다.
+    if (nodes.some((n) => n.kind === 'legend')) nodes = expandLegend(nodes, this.o.world);
     // 화면 밖 primitive 는 방출하지 않는다(resvg 래스터 패닉 방지) — 무엇이 잘렸는지 기록.
     const cullReport = [];
     const svg = emitSVG(nodes, {

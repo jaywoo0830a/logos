@@ -47,7 +47,16 @@ export class Cylinder extends Drawable {
 }
 export const cylinder = {
   center(O) {
-    return { axis: () => ({ radius: (r) => ({ height: (h) => new Cylinder({ center: O, radius: r, height: h }) }) }) };
+    return {
+      axis: (a) => ({ radius: (r) => ({ height: (h) => new Cylinder({ center: O, radius: r, height: h, axis: a }) }) }),
+      radius: (r) => ({ height: (h) => new Cylinder({ center: O, radius: r, height: h }) }),
+    };
+  },
+  /** `cylinder.axis(l).radius(1).height(5)` — 축선(Line) 또는 방향벡터 */
+  axis(a) {
+    return {
+      radius: (r) => ({ height: (h) => new Cylinder({ center: point(0, 0, 0), radius: r, height: h, axis: a }) }),
+    };
   },
 };
 

@@ -5,6 +5,52 @@
 
 ## [Unreleased]
 
+## [0.4.1] — 2026-09-12
+
+**문서에 있던 API 를 실제로 구현**하고, 래스터(PNG)의 하드 크래시와 심볼릭 계산의 조용한 오답을 고쳤습니다.
+
+### Added
+
+- **문서화됐지만 비어 있던 API 구현** (DSL.md 기준 — 코어 기본값, 플러그인은 그대로 우선):
+  - 곡선: `curve.piecewise` · `curve.spline().tension()` · `curve.ode()` (RK4, 심볼릭 `dy` 지원) ·
+    `curve.taylor()` · `curve.tangentAt/normalAt/arcLength/curvature` · `curve.cylindrical/spherical`
+  - 원뿔곡선: `ellipse.semiMajor/eccentricity` · `ellipse.foci().major()` · `ellipse.directrix().eccentricity()` ·
+    `parabola.vertex().focus()` · `parabola.polynomial()` (수직·수평축) · `hyperbola.foci().distance()` ·
+    `circle.excircle(tri, key)` (타원 회전각도 SVG 에 반영)
+  - 직선: `line.polar(circle, P)` · `line.commonTangent(c1, c2)` (`.all` 로 4개)
+  - 영역: `region.inequality` · `region.union` · `region.difference` (+ 수치 포함 판정 `contains`)
+  - 주석: `annotate.shade` · `annotate.brace` · `annotate.limit` · `annotate.legend()`
+  - 3D: `plane.through/pointNormal/standard/offset` · `sphere.through(A,B,C,D)/unit/center().through()` ·
+    `cylinder.axis` · `polyhedron.vertices(...).faces([...])` · `cube.prism.pyramid.torus` ·
+    `surface.of/ruled/implicit` (marching tetrahedra) · `curve3.intersect`
+  - 2D: `arc.ofCircle/through/circle/circular` · `sector.ofCircle` · `ray.from().through()/direction()` ·
+    `regular.star` · `regular.tessellation('hex')`
+  - 벡터·점: `vector.gradient/div/curl` (수치 미분) · `point.reflect(P).over(line|plane)` · `point.byDeg`
+- **PNG 래스터 안전 패스** — 래스터 경로에서만 화면 밖 도형을 제거하고 캔버스 밖 좌표를 정확히 잘라낸다
+  (일반 `toSVG()` 출력은 바이트 단위로 동일). 2D 씬에서 제외된 도형이 있으면 `toPNG()` 가 단위 실수 경고.
+- **회귀 테스트** — `test/new-apis.test.js`(33), `test/raster.test.js`(24 케이스 자식 프로세스 격리).
+
+### Fixed
+
+- **래스터(PNG) 프로세스 abort** — 화면(뷰)을 크게 벗어난 도형이 있으면 `toPNG()`/`kit.saveFigures()` 가
+  resvg 의 Rust panic 으로 프로세스를 죽이던 문제. `try/catch` 로 못 잡아 배치 중 1장만 걸려도 나머지
+  산출물이 유실됐습니다(원인: `@resvg/resvg-js` 내부 resvg 0.34 의 `IntRect::from_ltrb(...).unwrap()`).
+- **`region.between` / `region.betweenX`** — 두 번째 경계를 생략하면 `NaN` 좌표를 방출해 영역이
+  조용히 사라지던 문제. matplotlib 과 동일하게 기본값 0.
+- **`tex.substitute`** — compute-engine 규칙을 잘못 만들어 `y(2)` 처럼 왜곡되던 문제(값이 조용히 틀림).
+- **심볼릭 → 네이티브 파서** — 숫자 자릿수 구분(`1.001\,25`)을 걸러내지 못해 상수가 틀리게 파싱되고,
+  다항식에서 `x` 항을 버리던 문제(`x+1` → f(x)=1). 이제 CE 결과와 교차검증 후 불일치하면 정확한 경로로 폴백.
+- 문서·예제의 단위 실수 정정 — `annotate.angle(...).arc({ radius })` 와
+  `annotate.dimension(...).offset()` 은 **world 단위**(px 아님)임을 명시하고 값들을 바로잡았습니다.
+
+### Changed
+
+- `ray` / `arc` / `sector` / `torus` / `cube` / `prism` / `pyramid` 는 **플러그인 등록이 있으면 그쪽을,
+  없으면 코어 기본 구현**을 씁니다(이전에는 미등록 시 PluginError).
+- `test/plugin.test.js` — 위 동작 변경에 맞춰 "미등록 이름 안내" 테스트를
+  "코어 기본값 동작 + 정말 없는 이름은 안내" 로 갱신.
+- 이미지 태그 `logos:0.4.1`.
+
 ### Fixed
 
 - **래스터(PNG) 프로세스 abort** — 화면(뷰)을 크게 벗어난 도형이 있으면 `toPNG()`/`kit.saveFigures()` 가
