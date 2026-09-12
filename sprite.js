@@ -15,7 +15,9 @@ export function jsub(v, ...path) {
   return cur;
 }
 
-export function clamp(x, lo, hi) { return Math.max(lo, Math.min(hi, x)); }
+export function clamp(x, lo, hi) {
+  return Math.max(lo, Math.min(hi, x));
+}
 
 // JSON 직렬화 (심볼/함수 제외, 재귀)
 export function toPlain(o, seen = new WeakSet()) {

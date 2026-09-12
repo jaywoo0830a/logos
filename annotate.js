@@ -4,7 +4,9 @@ import { node } from './core/node.js';
 import { norm2, perp2 } from './solver/coords.js';
 import { point as _point, toPoint } from './shapes/point.js';
 
-export function annotate() { return new _Annotate(); }
+export function annotate() {
+  return new _Annotate();
+}
 /**
  * 각도 표식 ∠ABC — **가운데 인자가 각의 꼭짓점**이다.
  *
@@ -16,8 +18,11 @@ export function annotate() { return new _Annotate(); }
  * 그려지므로, 헷갈리면 **이름 있는 형태**를 쓰세요.
  */
 annotate.angle = (A, B, C) => {
-  if (A && A.coords === undefined) {                 // { from, vertex, to } 형태
-    const vertex = A.vertex ?? A.at, from = A.from, to = A.to;
+  if (A && A.coords === undefined) {
+    // { from, vertex, to } 형태
+    const vertex = A.vertex ?? A.at,
+      from = A.from,
+      to = A.to;
     if (!from || !vertex || !to) {
       throw new Error('annotate.angle({ from, vertex, to }): 세 점이 필요합니다.');
     }
@@ -39,29 +44,47 @@ annotate.dot = (P) => new DotAnno(toPoint(P));
 annotate.tick = (seg) => new TickAnno(seg);
 annotate.text = (P) => new TextAnno(toPoint(P));
 
-class _Annotate extends Drawable { toIR() { return []; } }
+class _Annotate extends Drawable {
+  toIR() {
+    return [];
+  }
+}
 
 // ── 각도 ─────────────────────────────────────────
 export class AngleAnno extends Drawable {
   constructor(A, B, C) {
     // 흔한 실수(점이 아닌 값 전달)를 조용히 이상한 그림으로 만들지 않고 즉시 알려준다.
-    for (const [name, P] of [['A', A], ['B', B], ['C', C]]) {
+    for (const [name, P] of [
+      ['A', A],
+      ['B', B],
+      ['C', C],
+    ]) {
       if (!P || !Array.isArray(P.coords)) {
         throw new Error(`annotate.angle(A, B, C): ${name} 자리에 점(point)이 필요합니다 (가운데 B 가 각의 꼭짓점).`);
       }
     }
     super('annotation', { kind: 'angle', A, B, C, arc: { radius: null, double: false }, marker: 'arc' });
   }
-  arc(opts = {}) { return this.set({ arc: { ...this._conf.arc, ...opts }, marker: 'arc' }); }
-  rightAngle() { return this.set({ marker: 'right' }); }
-  degrees() { return this.set({ degrees: true }); }
-  radians() { return this.set({ degrees: false }); }
-  label(l, off) { return this.set({ label: l, labelOff: off }); }
+  arc(opts = {}) {
+    return this.set({ arc: { ...this._conf.arc, ...opts }, marker: 'arc' });
+  }
+  rightAngle() {
+    return this.set({ marker: 'right' });
+  }
+  degrees() {
+    return this.set({ degrees: true });
+  }
+  radians() {
+    return this.set({ degrees: false });
+  }
+  label(l, off) {
+    return this.set({ label: l, labelOff: off });
+  }
 
   toIR(ctx) {
     const c = this._conf;
     const w = ctx.world;
-    const rad = c.arc.radius || (Math.min(w.xmax - w.xmin, w.ymax - w.ymin) / 8);
+    const rad = c.arc.radius || Math.min(w.xmax - w.xmin, w.ymax - w.ymin) / 8;
     const [bx, by] = c.B.coords;
     const aBA = Math.atan2(c.A.coords[1] - by, c.A.coords[0] - bx);
     const aBC = Math.atan2(c.C.coords[1] - by, c.C.coords[0] - bx);
@@ -70,20 +93,26 @@ export class AngleAnno extends Drawable {
     if (c.marker === 'right') {
       const ang = Math.abs(normalizeAngle(aBC - aBA));
       if (Math.abs(ang - Math.PI / 2) > 1e-6) {
-        if (typeof console !== 'undefined') console.warn(`[logos] rightAngle(): angle is ${(ang * 180 / Math.PI).toFixed(1)}°, not 90°`);
+        if (typeof console !== 'undefined')
+          console.warn(`[logos] rightAngle(): angle is ${((ang * 180) / Math.PI).toFixed(1)}°, not 90°`);
       }
       const s = rad * 0.6;
-      out.push(node('path', {
-        ops: [
-          { op: 'M', x: bx + Math.cos(aBA) * s, y: by + Math.sin(aBA) * s },
-          { op: 'L', x: bx + Math.cos(aBA) * s + Math.cos(aBC) * s, y: by + Math.sin(aBA) * s + Math.sin(aBC) * s },
-          { op: 'L', x: bx + Math.cos(aBC) * s, y: by + Math.sin(aBC) * s },
-        ],
-        color: c.color, stroke: c.stroke, style: pickStyle(c),
-      }));
+      out.push(
+        node('path', {
+          ops: [
+            { op: 'M', x: bx + Math.cos(aBA) * s, y: by + Math.sin(aBA) * s },
+            { op: 'L', x: bx + Math.cos(aBA) * s + Math.cos(aBC) * s, y: by + Math.sin(aBA) * s + Math.sin(aBC) * s },
+            { op: 'L', x: bx + Math.cos(aBC) * s, y: by + Math.sin(aBC) * s },
+          ],
+          color: c.color,
+          stroke: c.stroke,
+          style: pickStyle(c),
+        }),
+      );
     } else {
       const n = 30;
-      const start = aBA, spanA = normalizeAngle(aBC - aBA);
+      const start = aBA,
+        spanA = normalizeAngle(aBC - aBA);
       const radii = c.arc.double ? [rad, rad * 0.7] : [rad];
       for (const rr of radii) {
         const pts = [];
@@ -95,18 +124,30 @@ export class AngleAnno extends Drawable {
       }
       if (c.degrees) {
         const mid = start + spanA / 2;
-        out.push(node('text', { x: bx + Math.cos(mid) * rad * 1.5, y: by + Math.sin(mid) * rad * 1.5, text: '°', anchor: 'middle' }));
+        out.push(
+          node('text', {
+            x: bx + Math.cos(mid) * rad * 1.5,
+            y: by + Math.sin(mid) * rad * 1.5,
+            text: '°',
+            anchor: 'middle',
+          }),
+        );
       }
     }
     // 라벨 (수식이면 math)
     if (c.label) {
       const L = c.label;
       const mid = normalizeAngle(aBA + normalizeAngle(aBC - aBA) / 2);
-      out.push(node('text', {
-        x: bx + Math.cos(mid) * rad * 1.6, y: by + Math.sin(mid) * rad * 1.6,
-        text: renderText(L), anchor: 'middle', color: c.color,
-        math: typeof L?.toLatex === 'function',
-      }));
+      out.push(
+        node('text', {
+          x: bx + Math.cos(mid) * rad * 1.6,
+          y: by + Math.sin(mid) * rad * 1.6,
+          text: renderText(L),
+          anchor: 'middle',
+          color: c.color,
+          math: typeof L?.toLatex === 'function',
+        }),
+      );
     }
     return out;
   }
@@ -118,37 +159,64 @@ function normalizeAngle(a) {
 }
 // ── 캡션 ─────────────────────────────────────────
 export class CaptionAnno extends Drawable {
-  constructor(text) { super('annotation', { kind: 'caption', text }); }
+  constructor(text) {
+    super('annotation', { kind: 'caption', text });
+  }
   toIR(ctx) {
     const w = ctx.world;
     const T = this._conf.text;
-    return [node('text', {
-      x: (w.xmin + w.xmax) / 2, y: w.ymax - (w.ymax - w.ymin) * 0.06,
-      text: renderText(T), anchor: 'middle', caption: true, color: this._conf.color,
-      math: typeof T?.toLatex === 'function',
-    })];
+    return [
+      node('text', {
+        x: (w.xmin + w.xmax) / 2,
+        y: w.ymax - (w.ymax - w.ymin) * 0.06,
+        text: renderText(T),
+        anchor: 'middle',
+        caption: true,
+        color: this._conf.color,
+        math: typeof T?.toLatex === 'function',
+      }),
+    ];
   }
 }
 
 // ── 정적분 ───────────────────────────────────────
 export class IntegralAnno extends Drawable {
-  constructor(f) { super('annotation', { kind: 'integral', fn: f }); }
-  from(a) { return new IntegralAnno2({ ...this._conf, from: a }); }
-  to(b) { return new IntegralAnno2({ ...this._conf, to: b }); }
-  label(l, off) { return this.set({ label: l, labelOff: off }); }
-  shade(color) { return this.set({ fill: color }); }
-  toIR(ctx) { return this._conf.to !== undefined ? renderIntegral(this._conf, ctx) : []; }
+  constructor(f) {
+    super('annotation', { kind: 'integral', fn: f });
+  }
+  from(a) {
+    return new IntegralAnno2({ ...this._conf, from: a });
+  }
+  to(b) {
+    return new IntegralAnno2({ ...this._conf, to: b });
+  }
+  label(l, off) {
+    return this.set({ label: l, labelOff: off });
+  }
+  shade(color) {
+    return this.set({ fill: color });
+  }
+  toIR(ctx) {
+    return this._conf.to !== undefined ? renderIntegral(this._conf, ctx) : [];
+  }
 }
 class IntegralAnno2 extends IntegralAnno {
-  constructor(conf) { super(conf.fn); this._conf = { ...conf }; }
-  to(b) { return new IntegralAnno2({ ...this._conf, to: b }); }
-  from(a) { return new IntegralAnno2({ ...this._conf, from: a }); }
+  constructor(conf) {
+    super(conf.fn);
+    this._conf = { ...conf };
+  }
+  to(b) {
+    return new IntegralAnno2({ ...this._conf, to: b });
+  }
+  from(a) {
+    return new IntegralAnno2({ ...this._conf, from: a });
+  }
 }
 function renderIntegral(c, ctx) {
   const w = ctx.world;
   const out = [];
   if (c.to === undefined) return out;
-  const fn = typeof c.fn === 'function' ? c.fn : (c.fn && c.fn.toFunction ? c.fn.toFunction('x') : (() => NaN));
+  const fn = typeof c.fn === 'function' ? c.fn : c.fn && c.fn.toFunction ? c.fn.toFunction('x') : () => NaN;
   if (c.fill) {
     const n = 200;
     const ops = [{ op: 'M', x: c.from, y: 0 }];
@@ -156,59 +224,105 @@ function renderIntegral(c, ctx) {
       const x = c.from + ((c.to - c.from) * i) / n;
       ops.push({ op: 'L', x, y: fn(x) });
     }
-    out.push(node('fillpath', { ops: [...ops, { op: 'L', x: c.to, y: 0 }, { op: 'Z' }], fill: c.fill, opacity: c.opacity || 0.35 }));
+    out.push(
+      node('fillpath', {
+        ops: [...ops, { op: 'L', x: c.to, y: 0 }, { op: 'Z' }],
+        fill: c.fill,
+        opacity: c.opacity || 0.35,
+      }),
+    );
   }
   if (c.label) {
     const midX = (c.from + c.to) / 2;
     const y = Math.max(fn(c.from), fn(c.to), fn(midX), 0);
-    out.push(node('text', { x: midX, y: y + (w.ymax - w.ymin) * 0.1, text: renderText(c.label), anchor: 'middle', math: typeof c.label?.toLatex === 'function' }));
+    out.push(
+      node('text', {
+        x: midX,
+        y: y + (w.ymax - w.ymin) * 0.1,
+        text: renderText(c.label),
+        anchor: 'middle',
+        math: typeof c.label?.toLatex === 'function',
+      }),
+    );
   }
   return out;
 }
 
 // ── 화살표 ───────────────────────────────────────
 export class ArrowAnno extends Drawable {
-  constructor(A, B) { super('annotation', { kind: 'arrow', A, B }); }
-  label(l, off) { return this.set({ label: l, labelOff: off }); }
+  constructor(A, B) {
+    super('annotation', { kind: 'arrow', A, B });
+  }
+  label(l, off) {
+    return this.set({ label: l, labelOff: off });
+  }
   /**
    * 곡선 화살표 — mpl `connectionstyle='arc3,rad=…'` 대응.
    * `rad > 0` 이면 진행 방향 **오른쪽**으로 휜다(원호 화살표·순환 표시에 쓴다).
    * @param {number} rad 휨 정도(현 길이에 대한 비율)
    */
-  bend(rad) { return this.set({ bend: rad }); }
+  bend(rad) {
+    return this.set({ bend: rad });
+  }
   toIR() {
     const c = this._conf;
-    const [x1, y1] = c.A.coords, [x2, y2] = c.B.coords;
+    const [x1, y1] = c.A.coords,
+      [x2, y2] = c.B.coords;
     const label = renderText(c.label);
     const labelMath = typeof c.label?.toLatex === 'function';
     if (!c.bend) {
-      return [node('arrow', {
-        x1, y1, x2, y2, label, labelMath,
-        color: c.color, stroke: c.stroke, dash: c.dash, transforms: c.transforms,
-        headless: c.headless,
-      })];
+      return [
+        node('arrow', {
+          x1,
+          y1,
+          x2,
+          y2,
+          label,
+          labelMath,
+          color: c.color,
+          stroke: c.stroke,
+          dash: c.dash,
+          transforms: c.transforms,
+          headless: c.headless,
+        }),
+      ];
     }
     // 이차 베지어 제어점 — mpl 과 같은 cx = 중점 + rad·dy, cy = 중점 − rad·dx
-    const cx = (x1 + x2) / 2 + c.bend * (y2 - y1), cy = (y1 + y2) / 2 - c.bend * (x2 - x1);
-    const N = 24, ops = [];
+    const cx = (x1 + x2) / 2 + c.bend * (y2 - y1),
+      cy = (y1 + y2) / 2 - c.bend * (x2 - x1);
+    const N = 24,
+      ops = [];
     for (let i = 0; i <= N; i++) {
-      const t = i / N, u = 1 - t;
+      const t = i / N,
+        u = 1 - t;
       ops.push({
         op: i ? 'L' : 'M',
         x: u * u * x1 + 2 * u * t * cx + t * t * x2,
         y: u * u * y1 + 2 * u * t * cy + t * t * y2,
       });
     }
-    const out = [node('path', {
-      ops, head: !c.headless,                       // path 끝에 촉(marker-end)
-      color: c.color, stroke: c.stroke, dash: c.dash, transforms: c.transforms,
-      style: pickStyle(c),
-    })];
+    const out = [
+      node('path', {
+        ops,
+        head: !c.headless, // path 끝에 촉(marker-end)
+        color: c.color,
+        stroke: c.stroke,
+        dash: c.dash,
+        transforms: c.transforms,
+        style: pickStyle(c),
+      }),
+    ];
     if (label) {
-      out.push(node('text', {
-        x: (x1 + 2 * cx + x2) / 4, y: (y1 + 2 * cy + y2) / 4,
-        text: label, math: labelMath, anchor: 'middle', color: c.color,
-      }));
+      out.push(
+        node('text', {
+          x: (x1 + 2 * cx + x2) / 4,
+          y: (y1 + 2 * cy + y2) / 4,
+          text: label,
+          math: labelMath,
+          anchor: 'middle',
+          color: c.color,
+        }),
+      );
     }
     return out;
   }
@@ -216,34 +330,62 @@ export class ArrowAnno extends Drawable {
 
 // ── 치수선 ───────────────────────────────────────
 export class DimensionAnno extends Drawable {
-  constructor(A, B) { super('annotation', { kind: 'dimension', A, B, offset: 0.5 }); }
-  offset(o) { return this.set({ offset: o }); }
-  units(u) { return this.set({ units: u }); }
-  label(l, off) { return this.set({ label: l, labelOff: off }); }
+  constructor(A, B) {
+    super('annotation', { kind: 'dimension', A, B, offset: 0.5 });
+  }
+  offset(o) {
+    return this.set({ offset: o });
+  }
+  units(u) {
+    return this.set({ units: u });
+  }
+  label(l, off) {
+    return this.set({ label: l, labelOff: off });
+  }
   toIR(ctx) {
     const c = this._conf;
-    const [x1, y1] = c.A.coords, [x2, y2] = c.B.coords;
+    const [x1, y1] = c.A.coords,
+      [x2, y2] = c.B.coords;
     const len = norm2([x2 - x1, y2 - y1]) || 1;
     const [ux, uy] = [(x2 - x1) / len, (y2 - y1) / len];
     const off = c.offset;
     const [ox, oy] = perp2([ux, uy]);
-    const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+    const mx = (x1 + x2) / 2,
+      my = (y1 + y2) / 2;
     const label = (c.label ? renderText(c.label) : '') + (c.units ? ` ${c.units}` : '');
     return [
-      node('arrow', { x1: x1 + ox * off, y1: y1 + oy * off, x2: x2 + ox * off, y2: y2 + oy * off, color: c.color, headless: true }),
-      node('path', { ops: [
-        { op: 'M', x: x1, y: y1 }, { op: 'L', x: x1 + ox * off, y: y1 + oy * off },
-        { op: 'M', x: x2, y: y2 }, { op: 'L', x: x2 + ox * off, y: y2 + oy * off },
-      ], color: c.color }),
-      ...(label ? [node('text', { x: mx + ox * off * 0.7, y: my + oy * off * 0.7, text: label, anchor: 'middle' })] : []),
+      node('arrow', {
+        x1: x1 + ox * off,
+        y1: y1 + oy * off,
+        x2: x2 + ox * off,
+        y2: y2 + oy * off,
+        color: c.color,
+        headless: true,
+      }),
+      node('path', {
+        ops: [
+          { op: 'M', x: x1, y: y1 },
+          { op: 'L', x: x1 + ox * off, y: y1 + oy * off },
+          { op: 'M', x: x2, y: y2 },
+          { op: 'L', x: x2 + ox * off, y: y2 + oy * off },
+        ],
+        color: c.color,
+      }),
+      ...(label
+        ? [node('text', { x: mx + ox * off * 0.7, y: my + oy * off * 0.7, text: label, anchor: 'middle' })]
+        : []),
     ];
   }
 }
 
 // ── 점 마킹 ──────────────────────────────────────
 export class DotAnno extends Drawable {
-  constructor(P) { super('annotation', { kind: 'dot', P }); }
-  label(l, off) { return this.set({ label: l, labelOff: off }); }
+  constructor(P) {
+    super('annotation', { kind: 'dot', P });
+  }
+  label(l, off) {
+    return this.set({ label: l, labelOff: off });
+  }
   toIR(ctx) {
     return _point(ctx.world.xmin, ctx.world.ymin).label(this._conf.label).dot().toIR();
   }
@@ -251,28 +393,41 @@ export class DotAnno extends Drawable {
 
 // ── 합동 tick ─────────────────────────────────────
 export class TickAnno extends Drawable {
-  constructor(seg) { super('annotation', { kind: 'tick', seg, count: 1 }); }
-  count(n) { return this.set({ count: n }); }
+  constructor(seg) {
+    super('annotation', { kind: 'tick', seg, count: 1 });
+  }
+  count(n) {
+    return this.set({ count: n });
+  }
   toIR() {
     const c = this._conf;
-    const A = c.seg.a.coords, B = c.seg.b.coords;
-    const dx = B[0] - A[0], dy = B[1] - A[1];
+    const A = c.seg.a.coords,
+      B = c.seg.b.coords;
+    const dx = B[0] - A[0],
+      dy = B[1] - A[1];
     const len = Math.hypot(dx, dy) || 1;
-    const ux = dx / len, uy = dy / len;
-    const nx = -uy, ny = ux;           // 법선
+    const ux = dx / len,
+      uy = dy / len;
+    const nx = -uy,
+      ny = ux; // 법선
     const n = Math.max(1, Math.round(c.count));
     const tickLen = 0.35;
     const out = [];
     for (let i = 1; i <= n; i++) {
-      const t = i / (n + 1);           // 변을 (count+1)등분한 마디
-      const px = A[0] + dx * t, py = A[1] + dy * t;
-      out.push(node('path', {
-        ops: [
-          { op: 'M', x: px - nx * tickLen, y: py - ny * tickLen },
-          { op: 'L', x: px + nx * tickLen, y: py + ny * tickLen },
-        ],
-        color: c.color, stroke: c.stroke, style: pickStyle(c),
-      }));
+      const t = i / (n + 1); // 변을 (count+1)등분한 마디
+      const px = A[0] + dx * t,
+        py = A[1] + dy * t;
+      out.push(
+        node('path', {
+          ops: [
+            { op: 'M', x: px - nx * tickLen, y: py - ny * tickLen },
+            { op: 'L', x: px + nx * tickLen, y: py + ny * tickLen },
+          ],
+          color: c.color,
+          stroke: c.stroke,
+          style: pickStyle(c),
+        }),
+      );
     }
     return out;
   }
@@ -283,27 +438,54 @@ export class TextAnno extends Drawable {
   constructor(P, text) {
     super('annotation', { kind: 'text', P, anchor: 'start', italic: false, text });
   }
-  label(l, opts) { return this.set({ text: l, ...(opts || {}) }); }
-  anchor(a) { return this.set({ anchor: a }); }
-  offset(dx, dy) { return this.set({ dxPx: dx, dyPx: dy }); }
-  font(f) { return this.set({ font: f }); }
-  bold(on = true) { return this.set({ bold: on }); }
-  rotate(deg) { return this.set({ rotate: deg }); }
+  label(l, opts) {
+    return this.set({ text: l, ...(opts || {}) });
+  }
+  anchor(a) {
+    return this.set({ anchor: a });
+  }
+  offset(dx, dy) {
+    return this.set({ dxPx: dx, dyPx: dy });
+  }
+  font(f) {
+    return this.set({ font: f });
+  }
+  bold(on = true) {
+    return this.set({ bold: on });
+  }
+  rotate(deg) {
+    return this.set({ rotate: deg });
+  }
   /** 텍스트 배경 상자 (matplotlib bbox). 예: .box({ facecolor:'wheat', alpha:0.8 }) */
-  box(cfg = {}) { return this.set({ box: cfg === true ? {} : cfg }); }
+  box(cfg = {}) {
+    return this.set({ box: cfg === true ? {} : cfg });
+  }
   toIR(ctx) {
     const c = this._conf;
     const coords = c.P.coords;
     // 3D 점(z 포함)이면 카메라 투영 적용 (matplotlib ax.text 3D 대응)
-    const [x, y] = (coords.length >= 3 && ctx && ctx.project) ? ctx.project(coords) : coords;
-    return [node('text', {
-      x, y, text: renderText(c.text),
-      math: typeof c.text?.toLatex === 'function',
-      anchor: c.anchor || 'start', dxPx: c.dxPx, dyPx: c.dyPx,
-      font: c.font, bold: c.bold, italic: c.italic, color: c.color, rotate: c.rotate, box: c.box, z: c.z,
-      // 타이포그래피(선택): 미지정이면 렌더러 기본값(행간 1.32 / 자간 0.01em)
-      lineHeight: c.lineHeight, letterSpacing: c.letterSpacing,
-    })];
+    const [x, y] = coords.length >= 3 && ctx && ctx.project ? ctx.project(coords) : coords;
+    return [
+      node('text', {
+        x,
+        y,
+        text: renderText(c.text),
+        math: typeof c.text?.toLatex === 'function',
+        anchor: c.anchor || 'start',
+        dxPx: c.dxPx,
+        dyPx: c.dyPx,
+        font: c.font,
+        bold: c.bold,
+        italic: c.italic,
+        color: c.color,
+        rotate: c.rotate,
+        box: c.box,
+        z: c.z,
+        // 타이포그래피(선택): 미지정이면 렌더러 기본값(행간 1.32 / 자간 0.01em)
+        lineHeight: c.lineHeight,
+        letterSpacing: c.letterSpacing,
+      }),
+    ];
   }
 }
 

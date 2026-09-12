@@ -4,10 +4,10 @@
 
 const rankOf = (n) => (n.data.z || 0) * 1000;
 // 자동 배치 대상: 라벨/주석(제목·범례·점라벨·캡션)만. 축 눈금(z<0)은 **움직이지 않는 장애물**로만 쓴다.
-const isText = (n) => (n.kind === 'text' || (n.kind === 'point' && (n.data.label || n.data.labelMath)))
-  && ((n.data.z ?? 0) >= 0);
+const isText = (n) =>
+  (n.kind === 'text' || (n.kind === 'point' && (n.data.label || n.data.labelMath))) && (n.data.z ?? 0) >= 0;
 /** 축 눈금·축 라벨(z<0) — 제자리에 두되, 어노테이션이 피해야 하는 장애물. */
-const isObstacle = (n) => n.kind === 'text' && ((n.data.z ?? 0) < 0) && String(n.data.text ?? '').length > 0;
+const isObstacle = (n) => n.kind === 'text' && (n.data.z ?? 0) < 0 && String(n.data.text ?? '').length > 0;
 
 function measure(d, kind) {
   const font = d.font || (kind === 'point' ? 13 : 13.5);
@@ -22,7 +22,7 @@ function measure(d, kind) {
 
 function boxAt(sx, sy, w, h, anchor) {
   const left = anchor === 'middle' ? sx - w / 2 : anchor === 'end' ? sx - w : sx;
-  return { x0: left, y0: sy - h, x1: left + w, y1: sy };  // baseline 기준(위쪽 박스)
+  return { x0: left, y0: sy - h, x1: left + w, y1: sy }; // baseline 기준(위쪽 박스)
 }
 
 function overlap(a, b, pad) {
@@ -39,7 +39,7 @@ function overlap(a, b, pad) {
 export function relayout(nodes, map, W, H, opts = {}) {
   const pad = opts.pad ?? 2;
   const items = [];
-  const fixed = [];   // 눈금/축 라벨 — 옮기지 않지만 피해야 하는 박스
+  const fixed = []; // 눈금/축 라벨 — 옮기지 않지만 피해야 하는 박스
   nodes.forEach((n, i) => {
     const d = n.data;
     if (isObstacle(n)) {
@@ -52,21 +52,29 @@ export function relayout(nodes, map, W, H, opts = {}) {
     const [mx, my] = map(d.x, d.y);
     const { w, h } = measure(d, n.kind);
     items.push({
-      i, node: n, d, mx, my, w, h,
-      sx: mx + (d.dxPx || 0), sy: my + (d.dyPx || 0),
-      anchor: d.anchor || 'start', rank: rankOf(n),
+      i,
+      node: n,
+      d,
+      mx,
+      my,
+      w,
+      h,
+      sx: mx + (d.dxPx || 0),
+      sy: my + (d.dyPx || 0),
+      anchor: d.anchor || 'start',
+      rank: rankOf(n),
     });
   });
   // 우선순위: z(위) 큰 것부터, 같으면 위쪽(y 작은) 먼저 — toSorted 로 원본 배열을 건드리지 않는다(A3).
   const placed = [];
   const out = nodes.slice();
   const hitOf = (bb) => placed.find((p) => overlap(bb, p, pad)) || fixed.find((p) => overlap(bb, p, pad));
-  for (const it of items.toSorted((a, b) => (b.rank - a.rank) || (a.sy - b.sy))) {
+  for (const it of items.toSorted((a, b) => b.rank - a.rank || a.sy - b.sy)) {
     let bx = boxAt(it.sx, it.sy, it.w, it.h, it.anchor);
     let guard = 0;
     let hit = hitOf(bx);
     while (hit && guard++ < 40) {
-      it.sy = hit.y1 + pad + it.h;          // 충돌 상대 아래로 이동
+      it.sy = hit.y1 + pad + it.h; // 충돌 상대 아래로 이동
       bx = boxAt(it.sx, it.sy, it.w, it.h, it.anchor);
       hit = hitOf(bx);
     }

@@ -15,12 +15,20 @@ export function parseAngle(a) {
   return Number(a);
 }
 
-export function degToRad(d) { return (d * Math.PI) / 180; }
-export function radToDeg(r) { return (r * 180) / Math.PI; }
+export function degToRad(d) {
+  return (d * Math.PI) / 180;
+}
+export function radToDeg(r) {
+  return (r * 180) / Math.PI;
+}
 
-export function polarToCart(r, t) { return [r * Math.cos(t), r * Math.sin(t)]; }
+export function polarToCart(r, t) {
+  return [r * Math.cos(t), r * Math.sin(t)];
+}
 
-export function cartToPolar(x, y) { return { r: Math.hypot(x, y), theta: Math.atan2(y, x) }; }
+export function cartToPolar(x, y) {
+  return { r: Math.hypot(x, y), theta: Math.atan2(y, x) };
+}
 
 /** cylindrical(r, θ, z) → cartesian [x, y, z] */
 export function cylindricalToCart(r, t, z) {
@@ -39,7 +47,11 @@ export function cartToSpherical(x, y, z) {
 }
 
 /** 2D 평면에서 벡터 노름 */
-export function norm2(v) { return Math.hypot(v[0], v[1]); }
+export function norm2(v) {
+  return Math.hypot(v[0], v[1]);
+}
 
 /** 90° 회전 (데카르트 외적 영역) */
-export function perp2([x, y]) { return [-y, x]; }
+export function perp2([x, y]) {
+  return [-y, x];
+}

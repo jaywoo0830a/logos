@@ -5,6 +5,29 @@
 
 ## [Unreleased]
 
+## [0.3.0] — 2026-09-12
+
+**워크플로우(테스트·렌더·서빙)를 전부 도커 컨테이너로 통일**하고, **prettier 3.9.6** 으로 저장소 전체를
+포맷했습니다. 출력(그림) 자체는 변하지 않습니다 — 전체 테스트 통과.
+
+### Changed
+
+- **렌더 도커 전용** — `scripts/render.sh` 의 `--local`(호스트 node) 경로를 제거했습니다. 렌더는 항상
+  `Dockerfile.render` 이미지에서 실행되어 Node·폰트·래스터라이저가 고정됩니다(결과가 일정).
+- **서빙 도커 전용** — `scripts/serve.sh` 가 항상 컨테이너에서 서빙합니다(`--docker` 불필요, 호스트 node 불필요).
+- **테스트도 도커** — `npm test` 가 `scripts/test.sh` 를 통해 개발 이미지에서 실행됩니다. 호스트에서 바로
+  돌리려면 `npm run test:unit`.
+- **공통 라이브러리** — `scripts/lib/common.sh` 가 package.json 을 `node` 없이(`sed`) 읽어 호스트 Node 의존을
+  제거했고, 이미지 태그를 **패키지 버전**에서 자동 유도합니다(`logos-render:0.3.0`). 하드코딩 `0.1.0` 제거.
+- **`docker-compose.yml`** 이미지 태그를 `LOGOS_IMAGE_TAG`(기본 0.3.0)로 정리, 테스트 서비스는 `test:unit` 사용.
+
+### Added
+
+- **`scripts/test.sh`** — 개발 이미지에서 테스트 실행(스냅샷 골든은 이미지에 없어 자동 skip).
+- **prettier 3.9.6**(devDependency · 정확 버전) + `.prettierrc.json` + `.prettierignore`,
+  `npm run format` / `npm run format:check`. 저장소 전체(.js·.mjs·.json·.md·.yml)를 포맷했습니다.
+  런타임 의존성은 늘지 않습니다(의존성 0 원칙 유지).
+
 ## [0.2.0] — 2026-09-12
 
 `FEEDBACK.md`(모던 JS 기반 구문·DX 제안)의 **A·B 항목**을 반영하고, 아직 배포되지 않았던
@@ -21,7 +44,7 @@ mathbook(`math/graph/phase2` — 미분 해석) 실사용에서 올라온 피드
   이제 `point([1,2])`(예전엔 조용히 `[[1,2]]` 로 뭉갰습니다), `annotate.text([x,y])`,
   `segment([x,y], [x,y])`, `line.through([x,y], [x,y])`, `vector.between([..], [..])` 가 자연스럽게 동작합니다.
 - **태그드 템플릿 `xy` · `range` · `view`(B3)** — 교재 문맥을 코드에 그대로:
-  `xy\`3, 4\`` · `range\`0..10 step 2\`` · `view\`x∈[-3, 3]  y∈[-1, 4]\``. (파서 없음 — 좁은 문법, 실패 시 안내)
+  `xy\`3, 4\``·`range\`0..10 step 2\``·`view\`x∈[-3, 3] y∈[-1, 4]\``. (파서 없음 — 좁은 문법, 실패 시 안내)
 - **`Drawable#with(changes)`(B4)** — "뮤테이션"처럼 들리는 `set()` 의 별칭(불변 업데이트).
 - **`Segment#ends`(B2)** — `const [a, b] = segment(A, B).ends`. (`Point#x/#y/#z` 게터는 기존)
 - **`SceneIR` 이터레이터(A7)** — `[...ir]` · `for (const n of ir)` 로 IR 노드를 바로 순회합니다.
@@ -84,7 +107,7 @@ mathbook(`math/graph/phase2` — 미분 해석) 실사용에서 올라온 피드
   `serve` · `list` · `--out`/`--scale`/`--png`/`--json`/`--dry-run`/`--clean`/`--recursive`.
 - **워크플로우(도커+배시, 리눅스)** `scripts/`(`install.sh` · `render.sh` · `serve.sh` ·
   `build-image.sh`) + `Dockerfile.render`(슬림 이미지 · 한글/수학 폰트 · resvg · ENTRYPOINT=`logos`)
-  + `docker-compose.yml` 서비스. 설치 → 작성 → 실행 → 렌더 4단계.
+  - `docker-compose.yml` 서비스. 설치 → 작성 → 실행 → 렌더 4단계.
 - **문서** — `README.md` · `KIT.md`(그림 작성 가이드) · `DSL.md`(언어 스펙) · `INTERFACE.md` ·
   `PLUGIN.md` · `WORKFLOW.md`.
 - **테스트 194개** (`node --test`) — 단위 · 시나리오(SENARIOS A–L · 1.md · py 재현) · 기하 불변식 ·

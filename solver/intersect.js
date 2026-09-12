@@ -16,13 +16,17 @@ export function lineIntersect(l1, l2) {
 
 /** point 팩토리를 lazy 주입 (순환 import 회피) */
 let POINT_FACTORY = null;
-export function setPointFactory(fn) { POINT_FACTORY = fn; }
-function shapePoint() { return POINT_FACTORY(); }
+export function setPointFactory(fn) {
+  POINT_FACTORY = fn;
+}
+function shapePoint() {
+  return POINT_FACTORY();
+}
 
 /** 직선과 원의 교점(2개) → Point[] (원 주변에서 솔브) */
 export function intersectLineCircle(line, circle) {
   const { point: makePoint } = shapePoint();
-  const c = circle.center();   // [cx, cy]
+  const c = circle.center(); // [cx, cy]
   const r = circle.radius();
   const { p, d } = line.pointDir();
   const dx = p[0] - c[0];
@@ -41,10 +45,7 @@ export function intersectLineCircle(line, circle) {
   const s = Math.sqrt(disc);
   const t1 = (-b + s) / (2 * a);
   const t2 = (-b - s) / (2 * a);
-  return [
-    makePoint(p[0] + t1 * d[0], p[1] + t1 * d[1]),
-    makePoint(p[0] + t2 * d[0], p[1] + t2 * d[1]),
-  ];
+  return [makePoint(p[0] + t1 * d[0], p[1] + t1 * d[1]), makePoint(p[0] + t2 * d[0], p[1] + t2 * d[1])];
 }
 
 /** 곡선 위 파라메트릭 지점 샘플평가 */
@@ -54,8 +55,10 @@ export function curvePointAt(curve, t) {
 
 /** 2D 회전 변환 (좌표용) */
 export function rotate2([x, y], a, [ox, oy] = [0, 0]) {
-  const c = Math.cos(a), s = Math.sin(a);
-  const X = x - ox, Y = y - oy;
+  const c = Math.cos(a),
+    s = Math.sin(a);
+  const X = x - ox,
+    Y = y - oy;
   return [ox + X * c - Y * s, oy + X * s + Y * c];
 }
 

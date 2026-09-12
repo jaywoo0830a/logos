@@ -60,9 +60,21 @@ const THEMES = {
 export class Scene {
   constructor(conf = {}) {
     this._conf = {
-      dim: 2, equal: false, axes: null, grid: null, polarGrid: false, sphericalGrid: false,
-      theme: 'default', camera: { position: [4, 3, 3], target: [0, 0, 0], up: [0, 0, 1] },
-      lights: [], size: [600, 600], dpi: 96, view: null, shapes: [], asserts: [], ...conf,
+      dim: 2,
+      equal: false,
+      axes: null,
+      grid: null,
+      polarGrid: false,
+      sphericalGrid: false,
+      theme: 'default',
+      camera: { position: [4, 3, 3], target: [0, 0, 0], up: [0, 0, 1] },
+      lights: [],
+      size: [600, 600],
+      dpi: 96,
+      view: null,
+      shapes: [],
+      asserts: [],
+      ...conf,
     };
     this._conf.shapes = [...this._conf.shapes];
     this._conf.lights = [...this._conf.lights];
@@ -85,37 +97,67 @@ export class Scene {
   /** REPL/로그용 한 줄 요약 — 내부 필드 덤프 대신 (A7). */
   [inspect.custom]() {
     const c = this._conf;
-    const dim = c.dim === 3 ? '3D' : (c.dim === 'auto' ? 'auto' : '2D');
+    const dim = c.dim === 3 ? '3D' : c.dim === 'auto' ? 'auto' : '2D';
     return `Scene(${dim}, shapes: ${c.shapes.length}, view: ${c.view ? JSON.stringify(c.view) : 'auto'})`;
   }
 
   // ── 좌표계/캔버스 ──────────────────────────────
-  dim(d) { return this.set({ dim: d }); }
-  auto() { return this.set({ dim: 'auto' }); }
+  dim(d) {
+    return this.set({ dim: d });
+  }
+  auto() {
+    return this.set({ dim: 'auto' });
+  }
   view(...ranges) {
     const arr = ranges.map((r) => (Array.isArray(r) ? r : [r, r]));
     return this.set({ view: arr });
   }
-  equal() { return this.set({ equal: true }); }
-  axes(cfg = true) { return this.set({ axes: cfg }); }
-  grid(cfg = true) { return this.set({ grid: cfg }); }
+  equal() {
+    return this.set({ equal: true });
+  }
+  axes(cfg = true) {
+    return this.set({ axes: cfg });
+  }
+  grid(cfg = true) {
+    return this.set({ grid: cfg });
+  }
   /** 플롯 테두리(spines). 예: .spines({ top: false, right: false }) */
-  spines(cfg = true) { return this.set({ spines: cfg }); }
-  polarGrid(cfg = true) { return this.set({ polarGrid: cfg }); }
-  sphericalGrid(cfg = true) { return this.set({ sphericalGrid: cfg }); }
-  size(w, h) { return this.set({ size: [w, h] }); }
-  dpi(d) { return this.set({ dpi: d }); }
-  theme(t) { return this.set({ theme: t }); }
+  spines(cfg = true) {
+    return this.set({ spines: cfg });
+  }
+  polarGrid(cfg = true) {
+    return this.set({ polarGrid: cfg });
+  }
+  sphericalGrid(cfg = true) {
+    return this.set({ sphericalGrid: cfg });
+  }
+  size(w, h) {
+    return this.set({ size: [w, h] });
+  }
+  dpi(d) {
+    return this.set({ dpi: d });
+  }
+  theme(t) {
+    return this.set({ theme: t });
+  }
 
   // ── 제목 / 축 라벨 / 범례 (출판 품질) ──────────
-  title(t) { return this.set({ title: t }); }
-  xlabel(t) { return this.set({ xlabel: t }); }
-  ylabel(t) { return this.set({ ylabel: t }); }
+  title(t) {
+    return this.set({ title: t });
+  }
+  xlabel(t) {
+    return this.set({ xlabel: t });
+  }
+  ylabel(t) {
+    return this.set({ ylabel: t });
+  }
   legend(v = true) {
     return this.set({ legend: v, ...(typeof v === 'string' ? { legendLoc: v } : {}) });
   }
   /** 라벨 자동 배치(텍스트 충돌 회피). */
-  layout(mode = 'auto') { return this.set({ layout: mode }); }
+  layout(mode = 'auto') {
+    return this.set({ layout: mode });
+  }
 
   // ── 3D 카메라/조명 ─────────────────────────────
   camera(c) {
@@ -135,17 +177,27 @@ export class Scene {
     }
     return this.set({ camera: cam });
   }
-  orbit(o) { return this.set({ camera: { ...this._conf.camera, ...o } }); }
-  light(l) { return this.set({ lights: [...this._conf.lights, l] }); }
+  orbit(o) {
+    return this.set({ camera: { ...this._conf.camera, ...o } });
+  }
+  light(l) {
+    return this.set({ lights: [...this._conf.lights, l] });
+  }
 
   // ── 도형 ───────────────────────────────────────
   // add: `add(a, b)` 는 물론 `add([a, b])`(배열 통째)도 평탄화해 받는다(B5).
   //   이전에는 배열이 그대로 IR 에 들어가 "그림이 안 나오는" 조용한 실패를 냈다.
-  add(...shapes) { return this.set({ shapes: [...this._conf.shapes, ...shapes.flat(1)] }); }
-  addAll(shapes) { return this.set({ shapes: [...this._conf.shapes, ...[...shapes].flat(1)] }); }
+  add(...shapes) {
+    return this.set({ shapes: [...this._conf.shapes, ...shapes.flat(1)] });
+  }
+  addAll(shapes) {
+    return this.set({ shapes: [...this._conf.shapes, ...[...shapes].flat(1)] });
+  }
 
   // ── 검증 ───────────────────────────────────────
-  assert(...rules) { return this.set({ asserts: [...this._conf.asserts, ...rules] }); }
+  assert(...rules) {
+    return this.set({ asserts: [...this._conf.asserts, ...rules] });
+  }
 
   // ── 컴파일 → Scene IR ──────────────────────────
   compile() {
@@ -160,7 +212,7 @@ export class Scene {
     let project = null;
     if (dim === 3) project = makeProjection(conf.camera);
     // 3D 면 축이 view 안에 들도록, 세계사각형을 프로젝션 후로 계산한다.
-    let effWorld = (dim === 3 && project && !conf.view) ? world3From(conf.shapes, project) : world;
+    let effWorld = dim === 3 && project && !conf.view ? world3From(conf.shapes, project) : world;
     // 제목/축 라벨을 가장자리 여백에 배치하기 위해 세계사각형을 약간 넓힌다.
     //   `areaWorld` = 눈금·격자가 실제로 그려지는 **데이터 영역**(여백 제외).
     //   제목/축라벨은 `effWorld`(여백 포함) 기준으로 배치한다.
@@ -170,7 +222,8 @@ export class Scene {
 
     let nodes = [];
     if (conf.grid) nodes = nodes.concat(gridIR(effWorld, conf.grid, themeDef, areaWorld));
-    if (conf.spines !== undefined && conf.spines !== false) nodes = nodes.concat(spineIR(effWorld, conf.spines, themeDef));
+    if (conf.spines !== undefined && conf.spines !== false)
+      nodes = nodes.concat(spineIR(effWorld, conf.spines, themeDef));
     if (conf.polarGrid) nodes = nodes.concat(polarGridIR(effWorld, themeDef));
     if (conf.sphericalGrid) nodes = nodes.concat(sphericalGridIR(effWorld, project, themeDef));
     if (conf.axes && dim === 3) nodes = nodes.concat(axes3IR(effWorld, project, themeDef, conf.axes));
@@ -178,7 +231,7 @@ export class Scene {
       // figure 라벨(scene.xlabel/ylabel)을 쓰면 축 자체 라벨은 끈다(중복 방지).
       let ac = conf.axes;
       if (conf.xlabel || conf.ylabel) {
-        const base = (ac && typeof ac === 'object') ? ac : {};
+        const base = ac && typeof ac === 'object' ? ac : {};
         ac = {
           ...base,
           x: { ...(base.x || {}), ...(conf.xlabel ? { label: false } : {}) },
@@ -199,36 +252,60 @@ export class Scene {
     if (conf.legend) nodes = nodes.concat(legendIR(effWorld, conf, themeDef));
     // 플러그인 훅('ir') — 노드 목록을 바꾸거나 덧붙일 수 있다(코어 무수정 확장).
     nodes = apply('ir', nodes, { conf, dim, theme: conf.theme, themeDef, world: effWorld });
-    nodes = nodes.map((n, i) => ({ n, i })).sort((a, b) => rank(a) - rank(b)).map((x) => x.n);
+    nodes = nodes
+      .map((n, i) => ({ n, i }))
+      .sort((a, b) => rank(a) - rank(b))
+      .map((x) => x.n);
 
     checkAsserts(conf.asserts);
 
     // 3D 씬은 좌표 왜곡을 막기 위해 정사각(equal) 렌더를 기본 활성화한다.
-    const effectiveEqual = conf.equal || (dim === 3);
+    const effectiveEqual = conf.equal || dim === 3;
 
-    return new SceneIR({ nodes, world: effWorld, dim, size: conf.size, equal: effectiveEqual, theme: conf.theme, themeDef, dpi: conf.dpi, layout: conf.layout });
+    return new SceneIR({
+      nodes,
+      world: effWorld,
+      dim,
+      size: conf.size,
+      equal: effectiveEqual,
+      theme: conf.theme,
+      themeDef,
+      dpi: conf.dpi,
+      layout: conf.layout,
+    });
   }
 }
 
 function rank({ n, i }) {
   const d = n.data || {};
-  const z = (d.z !== undefined ? d.z : (d.style && d.style.z));
+  const z = d.z !== undefined ? d.z : d.style && d.style.z;
   return (z === undefined ? 0 : z) * 1000 + i / 100000;
 }
 // ── 세계 사각형 ──────────────────────────────────
 /** 3D 씬: 투영된 도형점들의 bbox(원점 포함) + 여백으로 view 를 잡는다(mplot3d box framing 유사). */
 function world3From(shapes, project) {
-  let xmin = Infinity, xmax = -Infinity, ymin = Infinity, ymax = -Infinity;
+  let xmin = Infinity,
+    xmax = -Infinity,
+    ymin = Infinity,
+    ymax = -Infinity;
   const consider = (p) => {
     const [x, y] = project(p);
     if (!Number.isFinite(x) || !Number.isFinite(y)) return;
-    xmin = Math.min(xmin, x); xmax = Math.max(xmax, x);
-    ymin = Math.min(ymin, y); ymax = Math.max(ymax, y);
+    xmin = Math.min(xmin, x);
+    xmax = Math.max(xmax, x);
+    ymin = Math.min(ymin, y);
+    ymax = Math.max(ymax, y);
   };
   consider([0, 0, 0]);
   for (const s of shapes) for (const p of collect3(s, 1)) consider(p);
-  if (xmin === Infinity) { xmin = -5; xmax = 5; ymin = -5; ymax = 5; }
-  const sx = (xmax - xmin) || 1, sy = (ymax - ymin) || 1;
+  if (xmin === Infinity) {
+    xmin = -5;
+    xmax = 5;
+    ymin = -5;
+    ymax = 5;
+  }
+  const sx = xmax - xmin || 1,
+    sy = ymax - ymin || 1;
   const pad = Math.max(sx, sy) * 0.08;
   return { xmin: xmin - pad, xmax: xmax + pad, ymin: ymin - pad, ymax: ymax + pad };
 }
@@ -240,29 +317,49 @@ function collect3(s, _ = 1) {
   if (Array.isArray(s.coords) && s.coords.length >= 3) out.push(s.coords);
   if (s.vertices && Array.isArray(s.vertices)) for (const v of s.vertices) if (v.coords.length >= 3) out.push(v.coords);
   if (typeof s.center === 'function') {
-    const c = s.center(); if (c.length >= 3) out.push(c);
+    const c = s.center();
+    if (c.length >= 3) out.push(c);
   }
   if (typeof s.center === 'function' && typeof s.radius === 'function') {
-    const c = s.center(); const r = s.radius();
-    if (c.length >= 3) for (const dx of [-r, r]) for (const dy of [-r, r]) for (const dz of [-r, r]) out.push([c[0] + dx, c[1] + dy, c[2] + dz]);
+    const c = s.center();
+    const r = s.radius();
+    if (c.length >= 3)
+      for (const dx of [-r, r])
+        for (const dy of [-r, r]) for (const dz of [-r, r]) out.push([c[0] + dx, c[1] + dy, c[2] + dz]);
   }
   return out;
 }
 
 function resolveWorld(conf, shapes, dim = 2) {
   if (conf.view) return { xmin: conf.view[0][0], xmax: conf.view[0][1], ymin: conf.view[1][0], ymax: conf.view[1][1] };
-  let xmin = Infinity, xmax = -Infinity, ymin = Infinity, ymax = -Infinity;
+  let xmin = Infinity,
+    xmax = -Infinity,
+    ymin = Infinity,
+    ymax = -Infinity;
   for (const s of shapes) {
     for (const p of collect(s)) {
       // 3D 점은 투영 좌표를 world 로 사용하되, 원점 포함 처리
       if (p.length >= 3 && dim === 3) continue; // 3D 축이 별도로 world 를 확장
-      if (p.length >= 1) { xmin = Math.min(xmin, p[0]); xmax = Math.max(xmax, p[0]); }
-      if (p.length >= 2) { ymin = Math.min(ymin, p[1]); ymax = Math.max(ymax, p[1]); }
+      if (p.length >= 1) {
+        xmin = Math.min(xmin, p[0]);
+        xmax = Math.max(xmax, p[0]);
+      }
+      if (p.length >= 2) {
+        ymin = Math.min(ymin, p[1]);
+        ymax = Math.max(ymax, p[1]);
+      }
     }
   }
-  if (xmin === Infinity) { xmin = -5; xmax = 5; }
-  if (ymin === Infinity) { ymin = -5; ymax = 5; }
-  const xr = (xmax - xmin) || 1, yr = (ymax - ymin) || 1;
+  if (xmin === Infinity) {
+    xmin = -5;
+    xmax = 5;
+  }
+  if (ymin === Infinity) {
+    ymin = -5;
+    ymax = 5;
+  }
+  const xr = xmax - xmin || 1,
+    yr = ymax - ymin || 1;
   return { xmin: xmin - xr * 0.1, xmax: xmax + xr * 0.1, ymin: ymin - yr * 0.1, ymax: ymax + yr * 0.1 };
 }
 
@@ -272,16 +369,26 @@ function collect(s) {
   if (typeof s.bounds === 'function') {
     const b = s.bounds();
     if (b && Number.isFinite(b.xmin) && Number.isFinite(b.xmax) && Number.isFinite(b.ymin) && Number.isFinite(b.ymax)) {
-      return [[b.xmin, b.ymin], [b.xmax, b.ymax]];
+      return [
+        [b.xmin, b.ymin],
+        [b.xmax, b.ymax],
+      ];
     }
   }
   if (Array.isArray(s.coords)) return [s.coords];
   if (s.vertices && Array.isArray(s.vertices)) return s.vertices.map((v) => v.coords);
   if (typeof s.sample === 'function') return s.sample();
-  if (typeof s.pointDir === 'function') { const { p, d } = s.pointDir(); return [p, [p[0] + d[0], p[1] + d[1]]]; }
+  if (typeof s.pointDir === 'function') {
+    const { p, d } = s.pointDir();
+    return [p, [p[0] + d[0], p[1] + d[1]]];
+  }
   const ctr = readCenter(s);
   const r = readRadius(s);
-  if (ctr && r != null) return [[ctr[0] - r, ctr[1] - r], [ctr[0] + r, ctr[1] + r]];
+  if (ctr && r != null)
+    return [
+      [ctr[0] - r, ctr[1] - r],
+      [ctr[0] + r, ctr[1] + r],
+    ];
   return [];
 }
 
@@ -302,10 +409,11 @@ function readRadius(s) {
 /** 제목·축라벨을 위한 가장자리 여백 확장 */
 function withMargins(world, conf) {
   const w = { xmin: world.xmin, xmax: world.xmax, ymin: world.ymin, ymax: world.ymax };
-  const sx = w.xmax - w.xmin, sy = w.ymax - w.ymin;
-  if (conf.title) w.ymax += sy * 0.10;
-  if (conf.xlabel) w.ymin -= sy * 0.10;
-  if (conf.ylabel) w.xmin -= sx * 0.10;
+  const sx = w.xmax - w.xmin,
+    sy = w.ymax - w.ymin;
+  if (conf.title) w.ymax += sy * 0.1;
+  if (conf.xlabel) w.ymin -= sy * 0.1;
+  if (conf.ylabel) w.xmin -= sx * 0.1;
   return w;
 }
 
@@ -314,13 +422,22 @@ function decorateIR(world, conf, theme) {
   const c = theme.labelColor || '#333';
   const cx = (world.xmin + world.xmax) / 2;
   const cy = (world.ymin + world.ymax) / 2;
-  const sx = world.xmax - world.xmin, sy = world.ymax - world.ymin;
+  const sx = world.xmax - world.xmin,
+    sy = world.ymax - world.ymin;
   const mk = (t, x, y, extra) => {
     if (t == null) return;
-    out.push(node('text', {
-      x, y, text: renderText(t), math: typeof t?.toLatex === 'function',
-      italic: false, color: c, z: 60, ...extra,
-    }));
+    out.push(
+      node('text', {
+        x,
+        y,
+        text: renderText(t),
+        math: typeof t?.toLatex === 'function',
+        italic: false,
+        color: c,
+        z: 60,
+        ...extra,
+      }),
+    );
   };
   // 여백(10%)의 중앙에 배치
   mk(conf.title, cx, world.ymax - sy * 0.05, { anchor: 'middle', font: 16, bold: true });
@@ -335,17 +452,21 @@ function legendIR(world, conf, theme) {
     const lc = s && s._conf;
     if (!lc || lc.label == null) continue;
     entries.push({
-      text: renderText(lc.label), math: typeof lc.label?.toLatex === 'function',
-      color: lc.color || lc.fill || theme.strokeDefault || theme.axisColor || '#333', dash: lc.dash,
+      text: renderText(lc.label),
+      math: typeof lc.label?.toLatex === 'function',
+      color: lc.color || lc.fill || theme.strokeDefault || theme.axisColor || '#333',
+      dash: lc.dash,
     });
   }
   if (!entries.length) return [];
-  const spanX = world.xmax - world.xmin, spanY = world.ymax - world.ymin;
+  const spanX = world.xmax - world.xmin,
+    spanY = world.ymax - world.ymin;
   const loc = conf.legendLoc || 'upper left';
-  const padX = spanX * 0.03, padY = spanY * 0.03;
-  const sw = spanX * 0.05;                 // swatch 길이
+  const padX = spanX * 0.03,
+    padY = spanY * 0.03;
+  const sw = spanX * 0.05; // swatch 길이
   const gap = spanX * 0.015;
-  const textW = spanX * 0.30;
+  const textW = spanX * 0.3;
   const lineH = spanY * 0.075;
   const boxW = padX * 2 + sw + gap + textW;
   const boxH = padY * 2 + lineH * entries.length;
@@ -354,28 +475,64 @@ function legendIR(world, conf, theme) {
   let top = world.ymax - spanY * 0.02;
   if (/lower/.test(loc)) top = world.ymin + spanY * 0.02 + boxH;
   const bot = top - boxH;
-  const out = [node('polygon', {
-    pts: [[bx, bot], [bx + boxW, bot], [bx + boxW, top], [bx, top]], closed: true,
-    fill: '#ffffff', opacity: 0.86, color: theme.gridColor || '#cccccc', stroke: 0.8, z: 70,
-  })];
+  const out = [
+    node('polygon', {
+      pts: [
+        [bx, bot],
+        [bx + boxW, bot],
+        [bx + boxW, top],
+        [bx, top],
+      ],
+      closed: true,
+      fill: '#ffffff',
+      opacity: 0.86,
+      color: theme.gridColor || '#cccccc',
+      stroke: 0.8,
+      z: 70,
+    }),
+  ];
   const labelC = theme.labelColor || '#333';
   entries.forEach((e, i) => {
     const yc = top - padY - lineH * (i + 0.5);
     const x0 = bx + padX;
-    out.push(node('path', { ops: [{ op: 'M', x: x0, y: yc }, { op: 'L', x: x0 + sw, y: yc }], color: e.color, stroke: 2.4, dash: e.dash, z: 71 }));
-    out.push(node('text', { x: x0 + sw + gap, y: yc, dyPx: 4, text: e.text, math: e.math, anchor: 'start', font: 11.5, italic: false, color: labelC, z: 71 }));
+    out.push(
+      node('path', {
+        ops: [
+          { op: 'M', x: x0, y: yc },
+          { op: 'L', x: x0 + sw, y: yc },
+        ],
+        color: e.color,
+        stroke: 2.4,
+        dash: e.dash,
+        z: 71,
+      }),
+    );
+    out.push(
+      node('text', {
+        x: x0 + sw + gap,
+        y: yc,
+        dyPx: 4,
+        text: e.text,
+        math: e.math,
+        anchor: 'start',
+        font: 11.5,
+        italic: false,
+        color: labelC,
+        z: 71,
+      }),
+    );
   });
   return out;
 }
 
 // ── 배경 IR ──────────────────────────────────────
 function gridIR(world, cfg, theme, area = world) {
-  const o = (typeof cfg === 'object') ? cfg : {};
-  const step = o.step ? o.step : (typeof cfg === 'number' ? cfg : 1);
+  const o = typeof cfg === 'object' ? cfg : {};
+  const step = o.step ? o.step : typeof cfg === 'number' ? cfg : 1;
   const color = o.color || theme.gridColor || '#cbd5e1';
   const majorC = theme.gridMajor || o.major || color;
   const minor = o.minor || null;
-  const alpha = o.alpha != null ? o.alpha : 1;          // grid alpha (matplotlib alpha=0.15 대응)
+  const alpha = o.alpha != null ? o.alpha : 1; // grid alpha (matplotlib alpha=0.15 대응)
   const lwMajor = o.width != null ? o.width : 0.6;
   const lwMinor = o.minorWidth != null ? o.minorWidth : lwMajor * 0.7;
   const out = [];
@@ -385,20 +542,56 @@ function gridIR(world, cfg, theme, area = world) {
   if (minor) {
     const mcol = o.minorColor || theme.gridColor || color;
     for (let x = Math.floor(area.xmin / minor) * minor; x <= area.xmax + 1e-9; x += minor) {
-      out.push(node('path', { ops: [{ op: 'M', x, y: area.ymin }, { op: 'L', x, y: area.ymax }], z: -11, style: { color: mcol, stroke: lwMinor, opacity: alpha } }));
+      out.push(
+        node('path', {
+          ops: [
+            { op: 'M', x, y: area.ymin },
+            { op: 'L', x, y: area.ymax },
+          ],
+          z: -11,
+          style: { color: mcol, stroke: lwMinor, opacity: alpha },
+        }),
+      );
     }
     for (let y = Math.floor(area.ymin / minor) * minor; y <= area.ymax + 1e-9; y += minor) {
-      out.push(node('path', { ops: [{ op: 'M', x: area.xmin, y }, { op: 'L', x: area.xmax, y }], z: -11, style: { color: mcol, stroke: lwMinor, opacity: alpha } }));
+      out.push(
+        node('path', {
+          ops: [
+            { op: 'M', x: area.xmin, y },
+            { op: 'L', x: area.xmax, y },
+          ],
+          z: -11,
+          style: { color: mcol, stroke: lwMinor, opacity: alpha },
+        }),
+      );
     }
   }
   // 메이저 그리드 (step 배수, 원점 축은 생략)
   for (let x = Math.ceil(area.xmin / step) * step; x <= area.xmax + 1e-9; x += step) {
     if (Math.abs(x) < step * 1e-6) continue;
-    out.push(node('path', { ops: [{ op: 'M', x, y: area.ymin }, { op: 'L', x, y: area.ymax }], z: -10, style: { color: majorC, stroke: lwMajor, opacity: alpha } }));
+    out.push(
+      node('path', {
+        ops: [
+          { op: 'M', x, y: area.ymin },
+          { op: 'L', x, y: area.ymax },
+        ],
+        z: -10,
+        style: { color: majorC, stroke: lwMajor, opacity: alpha },
+      }),
+    );
   }
   for (let y = Math.ceil(area.ymin / step) * step; y <= area.ymax + 1e-9; y += step) {
     if (Math.abs(y) < step * 1e-6) continue;
-    out.push(node('path', { ops: [{ op: 'M', x: area.xmin, y }, { op: 'L', x: area.xmax, y }], z: -10, style: { color: majorC, stroke: lwMajor, opacity: alpha } }));
+    out.push(
+      node('path', {
+        ops: [
+          { op: 'M', x: area.xmin, y },
+          { op: 'L', x: area.xmax, y },
+        ],
+        z: -10,
+        style: { color: majorC, stroke: lwMajor, opacity: alpha },
+      }),
+    );
   }
   return out;
 }
@@ -406,11 +599,19 @@ function gridIR(world, cfg, theme, area = world) {
 /** 플롯 테두리(spines) — 선택한 변만 그린다. */
 function spineIR(world, cfg, theme) {
   const c = theme.axisColor || '#333';
-  const on = (k) => (cfg === true ? true : (cfg && cfg[k] !== undefined ? !!cfg[k] : false));
-  const w = (cfg && cfg.width != null) ? cfg.width : 1.2;
+  const on = (k) => (cfg === true ? true : cfg && cfg[k] !== undefined ? !!cfg[k] : false);
+  const w = cfg && cfg.width != null ? cfg.width : 1.2;
   const col = (cfg && cfg.color) || c;
   const out = [];
-  const seg = (x1, y1, x2, y2) => node('path', { ops: [{ op: 'M', x: x1, y: y1 }, { op: 'L', x: x2, y: y2 }], z: -7, style: { color: col, stroke: w } });
+  const seg = (x1, y1, x2, y2) =>
+    node('path', {
+      ops: [
+        { op: 'M', x: x1, y: y1 },
+        { op: 'L', x: x2, y: y2 },
+      ],
+      z: -7,
+      style: { color: col, stroke: w },
+    });
   if (on('top')) out.push(seg(world.xmin, world.ymax, world.xmax, world.ymax));
   if (on('right')) out.push(seg(world.xmax, world.ymin, world.xmax, world.ymax));
   if (on('bottom')) out.push(seg(world.xmin, world.ymin, world.xmax, world.ymin));
@@ -428,8 +629,11 @@ function polarGridIR(world, theme) {
   const axisC = theme.axisColor || '#34495e';
   const tcol = theme.tickColor || axisC;
   // 원점에서 각 변까지의 최소 거리 = 확실히 보이는 반지름.
-  const fitR = Math.min(Math.max(Math.abs(world.xmin), Math.abs(world.xmax)), Math.max(Math.abs(world.ymin), Math.abs(world.ymax)));
-  const maxR = fitR * 0.9;         // 그리드가 화면 안에 들어오도록
+  const fitR = Math.min(
+    Math.max(Math.abs(world.xmin), Math.abs(world.xmax)),
+    Math.max(Math.abs(world.ymin), Math.abs(world.ymax)),
+  );
+  const maxR = fitR * 0.9; // 그리드가 화면 안에 들어오도록
   const step = maxR / 4;
   const out = [];
   const pad = maxR * 0.06;
@@ -441,19 +645,58 @@ function polarGridIR(world, theme) {
   // 방사선(각도선) + 각도 숫자
   for (let i = 0; i < 12; i++) {
     const a = (Math.PI * i) / 6;
-    out.push(node('path', { ops: [{ op: 'M', x: 0, y: 0 }, { op: 'L', x: Math.cos(a) * maxR, y: Math.sin(a) * maxR }], z: -10, style: { color, stroke: 0.6 } }));
+    out.push(
+      node('path', {
+        ops: [
+          { op: 'M', x: 0, y: 0 },
+          { op: 'L', x: Math.cos(a) * maxR, y: Math.sin(a) * maxR },
+        ],
+        z: -10,
+        style: { color, stroke: 0.6 },
+      }),
+    );
   }
   // 각도 라벨 — 0 과 π 만. 화면 오프셋은 px(dyPx)로.
   for (let i = 0; i < 12; i++) {
     const a = (Math.PI * i) / 6;
     if (i % 6 !== 0) continue;
     const txt = i === 0 ? '0' : 'π';
-    const lr = maxR * 1.06;   // fitR 안쪽
-    out.push(node('text', { x: Math.cos(a) * lr, y: Math.sin(a) * lr, dxPx: 0, dyPx: 4, text: txt, anchor: 'middle', font: 11, color: tcol, z: -9 }));
+    const lr = maxR * 1.06; // fitR 안쪽
+    out.push(
+      node('text', {
+        x: Math.cos(a) * lr,
+        y: Math.sin(a) * lr,
+        dxPx: 0,
+        dyPx: 4,
+        text: txt,
+        anchor: 'middle',
+        font: 11,
+        color: tcol,
+        z: -9,
+      }),
+    );
   }
   // 축 (x, y) — 원점을 지나는 주요 축 강조
-  out.push(node('path', { ops: [{ op: 'M', x: -maxR, y: 0 }, { op: 'L', x: maxR, y: 0 }], z: -5, style: { color: axisC, stroke: 1 } }));
-  out.push(node('path', { ops: [{ op: 'M', x: 0, y: -maxR }, { op: 'L', x: 0, y: maxR }], z: -5, style: { color: axisC, stroke: 1 } }));
+  out.push(
+    node('path', {
+      ops: [
+        { op: 'M', x: -maxR, y: 0 },
+        { op: 'L', x: maxR, y: 0 },
+      ],
+      z: -5,
+      style: { color: axisC, stroke: 1 },
+    }),
+  );
+  out.push(
+    node('path', {
+      ops: [
+        { op: 'M', x: 0, y: -maxR },
+        { op: 'L', x: 0, y: maxR },
+      ],
+      z: -5,
+      style: { color: axisC, stroke: 1 },
+    }),
+  );
   return out;
 }
 
@@ -462,20 +705,31 @@ function sphericalGridIR(world, project, theme) {
   const color = theme.gridColor || '#cbd5e1';
   const R = 1.6;
   const out = [];
-  const ring = (pts) => node('path', { ops: pts.map((p, i) => ({ op: i ? 'L' : 'M', x: p[0], y: p[1] })), z: -10, style: { color, stroke: 0.5 } });
+  const ring = (pts) =>
+    node('path', {
+      ops: pts.map((p, i) => ({ op: i ? 'L' : 'M', x: p[0], y: p[1] })),
+      z: -10,
+      style: { color, stroke: 0.5 },
+    });
   const projectPts = (pts) => pts.map((p) => project(p));
   // 위선 (latitude)
   for (let k = 1; k < 8; k++) {
     const phi = (Math.PI * k) / 8;
     const pts = [];
-    for (let i = 0; i <= 48; i++) { const th = (2 * Math.PI * i) / 48; pts.push([R * Math.sin(phi) * Math.cos(th), R * Math.sin(phi) * Math.sin(th), R * Math.cos(phi)]); }
+    for (let i = 0; i <= 48; i++) {
+      const th = (2 * Math.PI * i) / 48;
+      pts.push([R * Math.sin(phi) * Math.cos(th), R * Math.sin(phi) * Math.sin(th), R * Math.cos(phi)]);
+    }
     out.push(ring(projectPts(pts)));
   }
   // 경선 (longitude)
   for (let k = 0; k < 12; k++) {
     const th = (Math.PI * k) / 6;
     const pts = [];
-    for (let i = 0; i <= 48; i++) { const phi = (2 * Math.PI * i) / 48; pts.push([R * Math.sin(phi) * Math.cos(th), R * Math.sin(phi) * Math.sin(th), R * Math.cos(phi)]); }
+    for (let i = 0; i <= 48; i++) {
+      const phi = (2 * Math.PI * i) / 48;
+      pts.push([R * Math.sin(phi) * Math.cos(th), R * Math.sin(phi) * Math.sin(th), R * Math.cos(phi)]);
+    }
     out.push(ring(projectPts(pts)));
   }
   return out;
@@ -494,19 +748,35 @@ function axesIR(world, cfg, theme, area = world) {
   //   패널 밖(축 라벨 자리)으로 삐져나온다.
   //   이렇게 나누면 눈금의 **화면 길이**가 데이터 범위와 무관하게
   //   캔버스 크기의 2.4%(= 0.012 × 2)로 고정돼 matplotlib 눈금처럼 보인다.
-  const tickHalfX = (world.ymax - world.ymin) * 0.012;   // x축 눈금(세로 선분) 반길이
-  const tickHalfY = (world.xmax - world.xmin) * 0.012;   // y축 눈금(가로 선분) 반길이
+  const tickHalfX = (world.ymax - world.ymin) * 0.012; // x축 눈금(세로 선분) 반길이
+  const tickHalfY = (world.xmax - world.xmin) * 0.012; // y축 눈금(가로 선분) 반길이
 
-  const xLabel = (cfg === true || !cfg.x || cfg.x.label === undefined || cfg.x.label === true) ? (cfg && cfg.x && typeof cfg.x.label === 'string' ? cfg.x.label : 'x') : null;
-  const yLabel = (cfg === true || !cfg.y || cfg.y.label === undefined || cfg.y.label === true) ? (cfg && cfg.y && typeof cfg.y.label === 'string' ? cfg.y.label : 'y') : null;
+  const xLabel =
+    cfg === true || !cfg.x || cfg.x.label === undefined || cfg.x.label === true
+      ? cfg && cfg.x && typeof cfg.x.label === 'string'
+        ? cfg.x.label
+        : 'x'
+      : null;
+  const yLabel =
+    cfg === true || !cfg.y || cfg.y.label === undefined || cfg.y.label === true
+      ? cfg && cfg.y && typeof cfg.y.label === 'string'
+        ? cfg.y.label
+        : 'y'
+      : null;
   // 눈금 간격·눈금 위치는 **데이터 영역(area)** 기준 — 여백까지 넣으면 눈금 라벨이
   // 제목/축라벨 자리(여백)에 찍혀 제목과 겹친다.
   const xStep = niceStep(area.xmin, area.xmax, cfg && cfg.x && cfg.x.tick ? cfg.x.tick : undefined);
   const yStep = niceStep(area.ymin, area.ymax, cfg && cfg.y && cfg.y.tick ? cfg.y.tick : undefined);
-  const showTick = (cfg === true || cfg === undefined || cfg === 1 || cfg.x === undefined || cfg.x.ticks === undefined) ? true : !!cfg.x.ticks;
+  const showTick =
+    cfg === true || cfg === undefined || cfg === 1 || cfg.x === undefined || cfg.x.ticks === undefined
+      ? true
+      : !!cfg.x.ticks;
   // y 눈금도 개별로 끌 수 있다 ← matplotlib `ax.set_yticks([])` 대응
   //   `.axes({ x: { label: 'Projected coordinate' }, y: { ticks: false } })`
-  const showYTick = (cfg === true || cfg === undefined || cfg === 1 || cfg.y === undefined || cfg.y.ticks === undefined) ? true : !!cfg.y.ticks;
+  const showYTick =
+    cfg === true || cfg === undefined || cfg === 1 || cfg.y === undefined || cfg.y.ticks === undefined
+      ? true
+      : !!cfg.y.ticks;
   // 눈금 라벨 포매터 — 축별 자릿수/포맷 재정의 (axes({ y: { decimals: 3 } }))
   const xf = tickFmt(cfg && cfg.x, xStep);
   const yf = tickFmt(cfg && cfg.y, yStep);
@@ -514,40 +784,145 @@ function axesIR(world, cfg, theme, area = world) {
   // P1-1: 축의 위치를 world 로 정하되, 라벨이 화면 밖으로 나가지 않도록 가장자리에서 안쪽으로 inset.
   const marginY = spanY * 0.06;
   const marginX = spanX * 0.06;
-  let axisY = (area.ymin <= 0 && 0 <= area.ymax) ? 0 : (area.ymin + marginY);
+  let axisY = area.ymin <= 0 && 0 <= area.ymax ? 0 : area.ymin + marginY;
   axisY = Math.min(Math.max(axisY, area.ymin + marginY), area.ymax - marginY);
-  let axisX = (area.xmin <= 0 && 0 <= area.xmax) ? 0 : (area.xmin + marginX);
+  let axisX = area.xmin <= 0 && 0 <= area.xmax ? 0 : area.xmin + marginX;
   axisX = Math.min(Math.max(axisX, area.xmin + marginX), area.xmax - marginX);
 
   // ── x 축 (y = axisY 인 가로선) ──
-  out.push(node('path', { ops: [{ op: 'M', x: area.xmin, y: axisY }, { op: 'L', x: area.xmax, y: axisY }], z: -6, style: { color: c, stroke: 1.1 } }));
+  out.push(
+    node('path', {
+      ops: [
+        { op: 'M', x: area.xmin, y: axisY },
+        { op: 'L', x: area.xmax, y: axisY },
+      ],
+      z: -6,
+      style: { color: c, stroke: 1.1 },
+    }),
+  );
   if (showTick) {
     for (let x = Math.ceil(area.xmin / xStep) * xStep; x <= area.xmax + 1e-9; x += xStep) {
       if (x <= area.xmin + spanX * 0.01 || x >= area.xmax - spanX * 0.01) continue; // 경계 라벨 제외(클립 방지)
       const nearOrigin = Math.abs(x - axisX) < xStep * 1e-6;
-      out.push(node('path', { ops: [{ op: 'M', x, y: axisY - tickHalfX }, { op: 'L', x, y: axisY + tickHalfX }], z: -5, style: { color: tcol, stroke: 1 } }));
+      out.push(
+        node('path', {
+          ops: [
+            { op: 'M', x, y: axisY - tickHalfX },
+            { op: 'L', x, y: axisY + tickHalfX },
+          ],
+          z: -5,
+          style: { color: tcol, stroke: 1 },
+        }),
+      );
       // 화면 오프셋은 px(dyPx)로 — world 단위 오프셋 금지(증거 A 재발 방지).
-      if (!nearOrigin) out.push(node('text', { x, y: axisY, dxPx: 0, dyPx: 16, text: xf(x), anchor: 'middle', font: 12, italic: false, color: tcol, z: -5 }));
+      if (!nearOrigin)
+        out.push(
+          node('text', {
+            x,
+            y: axisY,
+            dxPx: 0,
+            dyPx: 16,
+            text: xf(x),
+            anchor: 'middle',
+            font: 12,
+            italic: false,
+            color: tcol,
+            z: -5,
+          }),
+        );
     }
   }
-  if (xLabel) out.push(node('text', { x: area.xmax, y: axisY, dxPx: 0, dyPx: 18, text: String(xLabel), anchor: 'end', font: 13, italic: true, color: c, z: -4 }));
+  if (xLabel)
+    out.push(
+      node('text', {
+        x: area.xmax,
+        y: axisY,
+        dxPx: 0,
+        dyPx: 18,
+        text: String(xLabel),
+        anchor: 'end',
+        font: 13,
+        italic: true,
+        color: c,
+        z: -4,
+      }),
+    );
 
   // ── y 축 (x = axisX 인 세로선) ──
-  out.push(node('path', { ops: [{ op: 'M', x: axisX, y: area.ymin }, { op: 'L', x: axisX, y: area.ymax }], z: -6, style: { color: c, stroke: 1.1 } }));
+  out.push(
+    node('path', {
+      ops: [
+        { op: 'M', x: axisX, y: area.ymin },
+        { op: 'L', x: axisX, y: area.ymax },
+      ],
+      z: -6,
+      style: { color: c, stroke: 1.1 },
+    }),
+  );
   if (showYTick) {
     for (let y = Math.ceil(area.ymin / yStep) * yStep; y <= area.ymax + 1e-9; y += yStep) {
       if (y <= area.ymin + spanY * 0.01 || y >= area.ymax - spanY * 0.01) continue; // 경계 라벨 제외(클립 방지)
       const nearOrigin = Math.abs(y - axisY) < yStep * 1e-6;
-      out.push(node('path', { ops: [{ op: 'M', x: axisX - tickHalfY, y }, { op: 'L', x: axisX + tickHalfY, y }], z: -5, style: { color: tcol, stroke: 1 } }));
-      if (!nearOrigin) out.push(node('text', { x: axisX, y, dxPx: -8, dyPx: 4, text: yf(y), anchor: 'end', font: 12, italic: false, color: tcol, z: -5 }));
+      out.push(
+        node('path', {
+          ops: [
+            { op: 'M', x: axisX - tickHalfY, y },
+            { op: 'L', x: axisX + tickHalfY, y },
+          ],
+          z: -5,
+          style: { color: tcol, stroke: 1 },
+        }),
+      );
+      if (!nearOrigin)
+        out.push(
+          node('text', {
+            x: axisX,
+            y,
+            dxPx: -8,
+            dyPx: 4,
+            text: yf(y),
+            anchor: 'end',
+            font: 12,
+            italic: false,
+            color: tcol,
+            z: -5,
+          }),
+        );
     }
   }
   // 축 라벨은 데이터 영역의 끝(여백과의 경계)에 붙인다 — 여백 안쪽이면 제목과 겹친다.
-  if (yLabel) out.push(node('text', { x: axisX, y: area.ymax, dxPx: -6, dyPx: 0, text: String(yLabel), anchor: 'end', font: 13, italic: true, color: c, z: -4 }));
+  if (yLabel)
+    out.push(
+      node('text', {
+        x: axisX,
+        y: area.ymax,
+        dxPx: -6,
+        dyPx: 0,
+        text: String(yLabel),
+        anchor: 'end',
+        font: 13,
+        italic: true,
+        color: c,
+        z: -4,
+      }),
+    );
 
   // 원점 "0" — 두 축이 모두 view 안일 때만.
-  if ((area.ymin <= 0 && 0 <= area.ymax) && (area.xmin <= 0 && 0 <= area.xmax) && showTick && showYTick) {
-    out.push(node('text', { x: axisX, y: axisY, dxPx: -6, dyPx: 16, text: '0', anchor: 'end', font: 12, italic: false, color: tcol, z: -4 }));
+  if (area.ymin <= 0 && 0 <= area.ymax && area.xmin <= 0 && 0 <= area.xmax && showTick && showYTick) {
+    out.push(
+      node('text', {
+        x: axisX,
+        y: axisY,
+        dxPx: -6,
+        dyPx: 16,
+        text: '0',
+        anchor: 'end',
+        font: 12,
+        italic: false,
+        color: tcol,
+        z: -4,
+      }),
+    );
   }
   return out;
 }
@@ -558,38 +933,73 @@ function axes3IR(world, project, theme, cfg) {
   const out = [];
   if (!project) return out;
   // 축 길이: 세계(원점중심 project) 반경의 0.8 (여백 남겨 모서리 안 닿게)
-  const radius = Math.max((world.xmax - world.xmin), (world.ymax - world.ymin)) / 2;
+  const radius = Math.max(world.xmax - world.xmin, world.ymax - world.ymin) / 2;
   const R = radius * 0.8;
   const axis = {
-    x: { color: '#d62728' }, y: { color: '#2ca02c' }, z: { color: '#1f77b4' },
+    x: { color: '#d62728' },
+    y: { color: '#2ca02c' },
+    z: { color: '#1f77b4' },
   };
   const step = niceStep(-R, R, cfg && cfg.tick ? cfg.tick : undefined);
 
   for (const [name, a] of Object.entries(axis)) {
     const idx = 'xyz'.indexOf(name);
-    const neg = [0, 0, 0], pos = [0, 0, 0];
-    neg[idx] = -R; pos[idx] = R;
-    const pn = project(neg), pp = project(pos);
-    out.push(node('path', { ops: [{ op: 'M', x: pn[0], y: pn[1] }, { op: 'L', x: pp[0], y: pp[1] }], z: -6, style: { color: a.color, stroke: 1.4 } }));
+    const neg = [0, 0, 0],
+      pos = [0, 0, 0];
+    neg[idx] = -R;
+    pos[idx] = R;
+    const pn = project(neg),
+      pp = project(pos);
+    out.push(
+      node('path', {
+        ops: [
+          { op: 'M', x: pn[0], y: pn[1] },
+          { op: 'L', x: pp[0], y: pp[1] },
+        ],
+        z: -6,
+        style: { color: a.color, stroke: 1.4 },
+      }),
+    );
     // 축 방향 단위 벡터(오프셋 계산)
     const L = Math.hypot(pp[0] - pn[0], pp[1] - pn[1]) || 1;
-    const ux = (pp[0] - pn[0]) / L, uy = (pp[1] - pn[1]) / L;
+    const ux = (pp[0] - pn[0]) / L,
+      uy = (pp[1] - pn[1]) / L;
     // 양(+)축에만 눈금 (원점 지나며, 오프셋은 world 단위로 소량)
     for (let t = 0; t <= R + 1e-9; t += step) {
       if (Math.abs(t) < step * 1e-6) continue;
-      const pt = [0, 0, 0]; pt[idx] = t;
+      const pt = [0, 0, 0];
+      pt[idx] = t;
       const p = project(pt);
-      out.push(node('text', { x: p[0] + ux * 0.12, y: p[1] - uy * 0.12, text: fmtTick(t, step), font: 10, color: a.color, z: -5 }));
+      out.push(
+        node('text', {
+          x: p[0] + ux * 0.12,
+          y: p[1] - uy * 0.12,
+          text: fmtTick(t, step),
+          font: 10,
+          color: a.color,
+          z: -5,
+        }),
+      );
     }
     // 축 라벨은 끝점 살짝 위 (world 단위)
-    out.push(node('text', { x: pp[0] + ux * 0.16, y: pp[1] - uy * 0.16, text: name, font: 13, italic: true, color: a.color, z: -4 }));
+    out.push(
+      node('text', {
+        x: pp[0] + ux * 0.16,
+        y: pp[1] - uy * 0.16,
+        text: name,
+        font: 13,
+        italic: true,
+        color: a.color,
+        z: -4,
+      }),
+    );
   }
   return out;
 }
 
 function niceStep(min, max, fixed) {
   if (fixed && fixed > 0) return fixed;
-  const span = (max - min) || 1;
+  const span = max - min || 1;
   const raw = span / 10;
   const pow = Math.pow(10, Math.floor(Math.log10(raw)));
   const frac = raw / pow;
@@ -625,7 +1035,7 @@ function fmtTick(v, step, decimals) {
   if (v === 0) return '0';
   const a = Math.abs(v);
   if (a >= 1e6 || (a > 0 && a < 1e-3)) return v.toExponential(1);
-  const d = Number.isFinite(decimals) ? decimals : (step && step > 0 ? decimalsFor(step) : 2);
+  const d = Number.isFinite(decimals) ? decimals : step && step > 0 ? decimalsFor(step) : 2;
   const r = Number(v.toFixed(d));
   return String(r);
 }
@@ -670,7 +1080,8 @@ function checkAsserts(rules) {
     if (r.kind === 'parallel') {
       const [a, b] = r.items;
       if (a && b && typeof a.pointDir === 'function' && typeof b.pointDir === 'function') {
-        const d1 = a.pointDir().d, d2 = b.pointDir().d;
+        const d1 = a.pointDir().d,
+          d2 = b.pointDir().d;
         if (Math.abs(d1[0] * d2[1] - d1[1] * d2[0]) > 1e-9) throw new Error('Assertion failed: parallel');
       }
     }

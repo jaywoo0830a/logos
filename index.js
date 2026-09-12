@@ -18,7 +18,17 @@ import { rectangle, Rectangle } from './shapes/rectangle.js';
 import { region, Region } from './shapes/region.js';
 import { vectorField, VectorField } from './shapes/vectorfield.js';
 import { sphere, plane, Sphere, Plane } from './shapes/threeD.js';
-import { cylinder, cone, surface, polyhedron, vectorField3, Cylinder, Cone, Surface, Polyhedron } from './shapes/threeD2.js';
+import {
+  cylinder,
+  cone,
+  surface,
+  polyhedron,
+  vectorField3,
+  Cylinder,
+  Cone,
+  Surface,
+  Polyhedron,
+} from './shapes/threeD2.js';
 import { curve3, arrow3, surfaceParam, axes3, quadrics, circle3, frame3, Curve3 } from './shapes/threeD3.js';
 import { cmapColor, shade } from './shapes/threeD3.js';
 import { mat, vec, Matrix } from './linalg.js';
@@ -41,8 +51,13 @@ import { katexRender, katexify } from './backend/katex.js';
 //   `use(p)` 한 번이면 새 빌더·체이닝 메서드·IR 노드·테마·훅이 **코어 수정 없이** 붙는다.
 //   `plugins` Proxy 로 등록된 이름을 즉석에서 부를 수도 있다(`plugins.ray(O, P)`).
 import {
-  use, plugins, PluginError, unknownFeature, lookupFactory,
-  registerNamespaceObject, registerTarget,
+  use,
+  plugins,
+  PluginError,
+  unknownFeature,
+  lookupFactory,
+  registerNamespaceObject,
+  registerTarget,
 } from './core/plugin.js';
 
 export { use, plugins, PluginError };
@@ -52,17 +67,83 @@ export const tau = TAU;
 export const pi = Math.PI;
 export const e = Math.E;
 
-export { Scene, scene, panels, node, point, toPoint, vector, line, segment, curve, circle, ellipse,
-         parabola, hyperbola, polygon, triangle, quad, regular, square, rectangle, region,
-         vectorField, vectorField3, sphere, plane, cylinder, cone, surface, polyhedron,
-         curve3, arrow3, surfaceParam, axes3, quadrics, circle3, frame3,
-         cmapColor, shade, mat, vec, Matrix, cplx, Complex,
-         transform, annotate, tex, Sym, typography, xy, range, view };
+export {
+  Scene,
+  scene,
+  panels,
+  node,
+  point,
+  toPoint,
+  vector,
+  line,
+  segment,
+  curve,
+  circle,
+  ellipse,
+  parabola,
+  hyperbola,
+  polygon,
+  triangle,
+  quad,
+  regular,
+  square,
+  rectangle,
+  region,
+  vectorField,
+  vectorField3,
+  sphere,
+  plane,
+  cylinder,
+  cone,
+  surface,
+  polyhedron,
+  curve3,
+  arrow3,
+  surfaceParam,
+  axes3,
+  quadrics,
+  circle3,
+  frame3,
+  cmapColor,
+  shade,
+  mat,
+  vec,
+  Matrix,
+  cplx,
+  Complex,
+  transform,
+  annotate,
+  tex,
+  Sym,
+  typography,
+  xy,
+  range,
+  view,
+};
 
 // 도형 클래스 — 플러그인 대상/`instanceof` 검사용 (`api.extend(Point, …)`)
-export { Point, Vector, Line, Segment, Curve, Circle, Ellipse, Parabola, Hyperbola,
-         Polygon, Rectangle, Region, VectorField, Sphere, Plane,
-         Cylinder, Cone, Surface, Polyhedron, Curve3 };
+export {
+  Point,
+  Vector,
+  Line,
+  Segment,
+  Curve,
+  Circle,
+  Ellipse,
+  Parabola,
+  Hyperbola,
+  Polygon,
+  Rectangle,
+  Region,
+  VectorField,
+  Sphere,
+  Plane,
+  Cylinder,
+  Cone,
+  Surface,
+  Polyhedron,
+  Curve3,
+};
 // 플러그인이 새 도형을 정의할 때 필요한 기반 클래스
 export { Drawable };
 // 라벨 값(Sym/문자열)을 그릴 문자열로 — 커스텀 도형의 toIR 에서 코어와 동일하게 사용
@@ -82,7 +163,9 @@ export const adapt = {
   katex: { katexRender, katexify },
 };
 
-function scene() { return new Scene(); }
+function scene() {
+  return new Scene();
+}
 scene.cartesian = () => new Scene();
 
 // ── 미구현 도형 (사용 시 명확한 안내) ──────────────
@@ -112,14 +195,18 @@ function dispatch(name, args) {
  * 등록 전에는 호출 시 PluginError(등록 방법 안내), 등록 후에는 즉시 동작.
  */
 function ns(name, hint) {
-  const missing = (k) => () => { throw unknownFeature(`${name}.${k}`, hint || ''); };
+  const missing = (k) => () => {
+    throw unknownFeature(`${name}.${k}`, hint || '');
+  };
   return new Proxy(function () {}, {
     get: (_, k) => {
       if (k === '$$') return true;
       const hit = lookupFactory(`${name}.${k}`);
       return hit ? (...a) => lookupFactory(`${name}.${k}`)(...a) : missing(k);
     },
-    apply: () => { throw unknownFeature(name, hint || ''); },
+    apply: () => {
+      throw unknownFeature(name, hint || '');
+    },
   });
 }
 
@@ -135,29 +222,112 @@ export const pyramid = ns('pyramid', TODO_HINT.pyramid);
 //   `api.static('point', 'hex', fn)` / `api.static('annotate', …)` 가 동작하도록
 //   팩토리 함수들을 네임스페이스로 등록한다(코어 → 플러그인 방향의 확장 지점).
 for (const [n, f] of Object.entries({
-  point, curve, circle, line, segment, vector, ellipse, parabola, hyperbola,
-  polygon, triangle, quad, regular, square, rectangle, region, vectorField,
-  sphere, plane, cylinder, cone, surface, polyhedron, curve3, arrow3,
-  surfaceParam, axes3, quadrics, circle3, frame3, mat, vec, cplx,
-  transform, annotate, tex,
-})) registerNamespaceObject(n, f);
+  point,
+  curve,
+  circle,
+  line,
+  segment,
+  vector,
+  ellipse,
+  parabola,
+  hyperbola,
+  polygon,
+  triangle,
+  quad,
+  regular,
+  square,
+  rectangle,
+  region,
+  vectorField,
+  sphere,
+  plane,
+  cylinder,
+  cone,
+  surface,
+  polyhedron,
+  curve3,
+  arrow3,
+  surfaceParam,
+  axes3,
+  quadrics,
+  circle3,
+  frame3,
+  mat,
+  vec,
+  cplx,
+  transform,
+  annotate,
+  tex,
+}))
+  registerNamespaceObject(n, f);
 
 // 도형 클래스도 플러그인 대상으로 공개 — `api.extend('curve', …)` · `api.extend('point', …)`.
 // ('drawable' 은 모든 도형, 'scene' 은 씬. 클래스 이름으로 부분 확장도 가능하다.)
 for (const [n, c] of Object.entries({
-  point: Point, curve: Curve, circle: Circle, line: Line, segment: Segment,
-  vector: Vector, ellipse: Ellipse, parabola: Parabola, hyperbola: Hyperbola,
-  polygon: Polygon, rectangle: Rectangle, region: Region, vectorField: VectorField,
-  sphere: Sphere, plane: Plane, cylinder: Cylinder, cone: Cone, surface: Surface,
-  polyhedron: Polyhedron, curve3: Curve3,
-})) registerTarget(n, c);
-
+  point: Point,
+  curve: Curve,
+  circle: Circle,
+  line: Line,
+  segment: Segment,
+  vector: Vector,
+  ellipse: Ellipse,
+  parabola: Parabola,
+  hyperbola: Hyperbola,
+  polygon: Polygon,
+  rectangle: Rectangle,
+  region: Region,
+  vectorField: VectorField,
+  sphere: Sphere,
+  plane: Plane,
+  cylinder: Cylinder,
+  cone: Cone,
+  surface: Surface,
+  polyhedron: Polyhedron,
+  curve3: Curve3,
+}))
+  registerTarget(n, c);
 
 export default {
-  scene, point, vector, line, segment, curve, circle, ellipse, parabola, hyperbola,
-  polygon, triangle, quad, regular, square, rectangle, region, vectorField,
-  sphere, plane, cylinder, cone, surface, polyhedron,
-  curve3, arrow3, surfaceParam, axes3, quadrics, circle3, frame3,
-  transform, annotate, tex, tau, pi, e,
-  use, plugins, xy, range, view,
+  scene,
+  point,
+  vector,
+  line,
+  segment,
+  curve,
+  circle,
+  ellipse,
+  parabola,
+  hyperbola,
+  polygon,
+  triangle,
+  quad,
+  regular,
+  square,
+  rectangle,
+  region,
+  vectorField,
+  sphere,
+  plane,
+  cylinder,
+  cone,
+  surface,
+  polyhedron,
+  curve3,
+  arrow3,
+  surfaceParam,
+  axes3,
+  quadrics,
+  circle3,
+  frame3,
+  transform,
+  annotate,
+  tex,
+  tau,
+  pi,
+  e,
+  use,
+  plugins,
+  xy,
+  range,
+  view,
 };

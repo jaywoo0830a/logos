@@ -73,7 +73,11 @@ test('cli: --help / --version / 알 수 없는 명령', () => {
   assert.match(badOpt.stderr, /알 수 없는 옵션/);
 
   // 하위 명령 뒤의 --help 도 도움말(오류 아님)
-  for (const c of [['render', '--help'], ['new', '-h'], ['serve', '--help']]) {
+  for (const c of [
+    ['render', '--help'],
+    ['new', '-h'],
+    ['serve', '--help'],
+  ]) {
     const h = cli(c);
     assert.equal(h.status, 0, `${c.join(' ')} → 0`);
     assert.match(h.stdout, /사용법/);
@@ -98,12 +102,14 @@ test('cli new: 스케치 폴더 뼈대 생성(패키지 의존성 포함)', () =
     assert.equal(r2.status, 0);
     assert.match(r2.stderr, /이미 있습니다/);
     assert.equal(readFileSync(join(dir, 'sketches', 'sketch.js'), 'utf8'), '// 사용자 편집');
-  } finally { rmSync(dir, { recursive: true, force: true }); }
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 test('cli render: 원하는 디렉토리에 SVG + 갤러리 + manifest 를 만든다', () => {
   const dir = project({ 'one.js': SKETCH_ONE });
-  const out = join(dir, 'build', 'figures');           // 프로젝트 안의 임의 깊이
+  const out = join(dir, 'build', 'figures'); // 프로젝트 안의 임의 깊이
   try {
     const r = cli(['render', 'sketches', '--out', out], { cwd: dir });
     assert.equal(r.status, 0, r.stderr);
@@ -121,7 +127,9 @@ test('cli render: 원하는 디렉토리에 SVG + 갤러리 + manifest 를 만�
     assert.deepEqual(m.figures, [{ name: 'one', title: '한 장' }]);
     assert.deepEqual(m.formats, ['svg', 'png']);
     assert.equal(m.src, 'sketches');
-  } finally { rmSync(dir, { recursive: true, force: true }); }
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 test('cli render: 한 파일 다장(figures 객체/배열) + --no-png + --json', () => {
@@ -131,12 +139,17 @@ test('cli render: 한 파일 다장(figures 객체/배열) + --no-png + --json',
     const r = cli(['render', 'sketches', '--out', 'out', '--no-png', '--json'], { cwd: dir });
     assert.equal(r.status, 0, r.stderr);
     const m = JSON.parse(r.stdout);
-    assert.deepEqual(m.figures.map((f) => f.name), ['many-a', 'many-b', 'arr-first']);
+    assert.deepEqual(
+      m.figures.map((f) => f.name),
+      ['many-a', 'many-b', 'arr-first'],
+    );
     assert.equal(m.figures[2].title, '첫째', '배열 형식의 제목');
     assert.deepEqual(m.formats, ['svg'], '--no-png');
     assert.ok(existsSync(join(out, 'many-a.svg')) && existsSync(join(out, 'many-b.svg')));
     assert.ok(!existsSync(join(out, 'many-a.png')), 'PNG 미생성');
-  } finally { rmSync(dir, { recursive: true, force: true }); }
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 test('cli render: 플러그인 subpath export(logos/plugins/*.js) 사용', () => {
@@ -147,7 +160,9 @@ test('cli render: 플러그인 subpath export(logos/plugins/*.js) 사용', () =>
     const svg = readFileSync(join(dir, 'out', 'plug.svg'), 'utf8');
     assert.ok(svg.includes('<path'), 'ray 가 그려짐');
     assert.ok(!/NaN/.test(svg));
-  } finally { rmSync(dir, { recursive: true, force: true }); }
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 test('cli: 오류 경로 — 없는 폴더 / 스케치 없음 / 그림 예외 → exit 2·1', () => {
@@ -158,7 +173,8 @@ test('cli: 오류 경로 — 없는 폴더 / 스케치 없음 / 그림 예외 �
     assert.match(missing.stderr, /없습니다/);
 
     const none = cli(['render', 'emptydir', '--out', 'out'], {
-      cwd: dir, env: { ...process.env, X: '1' },
+      cwd: dir,
+      env: { ...process.env, X: '1' },
     });
     assert.equal(none.status, 2, '없는 폴더');
     // 빈 폴더는 "스케치를 찾지 못했습니다"
@@ -176,7 +192,9 @@ test('cli: 오류 경로 — 없는 폴더 / 스케치 없음 / 그림 예외 �
     assert.equal(m.ok, 1);
     assert.match(m.errors[0].error, /스케치 폭발/);
     assert.ok(existsSync(join(dir, 'out', 'ok.svg')), '정상 스케치는 렌더됨');
-  } finally { rmSync(dir, { recursive: true, force: true }); }
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 test('cli render: --dry-run 은 렌더하지 않고, --clean 은 생성물만 지운다', () => {
@@ -190,24 +208,29 @@ test('cli render: --dry-run 은 렌더하지 않고, --clean 은 생성물만 �
 
     cli(['render', 'sketches', '--out', 'out', '--no-png'], { cwd: dir });
     writeFileSync(join(out, '사용자메모.txt'), '지우면 안 됨');
-    writeFileSync(join(out, 'old.svg'), '<svg/>');       // 이전 잔재(manifest 에 없음)
+    writeFileSync(join(out, 'old.svg'), '<svg/>'); // 이전 잔재(manifest 에 없음)
     const clean = cli(['render', 'sketches', '--out', 'out', '--no-png', '--clean'], { cwd: dir });
     assert.equal(clean.status, 0, clean.stderr);
     assert.ok(existsSync(join(out, '사용자메모.txt')), '사용자 파일은 보존');
     assert.ok(existsSync(join(out, 'one.svg')), '생성물 재생성');
-  } finally { rmSync(dir, { recursive: true, force: true }); }
-});
-
-test('cli: bash 워크플로우 스크립트가 리눅스에서 문법/도움말을 통과한다', { skip: process.platform !== 'linux' }, () => {
-  for (const s of ['install.sh', 'render.sh', 'serve.sh', 'build-image.sh']) {
-    const r = spawnSync('bash', [join(REPO, 'scripts', s), '--help'], { encoding: 'utf8' });
-    assert.equal(r.status, 0, `${s} --help`);
-    assert.match(r.stdout, /사용법/, `${s} 도움말`);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
   }
-  const lib = spawnSync('bash', ['-n', join(REPO, 'scripts', 'lib', 'common.sh')], { encoding: 'utf8' });
-  assert.equal(lib.status, 0, 'common.sh 문법');
 });
 
+test(
+  'cli: bash 워크플로우 스크립트가 리눅스에서 문법/도움말을 통과한다',
+  { skip: process.platform !== 'linux' },
+  () => {
+    for (const s of ['install.sh', 'render.sh', 'serve.sh', 'build-image.sh']) {
+      const r = spawnSync('bash', [join(REPO, 'scripts', s), '--help'], { encoding: 'utf8' });
+      assert.equal(r.status, 0, `${s} --help`);
+      assert.match(r.stdout, /사용법/, `${s} 도움말`);
+    }
+    const lib = spawnSync('bash', ['-n', join(REPO, 'scripts', 'lib', 'common.sh')], { encoding: 'utf8' });
+    assert.equal(lib.status, 0, 'common.sh 문법');
+  },
+);
 
 const SKETCH_TWO = `
 import { scene, point } from '@jaywoo0830a/logos';
@@ -235,7 +258,9 @@ test('cli render: 파일 하나만 / 여러 대상(셸이 펼친 glob)을 렌더
     const miss = cli(['render', 'sketches/nope.js', '--out', 'out3'], { cwd: dir });
     assert.equal(miss.status, 2, '없는 파일 → 2');
     assert.match(miss.stderr, /대상이 없습니다/);
-  } finally { rmSync(dir, { recursive: true, force: true }); }
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 test('cli render: --recursive 는 하위 폴더를 찾고 `_`·`.` 접두는 건너뛴다', () => {
@@ -254,7 +279,9 @@ test('cli render: --recursive 는 하위 폴더를 찾고 `_`·`.` 접두는 건
     assert.equal(rec.status, 0, rec.stderr);
     assert.match(rec.stdout, /nested/, '재귀는 하위 폴더 포함');
     assert.ok(!/_skip/.test(rec.stdout), '`_` 접두는 재귀에서도 제외');
-  } finally { rmSync(dir, { recursive: true, force: true }); }
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 test('cli render: --layout 이 라벨 자동 배치를 켠다', () => {
@@ -265,6 +292,7 @@ test('cli render: --layout 이 라벨 자동 배치를 켠다', () => {
     const plain = readFileSync(join(dir, 'plain', 'label.svg'), 'utf8');
     const laid = readFileSync(join(dir, 'laid', 'label.svg'), 'utf8');
     assert.notEqual(plain, laid, '--layout 이 어노테이션 오프셋을 바꾼다');
-  } finally { rmSync(dir, { recursive: true, force: true }); }
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
-

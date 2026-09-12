@@ -2,8 +2,13 @@
 import { Drawable, renderText } from '../core/drawable.js';
 import { node } from '../core/node.js';
 import {
-  parseAngle, polarToCart, cylindricalToCart, sphericalToCart,
-  cartToPolar, norm2, TAU,
+  parseAngle,
+  polarToCart,
+  cylindricalToCart,
+  sphericalToCart,
+  cartToPolar,
+  norm2,
+  TAU,
 } from '../solver/coords.js';
 import { setPointFactory, lineIntersect, intersectLineCircle } from '../solver/intersect.js';
 
@@ -13,14 +18,28 @@ export class Point extends Drawable {
     if (!this._conf.cart) this._conf = { ...this._conf, cart: [0, 0] };
   }
 
-  get coords() { return this._conf.cart; }
-  get x() { return this._conf.cart[0]; }
-  get y() { return this._conf.cart[1]; }
-  get z() { return this._conf.cart[2]; }
-  get system() { return this._conf.system || 'cartesian'; }
-  dim() { return this._conf.cart.length; }
+  get coords() {
+    return this._conf.cart;
+  }
+  get x() {
+    return this._conf.cart[0];
+  }
+  get y() {
+    return this._conf.cart[1];
+  }
+  get z() {
+    return this._conf.cart[2];
+  }
+  get system() {
+    return this._conf.system || 'cartesian';
+  }
+  dim() {
+    return this._conf.cart.length;
+  }
 
-  label(l, off) { return this.set({ label: l, labelOff: off }); }
+  label(l, off) {
+    return this.set({ label: l, labelOff: off });
+  }
   dot(marker = 'dot') {
     // dot({ open:true }) — 열린 점(빈 원 마커)
     if (marker && typeof marker === 'object') return this.set({ marker: 'dot', open: !!marker.open });
@@ -38,7 +57,9 @@ export class Point extends Drawable {
     if (opts.size !== undefined) set.size = opts.size;
     return this.set(set);
   }
-  size(n) { return this.set({ size: n }); }
+  size(n) {
+    return this.set({ size: n });
+  }
 
   toCartesian() {
     return new Point({ system: 'cartesian', cart: [...this._conf.cart] });
@@ -51,23 +72,28 @@ export class Point extends Drawable {
   toIR(ctx) {
     const c = this._conf;
     const [x, y, z] = c.cart;
-    const proj = (z !== undefined && ctx && ctx.project) ? ctx.project([x, y, z]) : [x, y];
+    const proj = z !== undefined && ctx && ctx.project ? ctx.project([x, y, z]) : [x, y];
     const labelMath = typeof c.label?.toLatex === 'function';
-    const off = (c.labelOff && typeof c.labelOff === 'object') ? c.labelOff : {};
-    return [node('point', {
-      x: proj[0], y: proj[1],
-      marker: c.marker || 'dot',
-      open: c.open,
-      size: c.size,
-      label: renderText(c.label),
-      labelMath,
-      color: c.color, fill: c.fill, stroke: c.stroke,
-      // 라벨 화면 오프셋은 px — layout(자동 배치)이 조정할 수 있도록 데이터로 둔다.
-      dxPx: off.dx ?? (labelMath ? 8 : 7),
-      dyPx: off.dy ?? (labelMath ? -24 : -7),
-      transforms: c.transforms,
-      style: pickStyle(c),
-    })];
+    const off = c.labelOff && typeof c.labelOff === 'object' ? c.labelOff : {};
+    return [
+      node('point', {
+        x: proj[0],
+        y: proj[1],
+        marker: c.marker || 'dot',
+        open: c.open,
+        size: c.size,
+        label: renderText(c.label),
+        labelMath,
+        color: c.color,
+        fill: c.fill,
+        stroke: c.stroke,
+        // 라벨 화면 오프셋은 px — layout(자동 배치)이 조정할 수 있도록 데이터로 둔다.
+        dxPx: off.dx ?? (labelMath ? 8 : 7),
+        dyPx: off.dy ?? (labelMath ? -24 : -7),
+        transforms: c.transforms,
+        style: pickStyle(c),
+      }),
+    ];
   }
 }
 
@@ -87,7 +113,7 @@ function normalizeArgs(args) {
   if (args.length === 1) {
     const v = args[0];
     if (Array.isArray(v)) return v.slice();
-    if (v && typeof v === 'object' && 'x' in v) return (v.z !== undefined) ? [v.x, v.y, v.z] : [v.x, v.y];
+    if (v && typeof v === 'object' && 'x' in v) return v.z !== undefined ? [v.x, v.y, v.z] : [v.x, v.y];
   }
   return args;
 }
@@ -103,7 +129,7 @@ function normalizeArgs(args) {
 export function toPoint(v, ...rest) {
   if (v && Array.isArray(v.coords)) return v;
   if (Array.isArray(v)) return point(...v, ...rest);
-  if (v && typeof v === 'object' && 'x' in v) return (v.z !== undefined) ? point(v.x, v.y, v.z) : point(v.x, v.y);
+  if (v && typeof v === 'object' && 'x' in v) return v.z !== undefined ? point(v.x, v.y, v.z) : point(v.x, v.y);
   return point(v, ...rest);
 }
 point.origin = (z) => (z === undefined ? point(0, 0) : point(0, 0, z));
@@ -140,7 +166,8 @@ point.center = (A, B, C) => point.centroid(A, B, C);
 
 /** 교점 (두 직선, 또는 직선 ∩ 원) — K2: 원과 접선의 접점 */
 point.intersect = (a, b) => {
-  const A = a.kind, B = b.kind;
+  const A = a.kind,
+    B = b.kind;
   if (A === 'circle' && B === 'line') return touchPoint(b, a);
   if (A === 'line' && B === 'circle') return touchPoint(a, b);
   return lineIntersect(a, b);
@@ -194,9 +221,12 @@ point.incenter = (tri) => {
 
 /** 외심: 세 수직이등분선의 교차 (원점에서 세 꼭짓점까지 거리 동일) */
 point.circumcenter = (A, B, C) => {
-  const ax = A.coords[0], ay = A.coords[1];
-  const bx = B.coords[0], by = B.coords[1];
-  const cx = C.coords[0], cy = C.coords[1];
+  const ax = A.coords[0],
+    ay = A.coords[1];
+  const bx = B.coords[0],
+    by = B.coords[1];
+  const cx = C.coords[0],
+    cy = C.coords[1];
   const d = 2 * (ax * (by - cy) + bx * (cy - ay) + cx * (ay - by));
   if (Math.abs(d) < 1e-12) return point((ax + bx + cx) / 3, (ay + by + cy) / 3);
   const ux = ((ax * ax + ay * ay) * (by - cy) + (bx * bx + by * by) * (cy - ay) + (cx * cx + cy * cy) * (ay - by)) / d;
@@ -218,7 +248,8 @@ point.orthocenter = (A, B, C) => {
 point.foot = (P) => ({
   onto(line) {
     const { p, d } = line.pointDir();
-    const px = P.coords[0] - p[0], py = P.coords[1] - p[1];
+    const px = P.coords[0] - p[0],
+      py = P.coords[1] - p[1];
     const t = (px * d[0] + py * d[1]) / (d[0] * d[0] + d[1] * d[1]);
     return point(p[0] + t * d[0], p[1] + t * d[1]);
   },

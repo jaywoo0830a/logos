@@ -26,17 +26,17 @@ bash scripts/serve.sh examples/workflow/out 18080                # ④ 브라우
 도커 없이 호스트에서 바로:
 
 ```bash
-bash scripts/render.sh --local -p examples/workflow -s sketches -o /tmp/report
+bash scripts/render.sh -p examples/workflow -s sketches -o /tmp/report
 ```
 
 ## 스케치 계약
 
-| 내보내기 | 의미 |
-|---|---|
-| `export default` | 그림 1장 — `Scene` · `SceneIR` · `() => Scene` 모두 허용 |
-| `export const figures = { 이름: 그림 }` | 한 파일 여러 장(이름이 파일명) |
-| `export const figures = [[이름, 그림, 제목], …]` | 배열 형식(제목 지정) |
-| `export const name` / `title` | 파일명/표시 이름 덮어쓰기 |
+| 내보내기                                         | 의미                                                     |
+| ------------------------------------------------ | -------------------------------------------------------- |
+| `export default`                                 | 그림 1장 — `Scene` · `SceneIR` · `() => Scene` 모두 허용 |
+| `export const figures = { 이름: 그림 }`          | 한 파일 여러 장(이름이 파일명)                           |
+| `export const figures = [[이름, 그림, 제목], …]` | 배열 형식(제목 지정)                                     |
+| `export const name` / `title`                    | 파일명/표시 이름 덮어쓰기                                |
 
 렌더 결과는 항상 `out/` 안에 `<이름>.svg` · `<이름>.png` · `index.html`(갤러리) ·
 `manifest.json`(기계 판독용 요약)로 나옵니다. 자세한 내용은 [`WORKFLOW.md`](../../WORKFLOW.md).

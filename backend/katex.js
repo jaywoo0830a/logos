@@ -23,10 +23,7 @@ export function katexify(text) {
   if (/\$[^$]+\$/.test(raw)) {
     return raw
       .split(/(\$[^$]+\$)/g)
-      .map((p) =>
-        (p.startsWith('$') && p.endsWith('$') && p.length > 1)
-          ? katexRender(p.slice(1, -1))
-          : escapeHtml(p))
+      .map((p) => (p.startsWith('$') && p.endsWith('$') && p.length > 1 ? katexRender(p.slice(1, -1)) : escapeHtml(p)))
       .join('');
   }
   // $ 없이 수식 문자 포함 시 → KaTeX 조판
@@ -40,13 +37,42 @@ export function latexToText(latex) {
   let s = String(latex);
   // 자주 쓰는 명령 → 유니코드
   const sym = {
-    '\\pi': 'π', '\\theta': 'θ', '\\alpha': 'α', '\\beta': 'β', '\\gamma': 'γ',
-    '\\delta': 'δ', '\\epsilon': 'ε', '\\varepsilon': 'ε', '\\phi': 'φ', '\\varphi': 'φ',
-    '\\infty': '∞', '\\approx': '≈', '\\to': '→', '\\rightarrow': '→', '\\Rightarrow': '⇒',
-    '\\le': '≤', '\\leq': '≤', '\\ge': '≥', '\\geq': '≥', '\\neq': '≠', '\\ne': '≠',
-    '\\pm': '±', '\\times': '×', '\\cdot': '·', '\\perp': '⊥', '\\parallel': '∥',
-    '\\int': '∫', '\\sum': '∑', '\\prod': '∏', '\\partial': '∂', '\\nabla': '∇',
-    '\\sqrt': '√', '\\in': '∈', '\\subset': '⊂', '\\cup': '∪', '\\cap': '∩',
+    '\\pi': 'π',
+    '\\theta': 'θ',
+    '\\alpha': 'α',
+    '\\beta': 'β',
+    '\\gamma': 'γ',
+    '\\delta': 'δ',
+    '\\epsilon': 'ε',
+    '\\varepsilon': 'ε',
+    '\\phi': 'φ',
+    '\\varphi': 'φ',
+    '\\infty': '∞',
+    '\\approx': '≈',
+    '\\to': '→',
+    '\\rightarrow': '→',
+    '\\Rightarrow': '⇒',
+    '\\le': '≤',
+    '\\leq': '≤',
+    '\\ge': '≥',
+    '\\geq': '≥',
+    '\\neq': '≠',
+    '\\ne': '≠',
+    '\\pm': '±',
+    '\\times': '×',
+    '\\cdot': '·',
+    '\\perp': '⊥',
+    '\\parallel': '∥',
+    '\\int': '∫',
+    '\\sum': '∑',
+    '\\prod': '∏',
+    '\\partial': '∂',
+    '\\nabla': '∇',
+    '\\sqrt': '√',
+    '\\in': '∈',
+    '\\subset': '⊂',
+    '\\cup': '∪',
+    '\\cap': '∩',
     '\\degree': '°',
   };
   for (const [k, v] of Object.entries(sym)) s = s.split(k).join(v);
@@ -67,8 +93,12 @@ export function latexToText(latex) {
   s = s.replace(/\\log\s*_\s*\{([^{}]*)\}/g, 'log($1)');
   // \bar{z} \overline{z} \vec{v} \hat{x} → 결합 문자 (래스터 폴백에서도 accent 가 보이게)
   const accent = { bar: '\u0304', overline: '\u0304', vec: '\u20d7', hat: '\u0302', dot: '\u0307', tilde: '\u0303' };
-  s = s.replace(/\\(bar|overline|vec|hat|dot|tilde)\s*\{([^{}]*)\}/g,
-    (m, name, body) => body.split('').map((ch) => ch + accent[name]).join(''));
+  s = s.replace(/\\(bar|overline|vec|hat|dot|tilde)\s*\{([^{}]*)\}/g, (m, name, body) =>
+    body
+      .split('')
+      .map((ch) => ch + accent[name])
+      .join(''),
+  );
   // 남은 명령 제거, 중괄호/달러/여분 공백 정리
   s = s.replace(/\\[a-zA-Z]+/g, '');
   s = s.replace(/\^\{([^{}]*)\}/g, '^$1');
@@ -78,14 +108,13 @@ export function latexToText(latex) {
 }
 
 export function escapeHtml(s) {
-  return String(s)
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
 /** 자식 노드(text)들을 전부 KaTeX 처리한 최종 <figure> 조립용 헬퍼 (STIX Two Math 포함) */
 export function buildFigureHTML(items) {
-  const link = '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=STIX+Two+Math&display=swap" rel="stylesheet">';
+  const link =
+    '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=STIX+Two+Math&display=swap" rel="stylesheet">';
   return `${link}<figure class="logos" style="font-family:'STIX Two Math',Georgia,serif">${items.join('\n')}</figure>`;
 }
 

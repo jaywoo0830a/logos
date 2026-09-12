@@ -31,16 +31,25 @@ function styleOf(c) {
 // ── ① ray — 반직선 (코어에는 없는 도형) ─────────────────────
 export class Ray extends Drawable {
   /** @param {Point} O 시작점 @param {Point} P 방향을 정하는 점 */
-  constructor(O, P, conf = {}) { super('ray', { O, P, ...conf }); }
-  get O() { return this._conf.O; }
-  get P() { return this._conf.P; }
+  constructor(O, P, conf = {}) {
+    super('ray', { O, P, ...conf });
+  }
+  get O() {
+    return this._conf.O;
+  }
+  get P() {
+    return this._conf.P;
+  }
   /** O + t·(P − O) — t>1 이면 P 너머, t<0 이면 반대쪽 */
   at(t) {
-    const [x0, y0] = this._conf.O.coords, [x1, y1] = this._conf.P.coords;
+    const [x0, y0] = this._conf.O.coords,
+      [x1, y1] = this._conf.P.coords;
     return point(x0 + (x1 - x0) * t, y0 + (y1 - y0) * t);
   }
   /** 그려지는 구간 — 뒤로 tail, 앞으로 over 배(반직선처럼 보이게) */
-  segment(tail, over) { return [this.at(-(tail ?? this._conf.tail ?? 0.15)), this.at(over ?? this._conf.over ?? 2.4)]; }
+  segment(tail, over) {
+    return [this.at(-(tail ?? this._conf.tail ?? 0.15)), this.at(over ?? this._conf.over ?? 2.4)];
+  }
   length() {
     const [A, B] = this.segment().map((p) => p.coords);
     return Math.hypot(B[0] - A[0], B[1] - A[1]);
@@ -49,35 +58,54 @@ export class Ray extends Drawable {
     const [A, B] = this.segment().map((p) => p.coords);
     const O = this._conf.O.coords;
     return {
-      xmin: Math.min(A[0], B[0], O[0]), xmax: Math.max(A[0], B[0], O[0]),
-      ymin: Math.min(A[1], B[1], O[1]), ymax: Math.max(A[1], B[1], O[1]),
+      xmin: Math.min(A[0], B[0], O[0]),
+      xmax: Math.max(A[0], B[0], O[0]),
+      ymin: Math.min(A[1], B[1], O[1]),
+      ymax: Math.max(A[1], B[1], O[1]),
     };
   }
   toIR() {
     const c = this._conf;
     const [A, B] = this.segment().map((p) => p.coords);
-    return [node('path', {
-      ops: [{ op: 'M', x: A[0], y: A[1] }, { op: 'L', x: B[0], y: B[1] }],
-      head: c.head,                             // 코어 path emitter 의 화살촉(marker-end)
-      color: c.color, stroke: c.stroke, dash: c.dash, opacity: c.opacity,
-      transforms: c.transforms, clip: c.clip, style: styleOf(c),
-    })];
+    return [
+      node('path', {
+        ops: [
+          { op: 'M', x: A[0], y: A[1] },
+          { op: 'L', x: B[0], y: B[1] },
+        ],
+        head: c.head, // 코어 path emitter 의 화살촉(marker-end)
+        color: c.color,
+        stroke: c.stroke,
+        dash: c.dash,
+        opacity: c.opacity,
+        transforms: c.transforms,
+        clip: c.clip,
+        style: styleOf(c),
+      }),
+    ];
   }
 }
 
 // ── ② arc.circular — 원호 ──────────────────────────────────
 export class Arc extends Drawable {
   /** @param {Point} C 중심 @param {number} r 반지름 @param {number} a0,a1 각(기본 도) */
-  constructor(C, r, a0, a1, conf = {}) { super('arc', { C, r, a0, a1, ...conf }); }
+  constructor(C, r, a0, a1, conf = {}) {
+    super('arc', { C, r, a0, a1, ...conf });
+  }
   /** 끝점 */
   end(t) {
-    const c = this._conf, a0 = c.rad ? c.a0 : c.a0 * RAD;
+    const c = this._conf,
+      a0 = c.rad ? c.a0 : c.a0 * RAD;
     const a = a0 + (t ?? 1) * this.sweep();
     return point(c.C.coords[0] + c.r * Math.cos(a), c.C.coords[1] + c.r * Math.sin(a));
   }
-  sweep() { const c = this._conf; return c.rad ? (c.a1 - c.a0) : (c.a1 - c.a0) * RAD; }
+  sweep() {
+    const c = this._conf;
+    return c.rad ? c.a1 - c.a0 : (c.a1 - c.a0) * RAD;
+  }
   bounds() {
-    const c = this._conf, [cx, cy] = c.C.coords;
+    const c = this._conf,
+      [cx, cy] = c.C.coords;
     return { xmin: cx - c.r, xmax: cx + c.r, ymin: cy - c.r, ymax: cy + c.r };
   }
   toIR() {
@@ -90,15 +118,22 @@ export class Arc extends Drawable {
       const a = a0 + (this.sweep() * i) / n;
       ops.push({ op: i === 0 ? 'M' : 'L', x: cx + c.r * Math.cos(a), y: cy + c.r * Math.sin(a) });
     }
-    return [node('path', {
-      ops, color: c.color, stroke: c.stroke, dash: c.dash, opacity: c.opacity,
-      transforms: c.transforms, style: styleOf(c),
-    })];
+    return [
+      node('path', {
+        ops,
+        color: c.color,
+        stroke: c.stroke,
+        dash: c.dash,
+        opacity: c.opacity,
+        transforms: c.transforms,
+        style: styleOf(c),
+      }),
+    ];
   }
 }
 
 // ── ③ 새 IR 노드 'hatch' — 사선 음영 사각형 (백엔드 무수정) ──
-let HATCH_SEQ = 0;   // SVG <pattern> id 용(렌더 단위로 증가, 결정적)
+let HATCH_SEQ = 0; // SVG <pattern> id 용(렌더 단위로 증가, 결정적)
 
 /**
  * SVG emitter — `api.node('hatch', { svg })` 로 등록된다.
@@ -114,13 +149,17 @@ export function hatchSvg(n, ctx) {
   const color = d.color || s.stroke;
   const gap = d.gap ?? 9;
   const id = `lgHatch${++HATCH_SEQ}`;
-  const rx = Math.min(x, x2), ry = Math.min(y, y2);
-  const rw = Math.abs(x2 - x), rh = Math.abs(y2 - y);
-  const defs = `<defs><pattern id="${id}" width="${gap}" height="${gap}" patternUnits="userSpaceOnUse"`
-    + ` patternTransform="rotate(${d.angle ?? 45})">`
-    + `<line x1="0" y1="0" x2="0" y2="${gap}" stroke="${color}" stroke-width="${w}"/></pattern></defs>`;
-  const rect = `<rect x="${rx.toFixed(2)}" y="${ry.toFixed(2)}" width="${rw.toFixed(2)}" height="${rh.toFixed(2)}"`
-    + ` fill="url(#${id})" stroke="${color}" stroke-width="${w}" opacity="${s.opacity ?? 1}"/>`;
+  const rx = Math.min(x, x2),
+    ry = Math.min(y, y2);
+  const rw = Math.abs(x2 - x),
+    rh = Math.abs(y2 - y);
+  const defs =
+    `<defs><pattern id="${id}" width="${gap}" height="${gap}" patternUnits="userSpaceOnUse"` +
+    ` patternTransform="rotate(${d.angle ?? 45})">` +
+    `<line x1="0" y1="0" x2="0" y2="${gap}" stroke="${color}" stroke-width="${w}"/></pattern></defs>`;
+  const rect =
+    `<rect x="${rx.toFixed(2)}" y="${ry.toFixed(2)}" width="${rw.toFixed(2)}" height="${rh.toFixed(2)}"` +
+    ` fill="url(#${id})" stroke="${color}" stroke-width="${w}" opacity="${s.opacity ?? 1}"/>`;
   // 라벨은 emitter 가 아니라 `Hatched.toIR()` 이 코어 text 노드로 따로 내보낸다
   //   (그래야 KaTeX/STIX 조판·자동 배치를 그대로 물려받는다 — 코어 IR 조합의 예)
   return defs + rect;
@@ -135,24 +174,49 @@ export function hatchTikz(n) {
 
 /** 사선 음영 직사각형 — `.hatch({ gap, angle })` 로 밀도를 바꿀 수 있다 */
 export class Hatched extends Drawable {
-  constructor(x, y, w, h, conf = {}) { super('hatch', { x, y, w, h, ...conf }); }
-  hatch(o = {}) { return this.set({ gap: o.gap ?? this._conf.gap, angle: o.angle ?? this._conf.angle }); }
-  text(t) { return this.set({ text: t }); }
-  bounds() { const c = this._conf; return { xmin: c.x, xmax: c.x + c.w, ymin: c.y, ymax: c.y + c.h }; }
+  constructor(x, y, w, h, conf = {}) {
+    super('hatch', { x, y, w, h, ...conf });
+  }
+  hatch(o = {}) {
+    return this.set({ gap: o.gap ?? this._conf.gap, angle: o.angle ?? this._conf.angle });
+  }
+  text(t) {
+    return this.set({ text: t });
+  }
+  bounds() {
+    const c = this._conf;
+    return { xmin: c.x, xmax: c.x + c.w, ymin: c.y, ymax: c.y + c.h };
+  }
   toIR() {
     const c = this._conf;
-    const out = [node('hatch', {
-      x: c.x, y: c.y, w: c.w, h: c.h, gap: c.gap, angle: c.angle,
-      color: c.color, stroke: c.stroke, style: styleOf(c),
-    })];
+    const out = [
+      node('hatch', {
+        x: c.x,
+        y: c.y,
+        w: c.w,
+        h: c.h,
+        gap: c.gap,
+        angle: c.angle,
+        color: c.color,
+        stroke: c.stroke,
+        style: styleOf(c),
+      }),
+    ];
     // 라벨은 코어 `text` 노드를 그대로 재사용한다(KaTeX 조판·자동 배치까지 물려받음).
     if (c.text != null) {
-      out.push(node('text', {
-        x: c.x + c.w / 2, y: c.y + c.h / 2, dxPx: 0, dyPx: 0,
-        text: renderText(c.text), anchor: 'middle',
-        math: typeof c.text?.toLatex === 'function',
-        color: c.color, bold: c.bold,
-      }));
+      out.push(
+        node('text', {
+          x: c.x + c.w / 2,
+          y: c.y + c.h / 2,
+          dxPx: 0,
+          dyPx: 0,
+          text: renderText(c.text),
+          anchor: 'middle',
+          math: typeof c.text?.toLatex === 'function',
+          color: c.color,
+          bold: c.bold,
+        }),
+      );
     }
     return out;
   }
@@ -183,8 +247,12 @@ export const chainables = {
  *   `segment(A, B).arrowTip().color('#c00')`  ← 감싼 뒤에도 코어 메서드 사용 가능
  */
 export class TipMarked extends Drawable {
-  constructor(inner, conf = {}) { super('tip', { inner, ...conf }); }
-  get inner() { return this._conf.inner; }
+  constructor(inner, conf = {}) {
+    super('tip', { inner, ...conf });
+  }
+  get inner() {
+    return this._conf.inner;
+  }
   /** 감싼 도형의 경계 위임 — 씬의 자동 view 계산과 협력한다 */
   bounds() {
     const i = this.inner;
@@ -198,33 +266,40 @@ export class TipMarked extends Drawable {
   toIR(ctx) {
     const irs = this.inner.toIR(ctx) || [];
     // 마지막 path 노드에만 화살촉 플래그를 심는다(코어 emitter 가 그대로 소비)
-    return irs.map((nd, i) => (i === irs.length - 1 && nd.kind === 'path'
-      ? { ...nd, data: { ...nd.data, head: true } }
-      : nd));
+    return irs.map((nd, i) =>
+      i === irs.length - 1 && nd.kind === 'path' ? { ...nd, data: { ...nd.data, head: true } } : nd,
+    );
   }
 }
 
 /** 명령형 체이닝 메서드 — Drawable 을 반환하면 그대로 통과한다(규칙 ③) */
 export const wrappers = {
-  arrowTip() { return new TipMarked(this); },
+  arrowTip() {
+    return new TipMarked(this);
+  },
 };
-
-
-
 
 // ── ⑤ 정적(네임스페이스) ────────────────────────────────────
 /** `point.byDeg(r, deg)` — 극좌표를 도 단위로 (코어 point.polar 는 라디안) */
 const pointByDeg = (r, deg) => point(r * Math.cos(deg * RAD), r * Math.sin(deg * RAD));
 /** `ray.deg(O, deg, len)` — O 에서 deg 방향으로 뻗는 반직선 */
-const rayDeg = (O, deg, len = 2) => ray(O, point(O.coords[0] + len * Math.cos(deg * RAD), O.coords[1] + len * Math.sin(deg * RAD)));
+const rayDeg = (O, deg, len = 2) =>
+  ray(O, point(O.coords[0] + len * Math.cos(deg * RAD), O.coords[1] + len * Math.sin(deg * RAD)));
 
 // ── ⑥ 테마 ─────────────────────────────────────────────────
 /** 칠판(chalk) 테마 — `.theme('chalk')` 로 즉시 사용 */
 export const chalkTheme = {
-  bg: '#2f3e3a', gridColor: '#41544e', gridMajor: '#4d635c', axisColor: '#e9f2ee',
-  axisWidth: 1.3, tickColor: '#cfe0da', labelColor: '#f4faf7',
-  font: 'Georgia, "Times New Roman", serif', fontMath: 'Latin Modern Math, Georgia, serif',
-  pointColor: '#ffd54f', strokeDefault: '#eaf4f0',
+  bg: '#2f3e3a',
+  gridColor: '#41544e',
+  gridMajor: '#4d635c',
+  axisColor: '#e9f2ee',
+  axisWidth: 1.3,
+  tickColor: '#cfe0da',
+  labelColor: '#f4faf7',
+  font: 'Georgia, "Times New Roman", serif',
+  fontMath: 'Latin Modern Math, Georgia, serif',
+  pointColor: '#ffd54f',
+  strokeDefault: '#eaf4f0',
 };
 
 // ── ⑦ 파이프라인 훅 ────────────────────────────────────────
@@ -233,9 +308,11 @@ function watermarkHook(svg, ctx, on = true) {
   if (!on || typeof svg !== 'string' || !svg.includes('</svg>')) return svg;
   // 오른쪽 가장자리 세로 스탬프 — 가운데 제목·축 눈금과 겹치지 않는 자리
   const [W, H] = (ctx.ir && ctx.ir.o && ctx.ir.o.size) || [600, 600];
-  const x = W - 6, y = H / 2;
-  const mark = `<text x="${x}" y="${y}" transform="rotate(-90 ${x} ${y})" text-anchor="middle"`
-    + ` font-size="10" font-family="Georgia, serif" fill="#9aa5b1" opacity="0.75">plugins/geometry-extras.js</text>`;
+  const x = W - 6,
+    y = H / 2;
+  const mark =
+    `<text x="${x}" y="${y}" transform="rotate(-90 ${x} ${y})" text-anchor="middle"` +
+    ` font-size="10" font-family="Georgia, serif" fill="#9aa5b1" opacity="0.75">plugins/geometry-extras.js</text>`;
   return svg.replace('</svg>', `${mark}</svg>`);
 }
 
@@ -257,8 +334,8 @@ const geometryExtras = {
     api.static('point', 'byDeg', pointByDeg);
     api.static('ray', 'deg', rayDeg);
     // ④ 체이닝 메서드 — 모든 도형(Drawable 하위 전부)에 붙는다
-    api.chain('drawable', chainables);        // 선언형(패치 객체 → 자동 set)
-    api.extend('drawable', wrappers);         // 명령형(Drawable 반환 → 그대로 통과)
+    api.chain('drawable', chainables); // 선언형(패치 객체 → 자동 set)
+    api.extend('drawable', wrappers); // 명령형(Drawable 반환 → 그대로 통과)
     // ⑥ 테마
     api.theme('chalk', chalkTheme);
     // ③ 새 IR 노드 + 두 백엔드 emitter

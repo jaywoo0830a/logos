@@ -19,10 +19,7 @@ scene().axes().grid(1).add(point(1, 2).label('A').dot()).compile().toSVG();
 ### A2. 수직선 · 수평선
 
 ```js
-scene().axes().add(
-  line.vertical(2),
-  line.horizontal(-1),
-).compile().toSVG();
+scene().axes().add(line.vertical(2), line.horizontal(-1)).compile().toSVG();
 ```
 
 **검증**: 뷰 경계 클리핑.
@@ -31,7 +28,12 @@ scene().axes().add(
 ### A3. 원 하나
 
 ```js
-scene().equal().axes().add(circle.center(point(0,0)).radius(3)).compile().toSVG();
+scene()
+  .equal()
+  .axes()
+  .add(circle.center(point(0, 0)).radius(3))
+  .compile()
+  .toSVG();
 ```
 
 **검증**: `equal()` 하에서 원이 **진짜 원**인지.
@@ -40,12 +42,16 @@ scene().equal().axes().add(circle.center(point(0,0)).radius(3)).compile().toSVG(
 ### A4. 여러 스타일
 
 ```js
-scene().axes().add(
-  point(0,0).dot().color('#e11'),
-  point(1,1).dot().color('#0a0').stroke(3),
-  point(2,2).dot().color('#00f').dash([2,2]),  // 점에는 dash 무시
-  point(3,3).dot().opacity(0.4),
-).compile().toSVG();
+scene()
+  .axes()
+  .add(
+    point(0, 0).dot().color('#e11'),
+    point(1, 1).dot().color('#0a0').stroke(3),
+    point(2, 2).dot().color('#00f').dash([2, 2]), // 점에는 dash 무시
+    point(3, 3).dot().opacity(0.4),
+  )
+  .compile()
+  .toSVG();
 ```
 
 **검증**: 스타일이 SVG 속성으로 정확히 매핑되는지.
@@ -58,8 +64,8 @@ scene().axes().add(
 ### B1. 함수 그래프
 
 ```js
-const f = curve.fn(x => x*x).on([-3, 3]);
-scene().view([-3,3],[-1,9]).axes().add(f.color('crimson').stroke(2)).compile().toSVG();
+const f = curve.fn((x) => x * x).on([-3, 3]);
+scene().view([-3, 3], [-1, 9]).axes().add(f.color('crimson').stroke(2)).compile().toSVG();
 ```
 
 **검증**: adaptive sampling, path 부드러움.
@@ -68,9 +74,11 @@ scene().view([-3,3],[-1,9]).axes().add(f.color('crimson').stroke(2)).compile().t
 ### B2. 파라메트릭 (원)
 
 ```js
-scene().equal().add(
-  curve.parametric(t => [Math.cos(t), Math.sin(t)]).on([0, 2*Math.PI]),
-).compile().toSVG();
+scene()
+  .equal()
+  .add(curve.parametric((t) => [Math.cos(t), Math.sin(t)]).on([0, 2 * Math.PI]))
+  .compile()
+  .toSVG();
 ```
 
 **검증**: 폐곡선이 이어지는지.
@@ -79,9 +87,12 @@ scene().equal().add(
 ### B3. 극좌표 장미
 
 ```js
-scene().equal().polarGrid().add(
-  curve.polar(θ => Math.cos(3*θ)).on([0, Math.PI]),
-).compile().toSVG();
+scene()
+  .equal()
+  .polarGrid()
+  .add(curve.polar((θ) => Math.cos(3 * θ)).on([0, Math.PI]))
+  .compile()
+  .toSVG();
 ```
 
 **검증**: 극좌표 → 데카르트 변환 정확성.
@@ -90,9 +101,12 @@ scene().equal().polarGrid().add(
 ### B4. 불연속 함수
 
 ```js
-scene().view([-5,5],[-2,2]).axes().add(
-  curve.fn(x => 1/x).on([-5, 5]),
-).compile().toSVG();
+scene()
+  .view([-5, 5], [-2, 2])
+  .axes()
+  .add(curve.fn((x) => 1 / x).on([-5, 5]))
+  .compile()
+  .toSVG();
 ```
 
 **검증**: 불연속점에서 path가 끊기는지.
@@ -101,9 +115,11 @@ scene().view([-5,5],[-2,2]).axes().add(
 ### B5. 음함수 곡선
 
 ```js
-scene().equal().add(
-  curve.implicit((x,y) => x*x + y*y - 1),
-).compile().toSVG();
+scene()
+  .equal()
+  .add(curve.implicit((x, y) => x * x + y * y - 1))
+  .compile()
+  .toSVG();
 ```
 
 **검증**: 마칭 스퀘어(marching squares) 또는 contour 추출.
@@ -112,10 +128,21 @@ scene().equal().add(
 ### B6. 여러 곡선 겹치기
 
 ```js
-scene().view([-2*Math.PI, 2*Math.PI],[-1.5, 1.5]).axes().add(
-  curve.fn(Math.sin).on([-2*Math.PI, 2*Math.PI]).color('crimson'),
-  curve.fn(Math.cos).on([-2*Math.PI, 2*Math.PI]).color('steelblue'),
-).compile().toSVG();
+scene()
+  .view([-2 * Math.PI, 2 * Math.PI], [-1.5, 1.5])
+  .axes()
+  .add(
+    curve
+      .fn(Math.sin)
+      .on([-2 * Math.PI, 2 * Math.PI])
+      .color('crimson'),
+    curve
+      .fn(Math.cos)
+      .on([-2 * Math.PI, 2 * Math.PI])
+      .color('steelblue'),
+  )
+  .compile()
+  .toSVG();
 ```
 
 **검증**: z-order, 색상 구분.
@@ -128,9 +155,12 @@ scene().view([-2*Math.PI, 2*Math.PI],[-1.5, 1.5]).axes().add(
 ### C1. 타원
 
 ```js
-scene().equal().axes().add(
-  ellipse.center(point(0,0)).semi(3, 2),
-).compile().toSVG();
+scene()
+  .equal()
+  .axes()
+  .add(ellipse.center(point(0, 0)).semi(3, 2))
+  .compile()
+  .toSVG();
 ```
 
 **검증**: `<ellipse>` 또는 `<path>` 정확성.
@@ -143,11 +173,7 @@ const F = point(0, 1).dot().label('F');
 const d = line.horizontal(-1).color('#888');
 const P = parabola.focus(F).directrix(d);
 
-scene().equal().axes().add(
-  P.color('crimson').stroke(2),
-  F, d,
-  point(0,0).dot().label('V'),
-).compile().toSVG();
+scene().equal().axes().add(P.color('crimson').stroke(2), F, d, point(0, 0).dot().label('V')).compile().toSVG();
 ```
 
 **검증**: 초점·준선이 도형과 정확히 일치.
@@ -156,11 +182,22 @@ scene().equal().axes().add(
 ### C3. 쌍곡선 + 점근선
 
 ```js
-scene().equal().axes().add(
-  hyperbola.center(point(0,0)).semi(3, 2).color('steelblue').stroke(2),
-  line.slopeIntercept(2/3, 0).dash([4,3]).color('#aaa'),
-  line.slopeIntercept(-2/3, 0).dash([4,3]).color('#aaa'),
-).compile().toSVG();
+scene()
+  .equal()
+  .axes()
+  .add(
+    hyperbola.center(point(0, 0)).semi(3, 2).color('steelblue').stroke(2),
+    line
+      .slopeIntercept(2 / 3, 0)
+      .dash([4, 3])
+      .color('#aaa'),
+    line
+      .slopeIntercept(-2 / 3, 0)
+      .dash([4, 3])
+      .color('#aaa'),
+  )
+  .compile()
+  .toSVG();
 ```
 
 **검증**: 두 branch가 모두 그려지는지.
@@ -173,11 +210,15 @@ scene().equal().axes().add(
 ### D1. 삼각형 + 채우기
 
 ```js
-const A = point(0,0), B = point(4,0), C = point(1,3);
-scene().equal().axes().add(
-  triangle(A, B, C).fill('#eef3ff').stroke(2).color('#334'),
-  A, B, C,
-).compile().toSVG();
+const A = point(0, 0),
+  B = point(4, 0),
+  C = point(1, 3);
+scene()
+  .equal()
+  .axes()
+  .add(triangle(A, B, C).fill('#eef3ff').stroke(2).color('#334'), A, B, C)
+  .compile()
+  .toSVG();
 ```
 
 **검증**: 닫힌 path, fill-rule.
@@ -186,7 +227,11 @@ scene().equal().axes().add(
 ### D2. 정육각형
 
 ```js
-scene().equal().add(regular.polygon(point(0,0), 6, 1)).compile().toSVG();
+scene()
+  .equal()
+  .add(regular.polygon(point(0, 0), 6, 1))
+  .compile()
+  .toSVG();
 ```
 
 **검증**: 6개 꼭짓점이 정확히 원 위에 있는지.
@@ -195,11 +240,16 @@ scene().equal().add(regular.polygon(point(0,0), 6, 1)).compile().toSVG();
 ### D3. 리만합
 
 ```js
-const f = x => x*x;
-scene().view([-0.5, 2.5],[-0.5, 5]).axes().add(
-  curve.fn(f).on([0, 2]).color('crimson').stroke(2),
-  region.riemann(f).on([0, 2]).n(8).left().fill('steelblue').opacity(0.4),
-).compile().toSVG();
+const f = (x) => x * x;
+scene()
+  .view([-0.5, 2.5], [-0.5, 5])
+  .axes()
+  .add(
+    curve.fn(f).on([0, 2]).color('crimson').stroke(2),
+    region.riemann(f).on([0, 2]).n(8).left().fill('steelblue').opacity(0.4),
+  )
+  .compile()
+  .toSVG();
 ```
 
 **검증**: 8개의 사각형, left rule (왼쪽 끝값).
@@ -210,10 +260,15 @@ scene().view([-0.5, 2.5],[-0.5, 5]).axes().add(
 ```js
 const c1 = circle.center(point(-0.5, 0)).radius(1);
 const c2 = circle.center(point(0.5, 0)).radius(1);
-scene().equal().add(
-  region.intersect(region.inside(c1), region.inside(c2)).fill('steelblue').opacity(0.4),
-  c1.stroke(1.5), c2.stroke(1.5),
-).compile().toSVG();
+scene()
+  .equal()
+  .add(
+    region.intersect(region.inside(c1), region.inside(c2)).fill('steelblue').opacity(0.4),
+    c1.stroke(1.5),
+    c2.stroke(1.5),
+  )
+  .compile()
+  .toSVG();
 ```
 
 **검증**: 두 원의 교집합(렌즈 모양).
@@ -226,10 +281,17 @@ scene().equal().add(
 ### E1. 구 + 평면
 
 ```js
-const S = sphere.center(point(0,0,0)).radius(1).opacity(0.25);
+const S = sphere
+  .center(point(0, 0, 0))
+  .radius(1)
+  .opacity(0.25);
 const P = plane.coordinate('xy').opacity(0.4);
-scene().dim(3).camera({ position: [3,3,2], projection: 'orthographic' })
-  .add(S, P).compile().toSVG();
+scene()
+  .dim(3)
+  .camera({ position: [3, 3, 2], projection: 'orthographic' })
+  .add(S, P)
+  .compile()
+  .toSVG();
 ```
 
 **검증**: 정사영, hidden-line removal.
@@ -238,11 +300,23 @@ scene().dim(3).camera({ position: [3,3,2], projection: 'orthographic' })
 ### E2. 원기둥 + 원뿔
 
 ```js
-scene().dim(3).camera({ position: [5, -5, 3] })
+scene()
+  .dim(3)
+  .camera({ position: [5, -5, 3] })
   .add(
-    cylinder.center(point(0,0,0)).axis(vector(0,0,1)).radius(1).height(2),
-    cone.vertex(point(2,0,1)).axis(vector(0,0,-1)).radius(0.5).height(2),
-  ).compile().toSVG();
+    cylinder
+      .center(point(0, 0, 0))
+      .axis(vector(0, 0, 1))
+      .radius(1)
+      .height(2),
+    cone
+      .vertex(point(2, 0, 1))
+      .axis(vector(0, 0, -1))
+      .radius(0.5)
+      .height(2),
+  )
+  .compile()
+  .toSVG();
 ```
 
 **검증**: 실루엣 라인 강조, 음영.
@@ -251,11 +325,18 @@ scene().dim(3).camera({ position: [5, -5, 3] })
 ### E3. 회전체
 
 ```js
-scene().dim(3).camera({ position: [6,-6,4] })
+scene()
+  .dim(3)
+  .camera({ position: [6, -6, 4] })
   .add(
-    surface.revolution(curve.fn(x => Math.sqrt(x)).on([0, 4]))
-      .about(line.horizontal(0)).opacity(0.8).color('#93c5fd'),
-  ).compile().toSVG();
+    surface
+      .revolution(curve.fn((x) => Math.sqrt(x)).on([0, 4]))
+      .about(line.horizontal(0))
+      .opacity(0.8)
+      .color('#93c5fd'),
+  )
+  .compile()
+  .toSVG();
 ```
 
 **검증**: 회전면의 와이어프레임 + 채우기.
@@ -264,9 +345,12 @@ scene().dim(3).camera({ position: [6,-6,4] })
 ### E4. 다면체
 
 ```js
-scene().dim(3).camera({ position: [3,3,3] })
+scene()
+  .dim(3)
+  .camera({ position: [3, 3, 3] })
   .add(polyhedron.platonic('dodeca').circumradius(1))
-  .compile().toSVG();
+  .compile()
+  .toSVG();
 ```
 
 **검증**: 12개 오각형 면, 20개 꼭짓점.
@@ -279,9 +363,12 @@ scene().dim(3).camera({ position: [3,3,3] })
 ### F1. 극좌표 격자
 
 ```js
-scene().equal().polarGrid().add(
-  curve.polar(θ => 1 + Math.cos(θ)).on([0, 2*Math.PI]),
-).compile().toSVG();
+scene()
+  .equal()
+  .polarGrid()
+  .add(curve.polar((θ) => 1 + Math.cos(θ)).on([0, 2 * Math.PI]))
+  .compile()
+  .toSVG();
 ```
 
 **검증**: 극좌표 격자 (동심원 + 방사선).
@@ -290,8 +377,12 @@ scene().equal().polarGrid().add(
 ### F2. 구면 격자
 
 ```js
-scene().dim(3).sphericalGrid().camera({ position: [5,5,5] })
-  .compile().toSVG();
+scene()
+  .dim(3)
+  .sphericalGrid()
+  .camera({ position: [5, 5, 5] })
+  .compile()
+  .toSVG();
 ```
 
 **검증**: 위선 + 경선.
@@ -300,10 +391,12 @@ scene().dim(3).sphericalGrid().camera({ position: [5,5,5] })
 ### F3. 복소평면
 
 ```js
-scene().equal().axes({ label: 'Re, Im' }).add(
-  point.complex(3, -4).dot().label('$3-4i$'),
-  line.through(point.origin(), point.complex(3, -4)).color('#888'),
-).compile().toSVG();
+scene()
+  .equal()
+  .axes({ label: 'Re, Im' })
+  .add(point.complex(3, -4).dot().label('$3-4i$'), line.through(point.origin(), point.complex(3, -4)).color('#888'))
+  .compile()
+  .toSVG();
 ```
 
 **검증**: 복소수를 데카르트로 매핑.
@@ -316,13 +409,19 @@ scene().equal().axes({ label: 'Re, Im' }).add(
 ### G1. 각도 (일반 + 직각 + 다중 호)
 
 ```js
-const A = point(0,0), B = point(4,0), C = point(1,3);
-scene().equal().add(
-  triangle(A,B,C),
-  annotate.angle(A, B, C).arc({ radius: 30 }).label('α').degrees(),
-  annotate.angle(B, C, A).arc({ radius: 30, double: true }).label('β'),
-  annotate.angle(C, A, B).rightAngle(),   // 실제로 직각이 아니면 경고
-).compile().toSVG();
+const A = point(0, 0),
+  B = point(4, 0),
+  C = point(1, 3);
+scene()
+  .equal()
+  .add(
+    triangle(A, B, C),
+    annotate.angle(A, B, C).arc({ radius: 30 }).label('α').degrees(),
+    annotate.angle(B, C, A).arc({ radius: 30, double: true }).label('β'),
+    annotate.angle(C, A, B).rightAngle(), // 실제로 직각이 아니면 경고
+  )
+  .compile()
+  .toSVG();
 ```
 
 **검증**: 호, 이중 호, 직각 표시.
@@ -331,10 +430,14 @@ scene().equal().add(
 ### G2. 치수선
 
 ```js
-scene().equal().add(
-  segment(point(0,0), point(4,0)),
-  annotate.dimension(point(0,0), point(4,0)).offset(24).label('4').units('cm'),
-).compile().toSVG();
+scene()
+  .equal()
+  .add(
+    segment(point(0, 0), point(4, 0)),
+    annotate.dimension(point(0, 0), point(4, 0)).offset(24).label('4').units('cm'),
+  )
+  .compile()
+  .toSVG();
 ```
 
 **검증**: 치수선, 화살촉, 텍스트 배치.
@@ -343,13 +446,19 @@ scene().equal().add(
 ### G3. 합동 tick
 
 ```js
-const A = point(0,0), B = point(2,0), C = point(1, 1.7);
-scene().equal().add(
-  triangle(A, B, C),
-  annotate.tick(segment(A,B)).count(2),
-  annotate.tick(segment(B,C)).count(2),
-  annotate.tick(segment(C,A)).count(3),
-).compile().toSVG();
+const A = point(0, 0),
+  B = point(2, 0),
+  C = point(1, 1.7);
+scene()
+  .equal()
+  .add(
+    triangle(A, B, C),
+    annotate.tick(segment(A, B)).count(2),
+    annotate.tick(segment(B, C)).count(2),
+    annotate.tick(segment(C, A)).count(3),
+  )
+  .compile()
+  .toSVG();
 ```
 
 **검증**: tick 개수, 변에 수직.
@@ -359,11 +468,21 @@ scene().equal().add(
 
 ```js
 const f = tex`x^{2}`;
-scene().view([-0.5,3],[-0.5,10]).equal().axes().add(
-  curve.fn(f).on([-0.5,3]).color('crimson'),
-  annotate.integral(f).from(0).to(2).shade('steelblue')
-    .label(tex`\int_0^2 x^2\,dx = \tfrac{8}{3}`),
-).compile().toSVG();
+scene()
+  .view([-0.5, 3], [-0.5, 10])
+  .equal()
+  .axes()
+  .add(
+    curve.fn(f).on([-0.5, 3]).color('crimson'),
+    annotate
+      .integral(f)
+      .from(0)
+      .to(2)
+      .shade('steelblue')
+      .label(tex`\int_0^2 x^2\,dx = \tfrac{8}{3}`),
+  )
+  .compile()
+  .toSVG();
 ```
 
 **검증**: 음영 영역 + KaTeX 조판.
@@ -372,10 +491,14 @@ scene().view([-0.5,3],[-0.5,10]).equal().axes().add(
 ### G5. 화살표 + 라벨
 
 ```js
-scene().equal().add(
-  annotate.arrow(point(0,0), point(2,1)).label('v'),
-  annotate.arrow(point(0,0), point(1,2)).label('w').color('crimson'),
-).compile().toSVG();
+scene()
+  .equal()
+  .add(
+    annotate.arrow(point(0, 0), point(2, 1)).label('v'),
+    annotate.arrow(point(0, 0), point(1, 2)).label('w').color('crimson'),
+  )
+  .compile()
+  .toSVG();
 ```
 
 **검증**: 화살촉 스타일 (Stealth).
@@ -388,10 +511,17 @@ scene().equal().add(
 ### H1. 수식 라벨
 
 ```js
-scene().equal().axes().add(
-  curve.fn(tex`\sin(x)`).on([-Math.PI, Math.PI])
-    .label(tex`f(x) = \sin x`),
-).compile().toSVG();
+scene()
+  .equal()
+  .axes()
+  .add(
+    curve
+      .fn(tex`\sin(x)`)
+      .on([-Math.PI, Math.PI])
+      .label(tex`f(x) = \sin x`),
+  )
+  .compile()
+  .toSVG();
 ```
 
 **검증**: KaTeX 조판, baseline 정렬.
@@ -403,13 +533,21 @@ scene().equal().axes().add(
 const f = tex`x^{2} - 1`;
 const df = f.diff('x').simplify();
 const F = curve.fn(f).on([-3, 3]);
-const T = line.tangent(F).at(1).dash([5,3]);
+const T = line.tangent(F).at(1).dash([5, 3]);
 
-scene().view([-3,4],[-2,9]).equal().axes().add(
-  F.label(tex`f(x) = x^2 - 1`),
-  T.label(tex`f'(x) = ${df.toLatex()}`),
-  point(1, 0).dot().label(tex`(1, 0)`),
-).compile().toSVG();
+scene()
+  .view([-3, 4], [-2, 9])
+  .equal()
+  .axes()
+  .add(
+    F.label(tex`f(x) = x^2 - 1`),
+    T.label(tex`f'(x) = ${df.toLatex()}`),
+    point(1, 0)
+      .dot()
+      .label(tex`(1, 0)`),
+  )
+  .compile()
+  .toSVG();
 ```
 
 **검증**: 심볼릭 미분 결과가 라벨에 반영.
@@ -418,9 +556,11 @@ scene().view([-3,4],[-2,9]).equal().axes().add(
 ### H3. 복잡한 수식
 
 ```js
-scene().equal().add(
-  annotate.caption(tex`\sum_{n=1}^{\infty} \frac{1}{n^2} = \frac{\pi^2}{6}`),
-).compile().toSVG();
+scene()
+  .equal()
+  .add(annotate.caption(tex`\sum_{n=1}^{\infty} \frac{1}{n^2} = \frac{\pi^2}{6}`))
+  .compile()
+  .toSVG();
 ```
 
 **검증**: 급수, 분수, 그리스 문자.
@@ -433,12 +573,16 @@ scene().equal().add(
 ### I1. Dash 패턴
 
 ```js
-scene().axes().add(
-  line.horizontal(0).dash([5, 3]),
-  line.horizontal(1).dash([2, 2]),
-  line.horizontal(2).dash([10, 5, 2, 5]),
-  line.horizontal(3).dash(1),         // 점선
-).compile().toSVG();
+scene()
+  .axes()
+  .add(
+    line.horizontal(0).dash([5, 3]),
+    line.horizontal(1).dash([2, 2]),
+    line.horizontal(2).dash([10, 5, 2, 5]),
+    line.horizontal(3).dash(1), // 점선
+  )
+  .compile()
+  .toSVG();
 ```
 
 **검증**: `stroke-dasharray` 매핑.
@@ -447,10 +591,14 @@ scene().axes().add(
 ### I2. 투명도
 
 ```js
-scene().equal().add(
-  circle.center(point(0,0)).radius(1).fill('red').opacity(0.5),
-  circle.center(point(1,0)).radius(1).fill('blue').opacity(0.5),
-).compile().toSVG();
+scene()
+  .equal()
+  .add(
+    circle.center(point(0, 0)).radius(1).fill('red').opacity(0.5),
+    circle.center(point(1, 0)).radius(1).fill('blue').opacity(0.5),
+  )
+  .compile()
+  .toSVG();
 ```
 
 **검증**: 겹친 영역의 색상.
@@ -459,13 +607,22 @@ scene().equal().add(
 ### I3. 그라디언트
 
 ```js
-scene().equal().add(
-  circle.center(point(0,0)).radius(1)
-    .gradient({ type: 'radial', stops: [
-      { offset: 0, color: '#fff' },
-      { offset: 1, color: '#3b82f6' },
-    ]}),
-).compile().toSVG();
+scene()
+  .equal()
+  .add(
+    circle
+      .center(point(0, 0))
+      .radius(1)
+      .gradient({
+        type: 'radial',
+        stops: [
+          { offset: 0, color: '#fff' },
+          { offset: 1, color: '#3b82f6' },
+        ],
+      }),
+  )
+  .compile()
+  .toSVG();
 ```
 
 **검증**: `<radialGradient>` 생성.
@@ -474,11 +631,15 @@ scene().equal().add(
 ### I4. z-order
 
 ```js
-scene().equal().add(
-  circle.center(point(0,0)).radius(1).fill('red').z(1),
-  circle.center(point(0.5,0)).radius(1).fill('blue').z(3),
-  circle.center(point(1,0)).radius(1).fill('green').z(2),
-).compile().toSVG();
+scene()
+  .equal()
+  .add(
+    circle.center(point(0, 0)).radius(1).fill('red').z(1),
+    circle.center(point(0.5, 0)).radius(1).fill('blue').z(3),
+    circle.center(point(1, 0)).radius(1).fill('green').z(2),
+  )
+  .compile()
+  .toSVG();
 ```
 
 **검증**: z 값 순서대로 렌더.
@@ -487,10 +648,16 @@ scene().equal().add(
 ### I5. 클리핑
 
 ```js
-scene().equal().add(
-  curve.fn(x => Math.tan(x)).on([-5, 5])
-    .clip(region.between(line.horizontal(-2), line.horizontal(2))),
-).compile().toSVG();
+scene()
+  .equal()
+  .add(
+    curve
+      .fn((x) => Math.tan(x))
+      .on([-5, 5])
+      .clip(region.between(line.horizontal(-2), line.horizontal(2))),
+  )
+  .compile()
+  .toSVG();
 ```
 
 **검증**: `<clipPath>` 생성.
@@ -521,7 +688,11 @@ scene().view([0, 1e-6], [0, 1e-6]).add(point(5e-7, 5e-7)).compile().toSVG();
 ### J3. 극단적으로 넓은 view
 
 ```js
-scene().view([-1e6, 1e6], [-1e6, 1e6]).add(circle.center(point(0,0)).radius(1e5)).compile().toSVG();
+scene()
+  .view([-1e6, 1e6], [-1e6, 1e6])
+  .add(circle.center(point(0, 0)).radius(1e5))
+  .compile()
+  .toSVG();
 ```
 
 **검증**: 큰 좌표에서도 path 정확.
@@ -530,11 +701,15 @@ scene().view([-1e6, 1e6], [-1e6, 1e6]).add(circle.center(point(0,0)).radius(1e5)
 ### J4. 축퇴 도형
 
 ```js
-scene().axes().add(
-  segment(point(0,0), point(0,0)),       // 길이 0
-  circle.center(point(0,0)).radius(0),   // 반지름 0
-  triangle(point(0,0), point(1,0), point(2,0)),  // 일직선
-).compile().toSVG();
+scene()
+  .axes()
+  .add(
+    segment(point(0, 0), point(0, 0)), // 길이 0
+    circle.center(point(0, 0)).radius(0), // 반지름 0
+    triangle(point(0, 0), point(1, 0), point(2, 0)), // 일직선
+  )
+  .compile()
+  .toSVG();
 ```
 
 **검증**: 크래시 없이 처리.
@@ -543,11 +718,11 @@ scene().axes().add(
 ### J5. 유니코드 라벨
 
 ```js
-scene().axes().add(
-  point(0,0).dot().label('α'),
-  point(1,0).dot().label('점 A'),
-  point(2,0).dot().label('$\\alpha\\beta\\gamma$'),
-).compile().toSVG();
+scene()
+  .axes()
+  .add(point(0, 0).dot().label('α'), point(1, 0).dot().label('점 A'), point(2, 0).dot().label('$\\alpha\\beta\\gamma$'))
+  .compile()
+  .toSVG();
 ```
 
 **검증**: 한글, 그리스 문자, LaTeX.
@@ -556,8 +731,9 @@ scene().axes().add(
 ### J6. 매우 많은 요소
 
 ```js
-const pts = Array.from({length: 1000}, (_, i) =>
-  point(Math.cos(i*0.1)*i*0.01, Math.sin(i*0.1)*i*0.01).dot());
+const pts = Array.from({ length: 1000 }, (_, i) =>
+  point(Math.cos(i * 0.1) * i * 0.01, Math.sin(i * 0.1) * i * 0.01).dot(),
+);
 scene().equal().addAll(pts).compile().toSVG();
 ```
 
@@ -571,16 +747,27 @@ scene().equal().addAll(pts).compile().toSVG();
 ### K1. 삼각형 내심 (중학교)
 
 ```js
-const A = point(0,0), B = point(5,0), C = point(1.5, 4);
+const A = point(0, 0),
+  B = point(5, 0),
+  C = point(1.5, 4);
 const tri = triangle(A, B, C).fill('#eef3ff').stroke(2);
-scene().equal().axes().theme('textbook').add(
-  tri, A, B, C,
-  circle.inscribed(tri).color('#e11').dash([4,3]),
-  segment(A, point.incenter(tri)).dash([2,2]).color('#888'),
-  annotate.angle(A, B, C).arc().degrees().label('α'),
-  annotate.tick(segment(A,B)).count(2),
-  annotate.tick(segment(B,C)).count(2),
-).compile().toSVG();
+scene()
+  .equal()
+  .axes()
+  .theme('textbook')
+  .add(
+    tri,
+    A,
+    B,
+    C,
+    circle.inscribed(tri).color('#e11').dash([4, 3]),
+    segment(A, point.incenter(tri)).dash([2, 2]).color('#888'),
+    annotate.angle(A, B, C).arc().degrees().label('α'),
+    annotate.tick(segment(A, B)).count(2),
+    annotate.tick(segment(B, C)).count(2),
+  )
+  .compile()
+  .toSVG();
 ```
 
 **검증**: 모든 요소가 겹치지 않고 배치.
@@ -589,18 +776,32 @@ scene().equal().axes().theme('textbook').add(
 ### K2. 원과 접선 (고등학교)
 
 ```js
-const O = point.origin(), P = point(5, 0);
+const O = point.origin(),
+  P = point(5, 0);
 const C = circle.center(O).radius(3);
 const T = point.intersect(C, line.tangent(C).at(P));
 
-scene().view([-4,6],[-4,4]).equal().axes().theme('textbook').add(
-  C.stroke(2), O, P, T,
-  line.through(P, T).color('#c00'),
-  segment(O, T).dash([3,3]).color('#888'),
-  annotate.angle(O, T, P).rightAngle(),
-  annotate.dimension(O, P).label(tex`5`).units('cm'),
-  annotate.caption(tex`OT \perp PT`),
-).compile().toSVG();
+scene()
+  .view([-4, 6], [-4, 4])
+  .equal()
+  .axes()
+  .theme('textbook')
+  .add(
+    C.stroke(2),
+    O,
+    P,
+    T,
+    line.through(P, T).color('#c00'),
+    segment(O, T).dash([3, 3]).color('#888'),
+    annotate.angle(O, T, P).rightAngle(),
+    annotate
+      .dimension(O, P)
+      .label(tex`5`)
+      .units('cm'),
+    annotate.caption(tex`OT \perp PT`),
+  )
+  .compile()
+  .toSVG();
 ```
 
 **검증**: 교점 T의 정확성, 직각 표시.
@@ -609,12 +810,25 @@ scene().view([-4,6],[-4,4]).equal().axes().theme('textbook').add(
 ### K3. 회전체 (3D 미적분)
 
 ```js
-scene().dim(3).camera({ position: [6,-6,4] }).theme('textbook').add(
-  surface.revolution(curve.fn(tex`\sqrt{x}`).on([0,4]))
-    .about(line.horizontal(0)).opacity(0.85).color('#93c5fd'),
-  curve.fn(tex`\sqrt{x}`).on([0,4]).color('crimson').stroke(2),
-  annotate.caption(tex`V = \pi \int_0^4 x\,dx = 8\pi`),
-).compile().toSVG();
+scene()
+  .dim(3)
+  .camera({ position: [6, -6, 4] })
+  .theme('textbook')
+  .add(
+    surface
+      .revolution(curve.fn(tex`\sqrt{x}`).on([0, 4]))
+      .about(line.horizontal(0))
+      .opacity(0.85)
+      .color('#93c5fd'),
+    curve
+      .fn(tex`\sqrt{x}`)
+      .on([0, 4])
+      .color('crimson')
+      .stroke(2),
+    annotate.caption(tex`V = \pi \int_0^4 x\,dx = 8\pi`),
+  )
+  .compile()
+  .toSVG();
 ```
 
 **검증**: 3D 곡면 + 2D 곡선 혼합.
@@ -623,11 +837,20 @@ scene().dim(3).camera({ position: [6,-6,4] }).theme('textbook').add(
 ### K4. 극좌표 장미 + 심볼릭
 
 ```js
-scene().equal().polarGrid().theme('textbook').add(
-  curve.polar(θ => Math.cos(3*θ)).on([0, Math.PI])
-    .stroke(1.8).color('#3b82f6')
-    .label(tex`r = \cos 3\theta`),
-).compile().toSVG();
+scene()
+  .equal()
+  .polarGrid()
+  .theme('textbook')
+  .add(
+    curve
+      .polar((θ) => Math.cos(3 * θ))
+      .on([0, Math.PI])
+      .stroke(1.8)
+      .color('#3b82f6')
+      .label(tex`r = \cos 3\theta`),
+  )
+  .compile()
+  .toSVG();
 ```
 
 **검증**: 극좌표 곡선 + LaTeX 라벨.
@@ -640,15 +863,30 @@ const f = tex`x^{2} - 1`;
 const df = f.diff('x').simplify();
 const F = curve.fn(f).on([-3, 3]);
 
-scene().view([-3,4],[-2,9]).equal().axes()
-  .grid({ step: 1, minor: 0.5 }).theme('textbook').add(
-    F.color('crimson').stroke(2).label(tex`f(x) = ${f.toLatex()}`),
-    line.tangent(F).at(1).dash([5,3]).color('#666'),
-    point(1, 0).dot().label(tex`(1, 0)`),
+scene()
+  .view([-3, 4], [-2, 9])
+  .equal()
+  .axes()
+  .grid({ step: 1, minor: 0.5 })
+  .theme('textbook')
+  .add(
+    F.color('crimson')
+      .stroke(2)
+      .label(tex`f(x) = ${f.toLatex()}`),
+    line.tangent(F).at(1).dash([5, 3]).color('#666'),
+    point(1, 0)
+      .dot()
+      .label(tex`(1, 0)`),
     region.riemann(f).on([0, 2]).n(8).left().fill('steelblue').opacity(0.35),
-    annotate.integral(f).from(0).to(2).label(tex`\int_0^2 f\,dx = \tfrac{2}{3}`),
+    annotate
+      .integral(f)
+      .from(0)
+      .to(2)
+      .label(tex`\int_0^2 f\,dx = \tfrac{2}{3}`),
     annotate.caption(tex`f'(x) = ${df.toLatex()}`),
-  ).compile().toSVG();
+  )
+  .compile()
+  .toSVG();
 ```
 
 **검증**: 심볼릭 · 도형 · 주석 · KaTeX 모두 통합.
@@ -675,20 +913,20 @@ CI는 `toSVG()` 결과를 `K2-circle-tangent.svg`와 문자열 비교. 의도적
 
 ## M. 통과 기준 요약
 
-| 카테고리 | 시나리오 수 | 핵심 검증 |
-|---|---|---|
-| A. 기본 | 4 | 좌표 변환, 스타일 매핑 |
-| B. 곡선 | 6 | 샘플링, 불연속, 폐곡선 |
-| C. 원뿔곡선 | 3 | 초점·준선·점근선 |
-| D. 다각형·영역 | 4 | path, fill-rule, 교집합 |
-| E. 3D | 4 | 투영, hidden-line, 다면체 |
-| F. 좌표계 | 3 | 극·구면·복소 |
-| G. 주석 | 5 | 각도·치수·tick·적분 |
-| H. 심볼릭 | 3 | KaTeX, 미분 반영 |
-| I. 스타일 | 5 | dash·opacity·gradient·z·clip |
-| J. 엣지 | 6 | 빈 씬, 극단 view, 유니코드 |
-| K. 통합 | 5 | 실제 교과서 그림 |
-| **합계** | **48** | |
+| 카테고리       | 시나리오 수 | 핵심 검증                    |
+| -------------- | ----------- | ---------------------------- |
+| A. 기본        | 4           | 좌표 변환, 스타일 매핑       |
+| B. 곡선        | 6           | 샘플링, 불연속, 폐곡선       |
+| C. 원뿔곡선    | 3           | 초점·준선·점근선             |
+| D. 다각형·영역 | 4           | path, fill-rule, 교집합      |
+| E. 3D          | 4           | 투영, hidden-line, 다면체    |
+| F. 좌표계      | 3           | 극·구면·복소                 |
+| G. 주석        | 5           | 각도·치수·tick·적분          |
+| H. 심볼릭      | 3           | KaTeX, 미분 반영             |
+| I. 스타일      | 5           | dash·opacity·gradient·z·clip |
+| J. 엣지        | 6           | 빈 씬, 극단 view, 유니코드   |
+| K. 통합        | 5           | 실제 교과서 그림             |
+| **합계**       | **48**      |                              |
 
 ---
 

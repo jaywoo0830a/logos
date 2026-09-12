@@ -26,18 +26,48 @@ import { point } from './shapes/point.js';
  */
 /** 이름 있는 10색 정성 팔레트 (tab10 근사) — `palette.tab.red` 처럼 이름으로 접근한다. */
 const TAB10 = {
-  blue: '#1f77b4', orange: '#ff7f0e', green: '#2ca02c', red: '#d62728', purple: '#9467bd',
-  brown: '#8c564b', pink: '#e377c2', gray: '#7f7f7f', olive: '#bcbd22', cyan: '#17becf',
+  blue: '#1f77b4',
+  orange: '#ff7f0e',
+  green: '#2ca02c',
+  red: '#d62728',
+  purple: '#9467bd',
+  brown: '#8c564b',
+  pink: '#e377c2',
+  gray: '#7f7f7f',
+  olive: '#bcbd22',
+  cyan: '#17becf',
 };
 export const palette = {
-  blue: '#0000ff', red: '#ff0000', green: '#008000', magenta: '#ff00ff',
-  orange: '#ff8c00', yellow: '#bfbf00', cyan: '#00bfbf', black: '#000000',
-  white: '#ffffff', gray: '#808080', navy: '#000080', purple: '#800080',
-  darkgreen: '#006400', darkred: '#8b0000', crimson: '#dc143c', steel: '#4682b4',
-  skyblue: '#87ceeb', coral: '#f08080', wheat: '#f5deb3', orangead: '#ffa500',
+  blue: '#0000ff',
+  red: '#ff0000',
+  green: '#008000',
+  magenta: '#ff00ff',
+  orange: '#ff8c00',
+  yellow: '#bfbf00',
+  cyan: '#00bfbf',
+  black: '#000000',
+  white: '#ffffff',
+  gray: '#808080',
+  navy: '#000080',
+  purple: '#800080',
+  darkgreen: '#006400',
+  darkred: '#8b0000',
+  crimson: '#dc143c',
+  steel: '#4682b4',
+  skyblue: '#87ceeb',
+  coral: '#f08080',
+  wheat: '#f5deb3',
+  orangead: '#ffa500',
   /** 한 글자 단축 (matplotlib 호환) */
-  b: '#0000ff', r: '#ff0000', g: '#008000', m: '#ff00ff', y: '#bfbf00',
-  c: '#00bfbf', k: '#000000', w: '#ffffff', o: '#ff8c00',
+  b: '#0000ff',
+  r: '#ff0000',
+  g: '#008000',
+  m: '#ff00ff',
+  y: '#bfbf00',
+  c: '#00bfbf',
+  k: '#000000',
+  w: '#ffffff',
+  o: '#ff8c00',
   /** 이름 있는 10색 정성 팔레트 (tab10 근사) — palette.tab.red */
   tab: TAB10,
   /** 위 tab 의 값 배열 — palette.tab10[0] === palette.tab.blue (기존 사용처 호환) */
@@ -71,13 +101,8 @@ export function plot2d(xr, yr, { size = [560, 440], grid = { alpha: 0.3 }, axes 
  * @example plot3d({ elev: 25, azim: -50 }).title('3D')
  */
 export function plot3d({ elev = 20, azim = -50, aspect = [1, 1, 0.75], size = [480, 440], axes = false } = {}) {
-  return new Scene()
-    .size(size[0], size[1])
-    .dim(3)
-    .camera({ elev, azim, aspect })
-    .axes(axes);
+  return new Scene().size(size[0], size[1]).dim(3).camera({ elev, azim, aspect }).axes(axes);
 }
-
 
 // ── ③ subplot 합성 ───────────────────────────────────
 /**
@@ -95,7 +120,8 @@ export function subplots(figures, opts = {}) {
 }
 
 // ── ④ 저장 ───────────────────────────────────────────
-const escAttr = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const escAttr = (s) =>
+  String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 /**
  * figure 하나를 파일로 저장한다(SVG, 그리고 가능하면 PNG).
@@ -104,12 +130,16 @@ const escAttr = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').re
  * @param {Object} o { dir, name, svg=true, png=true, scale=1, math='text', log=true }
  * @returns {Promise<{svg:string|null, png:string|null}>} 저장된 경로
  */
-export async function saveFigure(fig, { dir, name, svg = true, png = true, scale = 1, math = 'text', log = true } = {}) {
+export async function saveFigure(
+  fig,
+  { dir, name, svg = true, png = true, scale = 1, math = 'text', log = true } = {},
+) {
   if (!dir) throw new Error('saveFigure: opts.dir 이 필요합니다.');
   // 원시 Scene 이면 컴파일(호출자는 compile() 여부를 신경 쓰지 않아도 된다).
-  const ir = fig && typeof fig.toSVG === 'function' ? fig
-    : (fig && typeof fig.compile === 'function' ? fig.compile() : fig);
-  if (!ir || typeof ir.toSVG !== 'function') throw new Error(`saveFigure: ${name} 은 Scene 또는 SceneIR 이어야 합니다.`);
+  const ir =
+    fig && typeof fig.toSVG === 'function' ? fig : fig && typeof fig.compile === 'function' ? fig.compile() : fig;
+  if (!ir || typeof ir.toSVG !== 'function')
+    throw new Error(`saveFigure: ${name} 은 Scene 또는 SceneIR 이어야 합니다.`);
   mkdirSync(dir, { recursive: true });
   const out = { svg: null, png: null };
   if (svg) {
@@ -140,14 +170,16 @@ export async function saveFigure(fig, { dir, name, svg = true, png = true, scale
  *     ['ex-circle', () => scene().add(circle.center(point(0,0)).radius(1)).compile(), '원'],
  *   ], { dir: 'output/demo', index: true });
  */
-export async function saveFigures(figures, { dir, png = true, scale = 1, math = 'text', log = true, index = false, title = 'logos · 렌더 갤러리' } = {}) {
+export async function saveFigures(
+  figures,
+  { dir, png = true, scale = 1, math = 'text', log = true, index = false, title = 'logos · 렌더 갤러리' } = {},
+) {
   if (!dir) throw new Error('saveFigures: opts.dir 이 필요합니다.');
   mkdirSync(dir, { recursive: true });
-  const list = Array.isArray(figures)
-    ? figures.map((f) => (Array.isArray(f) ? f : [f, f]))
-    : Object.entries(figures);
+  const list = Array.isArray(figures) ? figures.map((f) => (Array.isArray(f) ? f : [f, f])) : Object.entries(figures);
   const entries = [];
-  let ok = 0, fail = 0;
+  let ok = 0,
+    fail = 0;
   for (const [name, factory, label] of list) {
     try {
       const fig = typeof factory === 'function' ? factory() : factory;
@@ -170,10 +202,12 @@ export async function saveFigures(figures, { dir, png = true, scale = 1, math = 
  * (SVG 는 `<object>` 로 임베드 — 파일을 직접 열어도, `node server.js` 로 서빙해도 동작)
  */
 export function writeGallery(dir, entries, { title = 'logos · 렌더 갤러리', file = 'index.html' } = {}) {
-  const cards = entries.map((it) => {
-    const h3 = it.title && it.title !== it.name ? `<h3>${escAttr(it.title)}</h3>` : '';
-    return `<div class="card">${h3}<div class="svgwrap"><object data="${encodeURI(it.name)}.svg" type="image/svg+xml"></object></div><code>${escAttr(it.name)}.svg</code></div>`;
-  }).join('');
+  const cards = entries
+    .map((it) => {
+      const h3 = it.title && it.title !== it.name ? `<h3>${escAttr(it.title)}</h3>` : '';
+      return `<div class="card">${h3}<div class="svgwrap"><object data="${encodeURI(it.name)}.svg" type="image/svg+xml"></object></div><code>${escAttr(it.name)}.svg</code></div>`;
+    })
+    .join('');
   const html = `<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>${escAttr(title)}</title>
 <style>
 :root{color-scheme:light}
@@ -205,9 +239,12 @@ code{display:block;padding:8px 14px;font-size:11px;color:#6b7280;background:#faf
  */
 export function seg(A, B, { color, stroke = 2, dash, opacity } = {}) {
   // 좌표 배열도 받는다 — 이전에는 2D 배열이 컴파일 때 line.pointDir 에서 죽었다(shapes/line.js:19).
-  const toPt = (v) => (v && v.coords ? v : Array.isArray(v) ? (v.length >= 3 ? point(v[0], v[1], v[2]) : point(v[0], v[1])) : v);
-  const a = toPt(A), b = toPt(B);
-  const ca = a.coords || a, cb = b.coords || b;
+  const toPt = (v) =>
+    v && v.coords ? v : Array.isArray(v) ? (v.length >= 3 ? point(v[0], v[1], v[2]) : point(v[0], v[1])) : v;
+  const a = toPt(A),
+    b = toPt(B);
+  const ca = a.coords || a,
+    cb = b.coords || b;
   const is3 = ca.length >= 3 || cb.length >= 3;
   let s = is3 ? curve3.through([ca, cb]) : line.through(a, b);
   if (color !== undefined) s = s.color(color);
@@ -231,5 +268,13 @@ export function poly3(points, { color, stroke = 1, dash, opacity } = {}) {
 }
 
 export default {
-  palette, plot2d, plot3d, subplots, saveFigure, saveFigures, writeGallery, seg, poly3,
+  palette,
+  plot2d,
+  plot3d,
+  subplots,
+  saveFigure,
+  saveFigures,
+  writeGallery,
+  seg,
+  poly3,
 };

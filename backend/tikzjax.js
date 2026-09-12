@@ -7,10 +7,7 @@ import * as tikzjax from 'node-tikzjax';
 
 // node-tikzjax 1.x: `import tex2svg from 'node-tikzjax'` → default.default 가
 // README 기준 함수 `tex2svg(input, options)` 이다. (다른 버전 대비 fallback)
-const tex2svgFn = tikzjax.default?.default
-  || tikzjax.default
-  || tikzjax.tex
-  || tikzjax['module.exports']?.tex;
+const tex2svgFn = tikzjax.default?.default || tikzjax.default || tikzjax.tex || tikzjax['module.exports']?.tex;
 const HAS_OPTIONS = tex2svgFn.name === 'tex2svg';
 
 let busy = false;
@@ -18,7 +15,11 @@ let loaded = false;
 const queue = [];
 function acquire() {
   return new Promise((resolve) => {
-    if (!busy) { busy = true; resolve(); return; }
+    if (!busy) {
+      busy = true;
+      resolve();
+      return;
+    }
     queue.push(resolve);
   });
 }
@@ -29,7 +30,13 @@ function release() {
 
 async function ensureLoaded() {
   if (!loaded) {
-    if (tikzjax.load) { try { await tikzjax.load(); } catch { /* 일부 버전은 load() 무의미 */ } }
+    if (tikzjax.load) {
+      try {
+        await tikzjax.load();
+      } catch {
+        /* 일부 버전은 load() 무의미 */
+      }
+    }
     loaded = true;
   }
 }

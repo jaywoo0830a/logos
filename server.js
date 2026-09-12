@@ -10,13 +10,18 @@ import { join, normalize, extname, resolve } from 'node:path';
 
 const PORT = Number(process.env.PORT || 18080);
 const HOST = process.env.HOST || '0.0.0.0'; // 컨테이너 외부 접속 허용
-const ROOT = resolve(
-  process.argv[2] || process.env.LOGOS_ROOT || join(import.meta.dirname, 'output'),
-);
+const ROOT = resolve(process.argv[2] || process.env.LOGOS_ROOT || join(import.meta.dirname, 'output'));
 // `/` 로 들어왔을 때 차례로 시도할 갤러리(통합 → 삼각함수 11A/11B → 플러그인 데모 → 3D(9C) → 2D(9B) → 3D+2D(12A2) → 복소수(12A1)).
-const GALLERIES = ['index.html', 'parity11a/index.html', 'parity11b/index.html',
+const GALLERIES = [
+  'index.html',
+  'parity11a/index.html',
+  'parity11b/index.html',
   'plugin-demo/index.html',
-  'parity9c/index.html', 'parity9b/index.html', 'parity12a2/index.html', 'parity12a1/index.html'];
+  'parity9c/index.html',
+  'parity9b/index.html',
+  'parity12a2/index.html',
+  'parity12a1/index.html',
+];
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',
@@ -39,10 +44,17 @@ const server = createServer(async (req, res) => {
     // 경로 이스케이프 방지
     const safe = candidates.map((c) => normalize(c).replace(/^(\.\.[/\\])+/, ''));
     const files = safe.map((c) => join(ROOT, c)).filter((f) => f.startsWith(ROOT));
-    let file = null, data = null, lastErr = null;
+    let file = null,
+      data = null,
+      lastErr = null;
     for (const f of files) {
-      try { data = await readFile(f); file = f; break; }
-      catch (e) { lastErr = e; }
+      try {
+        data = await readFile(f);
+        file = f;
+        break;
+      } catch (e) {
+        lastErr = e;
+      }
     }
     if (!data) throw lastErr || new Error('not found');
     const ext = extname(file).toLowerCase();

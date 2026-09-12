@@ -30,7 +30,9 @@ test('point: polar / cylindrical / spherical 변환', () => {
 });
 
 test('point: midpoint / centroid / intersect / incenter', () => {
-  const A = point(0, 0), B = point(4, 0), C = point(2, 3);
+  const A = point(0, 0),
+    B = point(4, 0),
+    C = point(2, 3);
   const mid = point.midpoint(A, B);
   approx(mid.coords[0], 2);
   approx(mid.coords[1], 0);

@@ -16,7 +16,11 @@ test('B1 toPoint: 배열·객체·Point 를 모두 점으로 정규화', () => {
   assert.equal(toPoint(p), p, '기존 Point 는 그대로');
 
   // annotate.text([x, y]) — 예전엔 c.P.coords 가 undefined 라 죽었다
-  const svg = scene().view([0, 1], [0, 1]).add(annotate.text([0.1, 0.5]).label('hi')).compile().toSVG();
+  const svg = scene()
+    .view([0, 1], [0, 1])
+    .add(annotate.text([0.1, 0.5]).label('hi'))
+    .compile()
+    .toSVG();
   assert.ok(svg.includes('hi'), '배열 좌표 텍스트 렌더');
 
   // segment([x,y], [x2,y2])
@@ -25,8 +29,16 @@ test('B1 toPoint: 배열·객체·Point 를 모두 점으로 정규화', () => {
   assert.deepEqual(seg.b.coords, [1, 1]);
 
   // kit.seg 도 동일 (이미 지원 — 회귀 유지)
-  const a1 = scene().view([0, 2], [0, 2]).add(kit.seg([0, 0], [1, 1])).compile().toSVG();
-  const p1 = scene().view([0, 2], [0, 2]).add(kit.seg(point(0, 0), point(1, 1))).compile().toSVG();
+  const a1 = scene()
+    .view([0, 2], [0, 2])
+    .add(kit.seg([0, 0], [1, 1]))
+    .compile()
+    .toSVG();
+  const p1 = scene()
+    .view([0, 2], [0, 2])
+    .add(kit.seg(point(0, 0), point(1, 1)))
+    .compile()
+    .toSVG();
   assert.equal(a1, p1);
 });
 
@@ -44,8 +56,14 @@ test('B3 태그드 템플릿: xy / range / view', () => {
   assert.deepEqual(xy`1 2`.coords, [1, 2]);
   assert.deepEqual(range`0..10 step 2`, [0, 2, 4, 6, 8, 10]);
   assert.deepEqual(range`3..-3`, [3, 2, 1, 0, -1, -2, -3]);
-  assert.deepEqual(view`x∈[-3, 3]  y∈[-1, 4]`, [[-3, 3], [-1, 4]]);
-  assert.deepEqual(view`[-2,2] [0,5]`, [[-2, 2], [0, 5]]);
+  assert.deepEqual(view`x∈[-3, 3]  y∈[-1, 4]`, [
+    [-3, 3],
+    [-1, 4],
+  ]);
+  assert.deepEqual(view`[-2,2] [0,5]`, [
+    [-2, 2],
+    [0, 5],
+  ]);
   assert.throws(() => range`nope`, /허용 예/);
 });
 

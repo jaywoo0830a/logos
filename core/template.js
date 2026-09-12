@@ -36,7 +36,8 @@ export function range(strings, ...vals) {
   const s = raw(strings, vals).trim();
   const m = s.match(new RegExp(`^\\s*(${NUM})\\s*\\.\\.\\s*(${NUM})(?:\\s*step\\s*(${NUM}))?\\s*$`, 'i'));
   if (!m) fail('range', s, 'range`0..10 step 2`');
-  const a = Number(m[1]), b = Number(m[2]);
+  const a = Number(m[1]),
+    b = Number(m[2]);
   const step = m[3] !== undefined ? Math.abs(Number(m[3])) : 1;
   if (!(step > 0) || !Number.isFinite(a) || !Number.isFinite(b)) fail('range', s, 'range`0..10 step 2` (step > 0)');
   const out = [];

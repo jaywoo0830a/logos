@@ -2,17 +2,12 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { scene, point, triangle, circle, line, segment, curve, region, annotate, tex } from '../index.js';
 
-function count(svg, tag) { return (svg.match(new RegExp(`<${tag}[ >]`, 'g')) || []).length; }
+function count(svg, tag) {
+  return (svg.match(new RegExp(`<${tag}[ >]`, 'g')) || []).length;
+}
 
 test('scene: 기본 2D SVG 컴파일', () => {
-  const svg = scene()
-    .view([-3, 3], [-2, 2])
-    .equal()
-    .axes()
-    .grid(1)
-    .add(point(1, 1).label('A').dot())
-    .compile()
-    .toSVG();
+  const svg = scene().view([-3, 3], [-2, 2]).equal().axes().grid(1).add(point(1, 1).label('A').dot()).compile().toSVG();
   assert.ok(svg.startsWith('<svg'), 'SVG 시작 태그');
   assert.ok(count(svg, 'circle') >= 1, '점 렌더링');
   assert.ok(count(svg, 'path') >= 1, '그리드 렌더링');
@@ -51,7 +46,15 @@ test('scene: 극좌표 장미 → SVG', () => {
 test('scene: region.riemann 채우기', () => {
   const svg = scene()
     .view([-0.5, 3], [-0.5, 3])
-    .add(region.riemann((x) => x * x).on([0, 2]).n(8).left().fill('#2196f3').opacity(0.4))
+    .add(
+      region
+        .riemann((x) => x * x)
+        .on([0, 2])
+        .n(8)
+        .left()
+        .fill('#2196f3')
+        .opacity(0.4),
+    )
     .compile()
     .toSVG();
   assert.ok(count(svg, 'rect') >= 1, '리만 직사각형');

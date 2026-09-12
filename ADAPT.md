@@ -31,13 +31,13 @@
 
 ### 후보 비교
 
-| 엔진 | 언어 | LaTeX 입출력 | 강점 | Node.js 연동 |
-|---|---|---|---|---|
-| **SageMath** | Python | ✅ 양방향 | 100+ 패키지, 대수·정수론·군론 | MCP 서버 / REST API |
-| **SymPy** | Python | ✅ 출력 | 순수 Python, 260K LOC, 검증됨 | subprocess / Pyodide |
-| **Maxima** | Lisp | ✅ 출력 | 1968년부터, CAS의 원조 | subprocess / tex2max |
-| **Symbolics.jl** | Julia | ⚠️ 제한적 | SciML 연동, ODE 특화 | subprocess |
-| **GAP** | Lisp | ❌ | 군론·조합론 특화 | Sage를 통해 |
+| 엔진             | 언어   | LaTeX 입출력 | 강점                          | Node.js 연동         |
+| ---------------- | ------ | ------------ | ----------------------------- | -------------------- |
+| **SageMath**     | Python | ✅ 양방향    | 100+ 패키지, 대수·정수론·군론 | MCP 서버 / REST API  |
+| **SymPy**        | Python | ✅ 출력      | 순수 Python, 260K LOC, 검증됨 | subprocess / Pyodide |
+| **Maxima**       | Lisp   | ✅ 출력      | 1968년부터, CAS의 원조        | subprocess / tex2max |
+| **Symbolics.jl** | Julia  | ⚠️ 제한적    | SciML 연동, ODE 특화          | subprocess           |
+| **GAP**          | Lisp   | ❌           | 군론·조합론 특화              | Sage를 통해          |
 
 ### 권장: **SageMath** (1순위) + **SymPy** (폴백)
 
@@ -52,17 +52,28 @@ SymPy는 SageMath의 내부 엔진 중 하나이므로, Sage가 실패할 경우
 class SageAdapter {
   async diff(latex, v = 'x') {
     const result = await this.mcp.call('differentiate_expression', {
-      expression: latex, variable: v
+      expression: latex,
+      variable: v,
     });
-    return result.latex;  // Sage가 LaTeX로 직접 출력
+    return result.latex; // Sage가 LaTeX로 직접 출력
   }
-  async integrate(latex, opts) { /* ... */ }
-  async solve(latex, v) { /* ... */ }
-  async limit(latex, v, to) { /* ... */ }
-  async series(latex, v, at, order) { /* ... */ }
+  async integrate(latex, opts) {
+    /* ... */
+  }
+  async solve(latex, v) {
+    /* ... */
+  }
+  async limit(latex, v, to) {
+    /* ... */
+  }
+  async series(latex, v, at, order) {
+    /* ... */
+  }
 }
 
-class SymPyAdapter extends SageAdapter { /* 폴백 */ }
+class SymPyAdapter extends SageAdapter {
+  /* 폴백 */
+}
 ```
 
 ---
@@ -71,11 +82,11 @@ class SymPyAdapter extends SageAdapter { /* 폴백 */ }
 
 ### 후보 비교
 
-| 엔진 | 언어 | SVG 출력 | 교과서 품질 | 3D |
-|---|---|---|---|---|
-| **JSXGraph** | JS | ✅ | ✅ 20년 검증 | 제한적 |
-| **Asymptote** | C++ | ✅ PDF/SVG | ✅ LaTeX 조판 | ✅ 3D PRC |
-| **GeoGebra** | Java/JS | ✅ | ✅ | ✅ |
+| 엔진          | 언어    | SVG 출력   | 교과서 품질   | 3D        |
+| ------------- | ------- | ---------- | ------------- | --------- |
+| **JSXGraph**  | JS      | ✅         | ✅ 20년 검증  | 제한적    |
+| **Asymptote** | C++     | ✅ PDF/SVG | ✅ LaTeX 조판 | ✅ 3D PRC |
+| **GeoGebra**  | Java/JS | ✅         | ✅            | ✅        |
 
 ### 권장: **Asymptote** (출판 품질) + **JSXGraph** (인터랙티브)
 
@@ -115,12 +126,12 @@ export function irToAsymptote(ir) {
 
 ### 후보 비교
 
-| 엔진 | 언어 | 출력 | 품질 | WASM |
-|---|---|---|---|---|
-| **Asymptote** | C++ | PRC/SVG | ✅ 최고 | ❌ |
-| **MathBox** | JS | WebGL | ✅ 프레젠테이션 | ❌ |
-| **MathLikeAnim-rs** | Rust | Canvas/SVG | ✅ Manim 스타일 | ✅ |
-| **Three.js** | JS | WebGL | ✅ 범용 | ❌ |
+| 엔진                | 언어 | 출력       | 품질            | WASM |
+| ------------------- | ---- | ---------- | --------------- | ---- |
+| **Asymptote**       | C++  | PRC/SVG    | ✅ 최고         | ❌   |
+| **MathBox**         | JS   | WebGL      | ✅ 프레젠테이션 | ❌   |
+| **MathLikeAnim-rs** | Rust | Canvas/SVG | ✅ Manim 스타일 | ✅   |
+| **Three.js**        | JS   | WebGL      | ✅ 범용         | ❌   |
 
 ### 권장: **Asymptote** (정적 출판) + **MathLikeAnim-rs** (웹/WASM)
 
@@ -172,13 +183,13 @@ Asymptote의 **PDF 출력**을 사용하거나, TikZ 코드를 `pdflatex`로 컴
 
 ## 🎯 최종 추천 스택
 
-| 계층 | 1순위 | 2순위 | 이유 |
-|---|---|---|---|
-| **심볼릭** | **SageMath** (MCP) | SymPy | 37개 도구, LaTeX 양방향, 100+ 패키지 |
-| **2D 기하** | **Asymptote** | JSXGraph | 출판 품질 LaTeX 조판, 3D까지 확장 |
-| **3D** | **Asymptote** | MathLikeAnim-rs | 3D PRC, TeX의 3차원 확장 |
-| **LaTeX/TikZ** | **node-tikzjax** | — | WASM, 툴체인 불필요 |
-| **수식 조판** | **KaTeX** | MathJax | 빠르고 가벼움 |
+| 계층           | 1순위              | 2순위           | 이유                                 |
+| -------------- | ------------------ | --------------- | ------------------------------------ |
+| **심볼릭**     | **SageMath** (MCP) | SymPy           | 37개 도구, LaTeX 양방향, 100+ 패키지 |
+| **2D 기하**    | **Asymptote**      | JSXGraph        | 출판 품질 LaTeX 조판, 3D까지 확장    |
+| **3D**         | **Asymptote**      | MathLikeAnim-rs | 3D PRC, TeX의 3차원 확장             |
+| **LaTeX/TikZ** | **node-tikzjax**   | —               | WASM, 툴체인 불필요                  |
+| **수식 조판**  | **KaTeX**          | MathJax         | 빠르고 가벼움                        |
 
 ### 왜 이 조합인가
 
@@ -191,14 +202,14 @@ Asymptote의 **PDF 출력**을 사용하거나, TikZ 코드를 `pdflatex`로 컴
 
 ## 🔌 Node.js 연동 요약
 
-| 엔진 | 연동 방식 | 지연 | 비고 |
-|---|---|---|---|
-| SageMath | MCP / REST / subprocess | 중 | 세션 유지 가능 |
-| SymPy | subprocess / Pyodide | 낮음 | Pyodide는 WASM |
-| Asymptote | CLI (`asy -f svg`) | 중 | CLI 설치 필요 |
-| node-tikzjax | npm import | 낮음 | WASM, 설치 불필요 |
-| MathLikeAnim-rs | npm import | 낮음 | WASM |
-| JSXGraph | npm import | 낮음 | 순수 JS |
+| 엔진            | 연동 방식               | 지연 | 비고              |
+| --------------- | ----------------------- | ---- | ----------------- |
+| SageMath        | MCP / REST / subprocess | 중   | 세션 유지 가능    |
+| SymPy           | subprocess / Pyodide    | 낮음 | Pyodide는 WASM    |
+| Asymptote       | CLI (`asy -f svg`)      | 중   | CLI 설치 필요     |
+| node-tikzjax    | npm import              | 낮음 | WASM, 설치 불필요 |
+| MathLikeAnim-rs | npm import              | 낮음 | WASM              |
+| JSXGraph        | npm import              | 낮음 | 순수 JS           |
 
 ---
 

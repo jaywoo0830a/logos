@@ -28,7 +28,10 @@ test('골든 SVG 스냅샷 (test/fixtures/*.svg)', (t) => {
   }
   assert.equal(missing.length, 0, `fixture 누락: ${missing.join(', ')} — npm run snap:update`);
   for (const name of names) {
-    assert.equal(scenes[name](), readFileSync(join(DIR, `${name}.svg`), 'utf8'),
-      `${name}.svg 불일치 — 의도적 변경이면 npm run snap:update`);
+    assert.equal(
+      scenes[name](),
+      readFileSync(join(DIR, `${name}.svg`), 'utf8'),
+      `${name}.svg 불일치 — 의도적 변경이면 npm run snap:update`,
+    );
   }
 });

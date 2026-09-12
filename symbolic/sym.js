@@ -11,7 +11,9 @@ function toJson(v) {
 export class Sym {
   #ast = null;
 
-  constructor(latex) { this.latex = String(latex); }
+  constructor(latex) {
+    this.latex = String(latex);
+  }
 
   get ast() {
     if (this.#ast === null) this.#ast = ce.parse(this.latex);
@@ -24,15 +26,20 @@ export class Sym {
   }
 
   integrate({ from, to, var: v = 'x' } = {}) {
-    const cmd = from !== undefined
-      ? ['Integrate', this.ast.json, ['Tuple', v, from, to]]
-      : ['Integrate', this.ast.json, v];
+    const cmd =
+      from !== undefined ? ['Integrate', this.ast.json, ['Tuple', v, from, to]] : ['Integrate', this.ast.json, v];
     return new Sym(ce.box(cmd).evaluate().toLatex());
   }
 
-  simplify() { return new Sym(this.ast.simplify().toLatex()); }
-  expand() { return new Sym(this.ast.expand().toLatex()); }
-  factor() { return new Sym(this.ast.factor().toLatex()); }
+  simplify() {
+    return new Sym(this.ast.simplify().toLatex());
+  }
+  expand() {
+    return new Sym(this.ast.expand().toLatex());
+  }
+  factor() {
+    return new Sym(this.ast.factor().toLatex());
+  }
 
   solve(v = 'x') {
     const r = this.ast.solve(v);
@@ -47,7 +54,12 @@ export class Sym {
 
   substitute(map) {
     const m = Object.entries(map).map(([k, v2]) => [k, toJson(v2)]);
-    return new Sym(ce.box(['ReplaceAll', this.ast.json, ['List', ...m]]).evaluate().toLatex());
+    return new Sym(
+      ce
+        .box(['ReplaceAll', this.ast.json, ['List', ...m]])
+        .evaluate()
+        .toLatex(),
+    );
   }
 
   toFunction(v = 'x') {
@@ -58,7 +70,10 @@ export class Sym {
     // 공유 엔진 상태에 영향을 받지 않도록 호출마다 fresh parse
     return (x) => {
       try {
-        const expr = ce.parse(self.latex).subs({ [v]: x }).N();
+        const expr = ce
+          .parse(self.latex)
+          .subs({ [v]: x })
+          .N();
         let nv = expr.numericValue;
         if (nv == null) {
           const j = expr.json;
@@ -72,7 +87,9 @@ export class Sym {
     };
   }
 
-  toLatex() { return this.latex; }
+  toLatex() {
+    return this.latex;
+  }
 
   valueOf() {
     const v = this.ast.N().numericValue;
@@ -92,12 +109,28 @@ function nativeFn(latex, v = 'x') {
   // 단순 삼각/지수/로그: \sin(x), sin(x), \cos(x), … (백슬래시 선택)
   const trig = s.match(/^\\?(sin|cos|tan|asin|acos|atan|sinh|cosh|tanh|log|ln|exp)\('?([a-z])'?\)$/);
   if (trig && trig[2] === v) {
-    const m = { sin: Math.sin, cos: Math.cos, tan: Math.tan, asin: Math.asin, acos: Math.acos, atan: Math.atan, sinh: Math.sinh, cosh: Math.cosh, tanh: Math.tanh, log: Math.log, ln: Math.log, exp: Math.exp };
+    const m = {
+      sin: Math.sin,
+      cos: Math.cos,
+      tan: Math.tan,
+      asin: Math.asin,
+      acos: Math.acos,
+      atan: Math.atan,
+      sinh: Math.sinh,
+      cosh: Math.cosh,
+      tanh: Math.tanh,
+      log: Math.log,
+      ln: Math.log,
+      exp: Math.exp,
+    };
     return (x) => m[trig[1]](x);
   }
   // 상수 (r = 3 등)
   const numConst = s.match(/^([0-9.]+)$/);
-  if (numConst) { const c = parseFloat(numConst[1]); return () => c; }
+  if (numConst) {
+    const c = parseFloat(numConst[1]);
+    return () => c;
+  }
   // 변수 자체
   if (s === v) return (x) => x;
   // 다항식: ax^n + bx^m ... + c  (x^k, x^k+c, a*x^k, a*x^k+b*x^j ...)
@@ -108,14 +141,13 @@ function nativeFn(latex, v = 'x') {
 
 /** 라디안/상수 매핑 아래 단일변수 다항식 파서 (덧셈/뺄셈, 곱, 거듭제곱) */
 function parsePolynomial(s, v, consts) {
-  const token = s
-    .replace(/\\cdot/g, '*')
-    .replace(/\{|\}/g, '');
+  const token = s.replace(/\\cdot/g, '*').replace(/\{|\}/g, '');
   // [부호][계수]*(x)^[지수] 또는 [계수]*x[지수] 형태 토큰으로 분리
   const termRe = /([+-]?)([0-9.]*(?:\*)?)([A-Za-z]+)?(?:\^?\{?(-?[0-9.]+)\}?)?/g;
   const terms = [];
   const body = token.replace(/[()]/g, '');
-  let m; let acc = '';
+  let m;
+  let acc = '';
   // 계수*변수^지수 패턴으로 파싱하는 간단 구현
   const termPat = /([+-]?)(?:([0-9.]+)\*)?([A-Za-z]+)\^?\{?(-?[0-9.]+)\}?|([+-]?)([0-9.]+)/g;
   let mm;

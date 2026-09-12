@@ -5,83 +5,83 @@
 
 ## 실행 파일 ↔ 담당 범위
 
-| 파일 | 담당 | 성격 |
-|---|---|---|
-| `test/senarios.test.js` | SENARIOS v0.1 (A1–A4, B1–B3, C1, D1–D3, F1, G1–G4, H1–H2, I1–I2, I4, J1, J5, K1–K2, K5) | 시나리오 |
-| `test/senarios2.test.js` | SENARIOS v0.2 (B4–B6, C2–C3, D4, E1–E4, F2–F3, G5, H3, I3, I5, J2–J4, J6, K3–K4) | 시나리오 |
-| `test/textbook.test.js` | 1.md 50개 (Stewart/Strang/Ross/Serra 등) | 시나리오 |
-| `test/scene.test.js`, `test/geometry.test.js`, `test/symbolic.test.js`, `test/render.test.js` | 씬/기하/심볼릭/TikZ 단위 | 단위 |
-| `test/adapters.test.js`, `test/external.test.js`, `test/sympy.test.js` | ADAPT.md 외부엔진 어댑터 | 단위 |
-| **`test/invariants.test.js`** | **P0-2 SVG 무결성 린터, P0-1 결정성, P0-5 기하 불변식** | **신규(Phase 0)** |
-| **`test/snapshots.test.js`** | **P0-3 골든 스냅샷 (`test/fixtures/*.svg`, 로컬 전용·gitignore)** | **신규(Phase 0)** |
-| **`test/backend.test.js`** | **P5-1 TikZ/Asymptote/JSXGraph/KaTeX/PNG 백엔드 정합 · `latexToText` 악센트(`\bar`/`\vec`) 폴백 · resvg 폰트 옵션(`fontDirs` 시스템 폰트 — CJK 라벨 tofu 방지)** | **신규(Phase 5·7차·10차)** |
-| **`test/features.test.js`** | **region.betweenX/barH/annulus/wedge · panels · surface.z(+cmap) · vectorField3 · scene.layout · curve3/arrow3/surfaceParam · 3D camera(elev/azim/aspect) · axes(false)/`axes({y:{ticks:false}})` · `axes3/quadrics/circle3/frame3` · `kit`(palette/plot2d/plot3d/subplots/saveFigures) · 타이포그래피(행간·자간) · `linalg`(mat/vec) · `transform.matrix` · 점선(arrow/polygon) · `cplx`(복소수) · `arrow().bend()` 곡선 화살표 · 제목/축라벨 여백에서 눈금·격자 제외** | **신규(§7·6차·7차)** |
-| **`test/plugin.test.js`** | **플러그인 아키텍처 — `use`/`extend`/`chain`/`define`/`static`/`node`(SVG+TikZ)/`theme`/`hook`(`ir`·`svg`)/`around`/`plugin()` escape hatch/미등록 `PluginError` 안내/`plugins` Proxy/`uninstall`·`reset` 원복/이름 충돌 롤백/`plugins/geometry-extras.js` 통합** | **신규(9차)** |
-| **`examples/plugin_demo.js`** | **플러그인 데모 4 figure — `plugins/geometry-extras.js` 로 `ray`·`arc.circular`·`hatch`(새 IR 노드)·체이닝(`.tilt/.dashed/.arrowTip`)·`theme('chalk')`·SVG 훅·`title` 래핑 (코어 수정 0줄)** | **확장 예제(9차)** |
-| **`test/cli.test.js`** | **워크플로우 CLI(`bin/logos.mjs`) — `--help`/`--version`/오류코드(2)/`new` 뼈대/`render`(SVG·갤러리·manifest·원하는 디렉토리)/한 파일 다장(객체·배열)/`logos/plugins/*` subpath/부분 실패(exit 1)/`--dry-run`·`--clean`(사용자 파일 보존)/배시 스크립트 도움말·문법** | **신규(10차)** |
-| **`examples/workflow/`** | **워크플로우 예제 프로젝트 — `sketches/`(hello·gallery·plugin) → `out/` 7 figure (설치→작성→실행→렌더)** | **대표 예제(10차)** |
-| `test/scenes.js` | 공용 대표 씬(`figures` = SceneIR, `scenes` = SVG) | 공용 |
-| **`examples/mpl_parity_11ab.js`** | 11AB · 삼각함수 **31 figure**(11A 19 + 11B 12) 재현 (`npm run parity11ab`) | **대표 예제(8차)** |
-| **`examples/mpl_parity_9b.js`** | Session 9B · 2D 기하 **25 figure** 재현 (`npm run parity9b`) | **대표 예제** |
-| **`examples/mpl_parity_9c.js`** | Session 9C · 3D 기하 **35 figure** 재현 (`npm run parity9c`) | **대표 예제** |
-| **`examples/mpl_parity_12a2.js`** | 12A2 · 행렬과 벡터 **20 figure** 재현 (`npm run parity12a2`) | **대표 예제(6차)** |
-| **`examples/mpl_parity_12a1.js`** | 12A1 · 복소수 **12 figure** 재현 (`npm run parity12a1`) | **대표 예제(7차)** |
+| 파일                                                                                          | 담당                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | 성격                       |
+| --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------- |
+| `test/senarios.test.js`                                                                       | SENARIOS v0.1 (A1–A4, B1–B3, C1, D1–D3, F1, G1–G4, H1–H2, I1–I2, I4, J1, J5, K1–K2, K5)                                                                                                                                                                                                                                                                                                                                                                                  | 시나리오                   |
+| `test/senarios2.test.js`                                                                      | SENARIOS v0.2 (B4–B6, C2–C3, D4, E1–E4, F2–F3, G5, H3, I3, I5, J2–J4, J6, K3–K4)                                                                                                                                                                                                                                                                                                                                                                                         | 시나리오                   |
+| `test/textbook.test.js`                                                                       | 1.md 50개 (Stewart/Strang/Ross/Serra 등)                                                                                                                                                                                                                                                                                                                                                                                                                                 | 시나리오                   |
+| `test/scene.test.js`, `test/geometry.test.js`, `test/symbolic.test.js`, `test/render.test.js` | 씬/기하/심볼릭/TikZ 단위                                                                                                                                                                                                                                                                                                                                                                                                                                                 | 단위                       |
+| `test/adapters.test.js`, `test/external.test.js`, `test/sympy.test.js`                        | ADAPT.md 외부엔진 어댑터                                                                                                                                                                                                                                                                                                                                                                                                                                                 | 단위                       |
+| **`test/invariants.test.js`**                                                                 | **P0-2 SVG 무결성 린터, P0-1 결정성, P0-5 기하 불변식**                                                                                                                                                                                                                                                                                                                                                                                                                  | **신규(Phase 0)**          |
+| **`test/snapshots.test.js`**                                                                  | **P0-3 골든 스냅샷 (`test/fixtures/*.svg`, 로컬 전용·gitignore)**                                                                                                                                                                                                                                                                                                                                                                                                        | **신규(Phase 0)**          |
+| **`test/backend.test.js`**                                                                    | **P5-1 TikZ/Asymptote/JSXGraph/KaTeX/PNG 백엔드 정합 · `latexToText` 악센트(`\bar`/`\vec`) 폴백 · resvg 폰트 옵션(`fontDirs` 시스템 폰트 — CJK 라벨 tofu 방지)**                                                                                                                                                                                                                                                                                                         | **신규(Phase 5·7차·10차)** |
+| **`test/features.test.js`**                                                                   | **region.betweenX/barH/annulus/wedge · panels · surface.z(+cmap) · vectorField3 · scene.layout · curve3/arrow3/surfaceParam · 3D camera(elev/azim/aspect) · axes(false)/`axes({y:{ticks:false}})` · `axes3/quadrics/circle3/frame3` · `kit`(palette/plot2d/plot3d/subplots/saveFigures) · 타이포그래피(행간·자간) · `linalg`(mat/vec) · `transform.matrix` · 점선(arrow/polygon) · `cplx`(복소수) · `arrow().bend()` 곡선 화살표 · 제목/축라벨 여백에서 눈금·격자 제외** | **신규(§7·6차·7차)**       |
+| **`test/plugin.test.js`**                                                                     | **플러그인 아키텍처 — `use`/`extend`/`chain`/`define`/`static`/`node`(SVG+TikZ)/`theme`/`hook`(`ir`·`svg`)/`around`/`plugin()` escape hatch/미등록 `PluginError` 안내/`plugins` Proxy/`uninstall`·`reset` 원복/이름 충돌 롤백/`plugins/geometry-extras.js` 통합**                                                                                                                                                                                                        | **신규(9차)**              |
+| **`examples/plugin_demo.js`**                                                                 | **플러그인 데모 4 figure — `plugins/geometry-extras.js` 로 `ray`·`arc.circular`·`hatch`(새 IR 노드)·체이닝(`.tilt/.dashed/.arrowTip`)·`theme('chalk')`·SVG 훅·`title` 래핑 (코어 수정 0줄)**                                                                                                                                                                                                                                                                             | **확장 예제(9차)**         |
+| **`test/cli.test.js`**                                                                        | **워크플로우 CLI(`bin/logos.mjs`) — `--help`/`--version`/오류코드(2)/`new` 뼈대/`render`(SVG·갤러리·manifest·원하는 디렉토리)/한 파일 다장(객체·배열)/`logos/plugins/*` subpath/부분 실패(exit 1)/`--dry-run`·`--clean`(사용자 파일 보존)/배시 스크립트 도움말·문법**                                                                                                                                                                                                    | **신규(10차)**             |
+| **`examples/workflow/`**                                                                      | **워크플로우 예제 프로젝트 — `sketches/`(hello·gallery·plugin) → `out/` 7 figure (설치→작성→실행→렌더)**                                                                                                                                                                                                                                                                                                                                                                 | **대표 예제(10차)**        |
+| `test/scenes.js`                                                                              | 공용 대표 씬(`figures` = SceneIR, `scenes` = SVG)                                                                                                                                                                                                                                                                                                                                                                                                                        | 공용                       |
+| **`examples/mpl_parity_11ab.js`**                                                             | 11AB · 삼각함수 **31 figure**(11A 19 + 11B 12) 재현 (`npm run parity11ab`)                                                                                                                                                                                                                                                                                                                                                                                               | **대표 예제(8차)**         |
+| **`examples/mpl_parity_9b.js`**                                                               | Session 9B · 2D 기하 **25 figure** 재현 (`npm run parity9b`)                                                                                                                                                                                                                                                                                                                                                                                                             | **대표 예제**              |
+| **`examples/mpl_parity_9c.js`**                                                               | Session 9C · 3D 기하 **35 figure** 재현 (`npm run parity9c`)                                                                                                                                                                                                                                                                                                                                                                                                             | **대표 예제**              |
+| **`examples/mpl_parity_12a2.js`**                                                             | 12A2 · 행렬과 벡터 **20 figure** 재현 (`npm run parity12a2`)                                                                                                                                                                                                                                                                                                                                                                                                             | **대표 예제(6차)**         |
+| **`examples/mpl_parity_12a1.js`**                                                             | 12A1 · 복소수 **12 figure** 재현 (`npm run parity12a1`)                                                                                                                                                                                                                                                                                                                                                                                                                  | **대표 예제(7차)**         |
 
 ## 0911-PLAN Phase ↔ 검증
 
-| Phase | 항목 | 검증 |
-|---|---|---|
-| 0 | P0-1 결정성 | `invariants.test.js` "같은 씬은 같은 SVG" |
-| 0 | P0-2 린터 | `invariants.test.js` "라벨/중심이 캔버스 안" (증거 A 회귀 방지) |
-| 0 | P0-3 골든 | `snapshots.test.js` + `test/fixtures/` (미생성 시 skip) |
-| 0 | P0-4 toPNG/시각 | `kit.saveFigures({ png: true })` → `output/*/*.png` + `index.html` 갤러리, `backend.test.js` PNG |
-| 0 | P0-5 불변식 | `invariants.test.js` (원·타원·implicit·영역·샘플링) |
-| 1 | P1-1/1-4 px 오프셋·축 | `invariants.test.js` tight view + 스냅샷 |
-| 1 | P1-2 bounds 기반 프레이밍 | `invariants.test.js` "auto-framing" |
-| 1 | P1-3 비등방 스케일 | `invariants.test.js` "non-equal → 타원" |
-| 2 | P2-1 adaptive | `invariants.test.js` "곡률에 비례" |
-| 2 | P2-2 불연속 | `invariants.test.js` "step 점프" + `senarios2` B4 |
-| 2 | P2-3 region domain | `invariants.test.js` "domain 상속" |
-| 2 | P2-4 implicit 폐합 | `invariants.test.js` "닫힌 폴리라인" |
-| 3 | P3-1 그라디언트 | 스냅샷(A3 평면 채움) |
-| 3 | P3-2 수식 전략 | `scenes.js` G5(`math:'text'`) + `backend.test.js` |
-| 4 | P4-1 depth 정렬 | 스냅샷(E1/E3) + `senarios2` E1–E4 |
-| 5 | P5-1 백엔드 | `backend.test.js` |
+| Phase | 항목                      | 검증                                                                                             |
+| ----- | ------------------------- | ------------------------------------------------------------------------------------------------ |
+| 0     | P0-1 결정성               | `invariants.test.js` "같은 씬은 같은 SVG"                                                        |
+| 0     | P0-2 린터                 | `invariants.test.js` "라벨/중심이 캔버스 안" (증거 A 회귀 방지)                                  |
+| 0     | P0-3 골든                 | `snapshots.test.js` + `test/fixtures/` (미생성 시 skip)                                          |
+| 0     | P0-4 toPNG/시각           | `kit.saveFigures({ png: true })` → `output/*/*.png` + `index.html` 갤러리, `backend.test.js` PNG |
+| 0     | P0-5 불변식               | `invariants.test.js` (원·타원·implicit·영역·샘플링)                                              |
+| 1     | P1-1/1-4 px 오프셋·축     | `invariants.test.js` tight view + 스냅샷                                                         |
+| 1     | P1-2 bounds 기반 프레이밍 | `invariants.test.js` "auto-framing"                                                              |
+| 1     | P1-3 비등방 스케일        | `invariants.test.js` "non-equal → 타원"                                                          |
+| 2     | P2-1 adaptive             | `invariants.test.js` "곡률에 비례"                                                               |
+| 2     | P2-2 불연속               | `invariants.test.js` "step 점프" + `senarios2` B4                                                |
+| 2     | P2-3 region domain        | `invariants.test.js` "domain 상속"                                                               |
+| 2     | P2-4 implicit 폐합        | `invariants.test.js` "닫힌 폴리라인"                                                             |
+| 3     | P3-1 그라디언트           | 스냅샷(A3 평면 채움)                                                                             |
+| 3     | P3-2 수식 전략            | `scenes.js` G5(`math:'text'`) + `backend.test.js`                                                |
+| 4     | P4-1 depth 정렬           | 스냅샷(E1/E3) + `senarios2` E1–E4                                                                |
+| 5     | P5-1 백엔드               | `backend.test.js`                                                                                |
 
 ## §7 신규 figure API (matplotlib 대응)
 
-| 기능 | API |
-|---|---|
-| **폰트 (전역)** | **STIX Two Math — 텍스트·수식·축 전부** (`backend/fonts.js`, `assets/STIXTwoMath-Regular.ttf`) |
-| 제목/축라벨/범례 | `scene.title()/xlabel()/ylabel()/legend(loc)` |
-| 임의 텍스트 | `annotate.text(P).label().anchor().offset().font().bold()` |
-| 텍스트 상자/회전 | `annotate.text(...).box({facecolor,alpha})` · `.rotate(deg)` |
-| 점 마커 모양 | `point(x,y).marker('circle'\|'square'\|'triangle'\|'diamond'\|'star'\|'point'\|'plus'\|'cross', {size,open})` |
-| 자동 라벨 배치 | `scene.layout()` → `backend/layout.js`(텍스트 충돌 회피, 축 눈금 제외) |
-| subplots/패널 | `panels([fig1,fig2], { cols, cell, title, tight })` |
-| grid/spine | `grid({ alpha, width, minor })` · `spines({ top:false, right:false })` |
-| 수평 슬라이스 | `region.betweenX(f, g).on([y0,y1])` |
-| 수평 막대 | `region.barH(y0,y1,x0,x1)` |
-| 링/부채꼴 | `region.annulus(O,ri,ro)` · `region.wedge(O,r,a0,a1)` |
-| 3D 곡면 | `surface.z((x,y)=>…).on(xr,yr).mesh(n)` / `.faces()` / `.cmap(name)` |
-| 3D quiver | `vectorField3((x,y,z)=>[dx,dy,dz]).on(box)` |
-| **3D 곡선/폴리라인** | **`curve3.parametric(f).on([t0,t1])` · `curve3.through([P,…])` (`.label()`, `.dash()`)** |
-| **3D 화살표(quiver)** | **`arrow3(from, to)` — 머리 = 0.12·|화살표| (`arrow_length_ratio` 대응, `.label()`)** |
-| **파라메트릭 곡면** | **`surfaceParam((u,v)=>[x,y,z]).on(ur,vr).wire(nu,nv)` / `.solid(nu,nv)` / `.cmap(name)`** |
-| **컬러맵** | **`cmap('viridis'\|'plasma'\|'coolwarm'\|'jet'\|'summer')` (5–6 stop 보간)** |
-| **3D 카메라 각도** | **`scene.camera({ elev, azim, distance })` (mplot3d `view_init` 대응)** |
-| **box aspect** | **`scene.camera({ aspect:[1,1,0.75] })` (mplot3d `box_aspect` [4,4,3] 대응)** |
-| **3D 자동축 끄기** | **`scene.axes(false)`** |
-| **3D 텍스트** | **`annotate.text(point(x,y,z)).label(…)` (자동 투영)** |
-| **3D hidden-line/실루엣** | `backend/hidden.js` (깊이 버퍼, `toSVG({ hiddenLine:false })` 로 해제) |
-| **3D 축 도우미** | **`axes3({length,color,width,labels})` → `.add(...axes3())` (mplot3d 축, `labels:null` 로 라벨 생략)** |
-| **이차곡면 팩토리** | **`quadrics.plane/ellipsoid/ball/hyperboloid1/hyperboloid2/cone/cylinder` (모두 `wire/solid/cmap` 상속)** |
-| **3D 원호** | **`circle3(r, z, center)`** |
-| **3D 프레이밍 상자** | **`frame3(xlim, ylim, zlim)` — 그리지 않고 뷰 범위만 고정(`set_xlim/ylim/zlim`)** |
-| **화살표 머리 비율** | **`arrow3(...).ratio(r)` (`arrow_length_ratio`, 기본 0.12)** |
-| **작성 키트** | **`kit.palette` · `plot2d(xr,yr,opts)` · `plot3d(opts)` · `subplots(figs,opts)` · `saveFigure/saveFigures/writeGallery` · `seg` · `poly3`** |
-| **패널 셀 자동** | **`panels()/subplots()` — `cell` 미지정 시 figure `.size()` 최댓값** |
-| **타이포그래피** | **`TYPE = { lineHeight: 1.32, letterSpacing: 0.01 }` (전역) · `Drawable.lineHeight(x)` / `.letterSpacing(px)` (개별)** |
+| 기능                      | API                                                                                                                                         |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| **폰트 (전역)**           | **STIX Two Math — 텍스트·수식·축 전부** (`backend/fonts.js`, `assets/STIXTwoMath-Regular.ttf`)                                              |
+| 제목/축라벨/범례          | `scene.title()/xlabel()/ylabel()/legend(loc)`                                                                                               |
+| 임의 텍스트               | `annotate.text(P).label().anchor().offset().font().bold()`                                                                                  |
+| 텍스트 상자/회전          | `annotate.text(...).box({facecolor,alpha})` · `.rotate(deg)`                                                                                |
+| 점 마커 모양              | `point(x,y).marker('circle'\|'square'\|'triangle'\|'diamond'\|'star'\|'point'\|'plus'\|'cross', {size,open})`                               |
+| 자동 라벨 배치            | `scene.layout()` → `backend/layout.js`(텍스트 충돌 회피, 축 눈금 제외)                                                                      |
+| subplots/패널             | `panels([fig1,fig2], { cols, cell, title, tight })`                                                                                         |
+| grid/spine                | `grid({ alpha, width, minor })` · `spines({ top:false, right:false })`                                                                      |
+| 수평 슬라이스             | `region.betweenX(f, g).on([y0,y1])`                                                                                                         |
+| 수평 막대                 | `region.barH(y0,y1,x0,x1)`                                                                                                                  |
+| 링/부채꼴                 | `region.annulus(O,ri,ro)` · `region.wedge(O,r,a0,a1)`                                                                                       |
+| 3D 곡면                   | `surface.z((x,y)=>…).on(xr,yr).mesh(n)` / `.faces()` / `.cmap(name)`                                                                        |
+| 3D quiver                 | `vectorField3((x,y,z)=>[dx,dy,dz]).on(box)`                                                                                                 |
+| **3D 곡선/폴리라인**      | **`curve3.parametric(f).on([t0,t1])` · `curve3.through([P,…])` (`.label()`, `.dash()`)**                                                    |
+| **3D 화살표(quiver)**     | **`arrow3(from, to)` — 머리 = 0.12·                                                                                                         | 화살표 | (`arrow_length_ratio` 대응, `.label()`)** |
+| **파라메트릭 곡면**       | **`surfaceParam((u,v)=>[x,y,z]).on(ur,vr).wire(nu,nv)` / `.solid(nu,nv)` / `.cmap(name)`**                                                  |
+| **컬러맵**                | **`cmap('viridis'\|'plasma'\|'coolwarm'\|'jet'\|'summer')` (5–6 stop 보간)**                                                                |
+| **3D 카메라 각도**        | **`scene.camera({ elev, azim, distance })` (mplot3d `view_init` 대응)**                                                                     |
+| **box aspect**            | **`scene.camera({ aspect:[1,1,0.75] })` (mplot3d `box_aspect` [4,4,3] 대응)**                                                               |
+| **3D 자동축 끄기**        | **`scene.axes(false)`**                                                                                                                     |
+| **3D 텍스트**             | **`annotate.text(point(x,y,z)).label(…)` (자동 투영)**                                                                                      |
+| **3D hidden-line/실루엣** | `backend/hidden.js` (깊이 버퍼, `toSVG({ hiddenLine:false })` 로 해제)                                                                      |
+| **3D 축 도우미**          | **`axes3({length,color,width,labels})` → `.add(...axes3())` (mplot3d 축, `labels:null` 로 라벨 생략)**                                      |
+| **이차곡면 팩토리**       | **`quadrics.plane/ellipsoid/ball/hyperboloid1/hyperboloid2/cone/cylinder` (모두 `wire/solid/cmap` 상속)**                                   |
+| **3D 원호**               | **`circle3(r, z, center)`**                                                                                                                 |
+| **3D 프레이밍 상자**      | **`frame3(xlim, ylim, zlim)` — 그리지 않고 뷰 범위만 고정(`set_xlim/ylim/zlim`)**                                                           |
+| **화살표 머리 비율**      | **`arrow3(...).ratio(r)` (`arrow_length_ratio`, 기본 0.12)**                                                                                |
+| **작성 키트**             | **`kit.palette` · `plot2d(xr,yr,opts)` · `plot3d(opts)` · `subplots(figs,opts)` · `saveFigure/saveFigures/writeGallery` · `seg` · `poly3`** |
+| **패널 셀 자동**          | **`panels()/subplots()` — `cell` 미지정 시 figure `.size()` 최댓값**                                                                        |
+| **타이포그래피**          | **`TYPE = { lineHeight: 1.32, letterSpacing: 0.01 }` (전역) · `Drawable.lineHeight(x)` / `.letterSpacing(px)` (개별)**                      |
 
 ## 남은(부분) 항목
 

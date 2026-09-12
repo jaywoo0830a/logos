@@ -10,7 +10,12 @@ export async function initMathLikeAnim() {
   try {
     const mod = await import('@mathlikeanim-rs/renderer');
     // 노드에서 DOM 이 없으면 폴리필 필요 — 브라우저 번들로 주로 사용
-    return { ok: false, reason: 'MathLikeAnim-rs 는 DOM 기반이므로 브라우저 번들용입니다. Node 에서는 JSXGraph/Asymptote(SVG)를 사용하세요.', mod };
+    return {
+      ok: false,
+      reason:
+        'MathLikeAnim-rs 는 DOM 기반이므로 브라우저 번들용입니다. Node 에서는 JSXGraph/Asymptote(SVG)를 사용하세요.',
+      mod,
+    };
   } catch (e) {
     return { ok: false, reason: `MathLikeAnim-rs 로드 실패: ${e.message}` };
   }
@@ -33,7 +38,8 @@ export function irToMathLikeAnimCode(ir, opts = {}) {
         items.push(`polyline(${JSON.stringify(pts)})`);
         break;
       }
-      default: break;
+      default:
+        break;
     }
   }
   return `import { SVGScene } from '@mathlikeanim-rs/renderer';\nconst items = [${items.join(', ')}];\nexport default items;`;
