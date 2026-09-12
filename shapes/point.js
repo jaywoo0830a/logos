@@ -194,6 +194,37 @@ point.on = (curve, t) => {
   return point(...v.cart);
 };
 
+/** 극좌표(도 단위) — `point.byDeg(1, 30)` */
+point.byDeg = (r, deg) => point.polar(r, (deg * Math.PI) / 180);
+
+/**
+ * 반사 — `point.reflect(P).over(line)` (2D) / `.over(plane)` (3D).
+ *   선: P 에서 선에 내린 발을 지나는 대칭점. 평면: 법선 방향 대칭.
+ */
+point.reflect = (P) => ({ over: (obj) => reflectOver(P, obj) });
+
+function reflectOver(P, obj) {
+  const c = P.coords;
+  // 평면(plane.*) — normal()/anchor() 를 가진 객체
+  if (obj && typeof obj.normal === 'function' && typeof obj.anchor === 'function') {
+    const n = obj.normal();
+    const A = obj.anchor();
+    const v = [c[0] - A[0], (c[1] ?? 0) - A[1], (c[2] ?? 0) - A[2]];
+    const dot = v[0] * n[0] + v[1] * n[1] + v[2] * n[2];
+    return point(c[0] - 2 * dot * n[0], c[1] - 2 * dot * n[1], c[2] - 2 * dot * n[2]);
+  }
+  // 직선(Line) — pointDir() 를 가진 객체
+  if (obj && typeof obj.pointDir === 'function') {
+    const { p: Q, d } = obj.pointDir();
+    const L2 = d[0] * d[0] + d[1] * d[1] || 1;
+    const t = ((c[0] - Q[0]) * d[0] + (c[1] - Q[1]) * d[1]) / L2;
+    const fx = Q[0] + d[0] * t,
+      fy = Q[1] + d[1] * t;
+    return point(2 * fx - c[0], 2 * fy - c[1]);
+  }
+  return P;
+}
+
 export function pickStyle(c) {
   const s = {};
   for (const k of ['color', 'stroke', 'fill', 'dash', 'opacity', 'z', 'label']) {

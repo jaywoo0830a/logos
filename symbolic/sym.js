@@ -53,22 +53,18 @@ export class Sym {
   }
 
   substitute(map) {
-    const m = Object.entries(map).map(([k, v2]) => [k, toJson(v2)]);
-    return new Sym(
-      ce
-        .box(['ReplaceAll', this.ast.json, ['List', ...m]])
-        .evaluate()
-        .toLatex(),
-    );
+    // compute-engine 의 치환은 `ast.subs()` 가 정확하다.
+    //   이전 구현은 `['ReplaceAll', …, ['List', …]]` 을 넘겼는데 평가되지 않고 `y(2)` 처럼 왜곡됐다
+    //   (값이 조용히 틀리는 버그 — ODE `dy` 심볼릭 경로에서 드러났다).
+    const box = this.ast.subs(Object.fromEntries(Object.entries(map).map(([k, v]) => [k, toJson(v)])));
+    const ev = box && typeof box.evaluate === 'function' ? box.evaluate() : box;
+    return new Sym(ev.toLatex());
   }
 
   toFunction(v = 'x') {
     const self = this;
-    // 네이티브 JS 평가 fallback (compute-engine 상태와 무관하게 신뢰)
-    const native = nativeFn(this.latex, v);
-    if (native) return native;
-    // 공유 엔진 상태에 영향을 받지 않도록 호출마다 fresh parse
-    return (x) => {
+    // 공유 엔진 상태에 영향을 받지 않도록 호출마다 fresh parse (정확하지만 느린 경로)
+    const slow = (x) => {
       try {
         const expr = ce
           .parse(self.latex)
@@ -85,6 +81,23 @@ export class Sym {
         return NaN;
       }
     };
+    // 네이티브 JS 평가가 빠르다 — 다만 표현식 커버리지가 좁으므로 **CE 결과와 교차검증**한다.
+    //   (검증 없이 쓰면 `x+1` 에서 x 항을 버리는 같은 종류의 **조용한 오답**이 곡선/영역에 그대로 흘러간다)
+    const native = nativeFn(this.latex, v);
+    if (native) {
+      let trustworthy = true;
+      for (const t of [0.37, 1.23, -0.61]) {
+        const a = native(t),
+          b = slow(t);
+        if (!Number.isFinite(a) || !Number.isFinite(b)) continue;
+        if (Math.abs(a - b) > 1e-6 * Math.max(1, Math.abs(b))) {
+          trustworthy = false;
+          break;
+        }
+      }
+      if (trustworthy) return native;
+    }
+    return slow;
   }
 
   toLatex() {
@@ -102,7 +115,14 @@ export class Sym {
  * compute-engine 상태와 무관하게 곡선/영역 샘플링을 견고하게 만든다.
  */
 function nativeFn(latex, v = 'x') {
-  const s = String(latex).replace(/\s/g, '');
+  const s = String(latex)
+    .replace(/\s/g, '')
+    // 숫자 자릿수 구분(얇은 공백)을 **반드시** 제거한다.
+    //   compute-engine 은 평가된 숫자를 `1.001\,25` 처럼 포맷하는데, 이를 남겨두면
+    //   상수 파싱이 깨져 1.001+25=26.001 같은 **조용히 틀린 값**이 나온다.
+    .replace(/\\[,;!]/g, '')
+    .replace(/\\hspace\{[^}]*\}/g, '')
+    .replace(/\\(?:left|right|,|;|!)/g, '');
   // 기호 정의
   const consts = { pi: Math.PI, e: Math.E, tau: 2 * Math.PI };
   const reSym = new RegExp(`[a-z]{2,}|[A-Za-z]`);
@@ -149,20 +169,18 @@ function parsePolynomial(s, v, consts) {
   let m;
   let acc = '';
   // 계수*변수^지수 패턴으로 파싱하는 간단 구현
-  const termPat = /([+-]?)(?:([0-9.]+)\*)?([A-Za-z]+)\^?\{?(-?[0-9.]+)\}?|([+-]?)([0-9.]+)/g;
+  const termPat = /([+-]?)(?:([0-9.]+)?([A-Za-z]+)(?:\^?\{?(-?[0-9.]+)\}?)?|([0-9.]+))/g;
   let mm;
   while ((mm = termPat.exec(body)) !== null) {
-    if (mm[1] !== undefined && mm[3] !== undefined) {
-      // a*x^k
+    if (mm[3] !== undefined) {
+      // [부호][계수][변수][^지수]  (지수 생략 = 1, 계수 생략 = 1)
       const sign = mm[1] === '-' ? -1 : 1;
       const coeff = mm[2] ? parseFloat(mm[2]) : 1;
-      const base = mm[3];
-      const exp = mm[4] ? parseFloat(mm[4]) : 1;
-      if (base === v) terms.push({ c: sign * coeff, e: exp });
-    } else if (mm[5] !== undefined && mm[6] !== undefined) {
-      // 상수
-      const sign = mm[5] === '-' ? -1 : 1;
-      terms.push({ c: sign * parseFloat(mm[6]), e: 0 });
+      if (mm[3] === v) terms.push({ c: sign * coeff, e: mm[4] ? parseFloat(mm[4]) : 1 });
+    } else if (mm[5] !== undefined) {
+      // [부호][상수]
+      const sign = mm[1] === '-' ? -1 : 1;
+      terms.push({ c: sign * parseFloat(mm[5]), e: 0 });
     }
   }
   if (!terms.length) return null;

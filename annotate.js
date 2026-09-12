@@ -495,4 +495,190 @@ function pickStyle(c) {
   for (const k of ['color', 'stroke', 'dash', 'opacity']) if (c[k] !== undefined) s[k] = c[k];
   return s;
 }
+// ── brace / shade / limit / legend (DSL.md §4.10) ───────────────
+
+/** 영역 채움 — region 을 주석처럼 색/투명도만 바꿔 그린다. */
+class ShadeAnno extends Drawable {
+  constructor(region) {
+    super('annotation', { kind: 'shade', region });
+  }
+  fill(f) {
+    return this.set({ fill: f });
+  }
+  color(c) {
+    return this.set({ color: c, fill: c });
+  }
+  opacity(o) {
+    return this.set({ opacity: o });
+  }
+  toIR(ctx) {
+    const c = this._conf;
+    const inner = c.region && typeof c.region.toIR === 'function' ? c.region.toIR(ctx) : [];
+    const fill = c.fill || c.color;
+    return inner.map((n) => ({
+      ...n,
+      data: { ...n.data, fill: fill ?? n.data.fill, opacity: c.opacity ?? n.data.opacity },
+    }));
+  }
+}
+
+/** 곡선/선분 위에 중괄호(브레이스) — 현(chord)을 따라 깊이 depth 만큼 띄워 그린다. */
+class BraceAnno extends Drawable {
+  constructor(target) {
+    super('annotation', { kind: 'brace', target, depth: 0.35 });
+  }
+  label(l) {
+    return this.set({ label: l });
+  }
+  depth(d) {
+    return this.set({ depth: d });
+  }
+  toIR(ctx) {
+    const c = this._conf;
+    const ch = chordOf(c.target);
+    if (!ch) return [];
+    const [A, B] = ch;
+    const dx = B[0] - A[0],
+      dy = B[1] - A[1];
+    const L = Math.hypot(dx, dy) || 1;
+    const ux = dx / L,
+      uy = dy / L;
+    const nx = -uy,
+      ny = ux;
+    const d = c.depth;
+    const mid = [(A[0] + B[0]) / 2, (A[1] + B[1]) / 2];
+    const q = Math.min(L * 0.12, d * 1.4);
+    const at = (x, y) => [A[0] + ux * x + nx * y, A[1] + uy * x + ny * y];
+    // 좌/우 S 곡선 + 가운데 뾰족한 부분
+    const P = [];
+    const pb = (p0, p1, p2, n = 6) => {
+      for (let i = 0; i <= n; i++) {
+        const t = i / n,
+          mt = 1 - t;
+        P.push([
+          mt * mt * p0[0] + 2 * mt * t * p1[0] + t * t * p2[0],
+          mt * mt * p0[1] + 2 * mt * t * p1[1] + t * t * p2[1],
+        ]);
+      }
+    };
+    pb(at(0, 0), at(0, d), at(q, d));
+    pb(at(q, d), at(L / 2 - q, d), at(L / 2, d * 1.45));
+    pb(at(L / 2, d * 1.45), at(L / 2 + q, d), at(L - q, d));
+    pb(at(L - q, d), at(L, d), at(L, 0));
+    const ops = P.map((p, i) => ({ op: i === 0 ? 'M' : 'L', x: p[0], y: p[1] }));
+    const out = [
+      node('path', {
+        ops,
+        color: c.color,
+        stroke: c.stroke ?? 1.2,
+        dash: c.dash,
+        opacity: c.opacity,
+        style: pickStyle(c),
+      }),
+    ];
+    if (c.label) {
+      const [lx, ly] = at(L / 2, d * 1.45);
+      out.push(
+        node('text', {
+          x: lx,
+          y: ly,
+          dxPx: 0,
+          dyPx: -10,
+          text: renderText(c.label),
+          anchor: 'middle',
+          color: c.color,
+        }),
+      );
+    }
+    return out;
+  }
+}
+
+/** 극한 표시 — y = lim f 의 점선 가이드 + 열린 점 + 라벨. */
+class LimitAnno extends Drawable {
+  constructor(f, ...args) {
+    super('annotation', { kind: 'limit', fn: f, at: Number(args[args.length - 1]) || 0 });
+  }
+  label(l) {
+    return this.set({ label: l });
+  }
+  toIR(ctx) {
+    const c = this._conf;
+    const f = typeof c.fn === 'function' ? c.fn : (x) => (c.fn && c.fn.toFunction ? c.fn.toFunction('x')(x) : NaN);
+    const at = c.at;
+    const L = f(at);
+    if (!Number.isFinite(L)) return [];
+    const span = Math.abs(ctx.world.xmax - ctx.world.xmin) * 0.15 || 0.5;
+    const out = [
+      node('path', {
+        ops: [
+          { op: 'M', x: at - span, y: L },
+          { op: 'L', x: at + span, y: L },
+        ],
+        color: c.color,
+        stroke: c.stroke ?? 1.2,
+        dash: c.dash ?? [5, 4],
+        opacity: c.opacity,
+        style: pickStyle({ color: c.color, stroke: c.stroke ?? 1.2, dash: c.dash ?? [5, 4], opacity: c.opacity }),
+      }),
+      node('point', { x: at, y: L, marker: 'dot', open: true, style: { color: c.color || '#b91c1c' } }),
+    ];
+    if (c.label) {
+      out.push(
+        node('text', {
+          x: at + span,
+          y: L,
+          dxPx: 8,
+          dyPx: -6,
+          text: renderText(c.label),
+          anchor: 'start',
+          color: c.color,
+        }),
+      );
+    }
+    return out;
+  }
+}
+
+annotate.shade = (region) => new ShadeAnno(region);
+annotate.brace = (target) => new BraceAnno(target);
+annotate.limit = (f, ...args) => new LimitAnno(f, ...args);
+/**
+ * 범례 — 표시자(marker)만 방출하고, 실제 상자는 `SceneIR.toSVG` 가 라벨 있는 도형을 모아 만든다.
+ * (그림 전체를 봐야 하므로 컴파일 단계에서 확장된다.)
+ */
+class LegendAnno extends Drawable {
+  constructor(opts = {}) {
+    super('legend', { ...opts });
+  }
+  title(t) {
+    return this.set({ title: t });
+  }
+  toIR() {
+    return [node('legend', { title: this._conf.title ?? null })];
+  }
+}
+annotate.legend = (opts) => new LegendAnno(opts);
+
+/** 곡선/선분/다각형에서 두 끝점 얻기 (브레이스용) */
+function chordOf(target) {
+  if (!target) return null;
+  if (typeof target.eval === 'function' && target.domain) {
+    const [a, b] = target.domain;
+    const p = target.eval(a).cart,
+      q = target.eval(b).cart;
+    if (Number.isFinite(p[0]) && Number.isFinite(q[0])) return [p, q];
+  }
+  const vs = target.vertices;
+  if (Array.isArray(vs) && vs.length >= 2) {
+    const p = vs[0].coords,
+      q = vs[vs.length - 1].coords;
+    if (Number.isFinite(p[0]) && Number.isFinite(q[0])) return [p, q];
+  }
+  const c = target._conf || {};
+  if (c.a && c.b && c.a.coords && c.b.coords) return [c.a.coords, c.b.coords];
+  if (c.p0 && c.p1 && c.p0.coords && c.p1.coords) return [c.p0.coords, c.p1.coords];
+  return null;
+}
+
 export default annotate;

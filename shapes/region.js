@@ -165,6 +165,8 @@ export class Region extends Drawable {
 
   toIR(ctx) {
     const c = this._conf;
+    // 술어 영역(부등식 · 합집합 · 차집합) — 스캔라인 런을 사각형으로 채운다.
+    if (c.mode === 'predicate') return predicateIR(c, ctx);
     const w = ctx.world;
     if (c.mode === 'riemann') {
       const [a, b] = c.domain;
@@ -382,6 +384,18 @@ export class Region extends Drawable {
 }
 
 export const region = {
+  /** 부등식 영역 — `region.inequality((x,y) => y <= x*x).on([x0,x1],[y0,y1])` */
+  inequality(pred) {
+    return new Region({ mode: 'predicate', fn: pred });
+  },
+  /** 합집합 — 두 영역 중 하나라도 포함 */
+  union(a, b) {
+    return new Region({ mode: 'predicate', fn: (x, y) => contains(a, x, y) || contains(b, x, y) });
+  },
+  /** 차집합 — a 에서 b 를 뺀 영역 */
+  difference(a, b) {
+    return new Region({ mode: 'predicate', fn: (x, y) => contains(a, x, y) && !contains(b, x, y) });
+  },
   riemann(f) {
     return new Region({ mode: 'riemann', fn: f, domain: [0, 0], rule: 'left', fill: 'steelblue', opacity: 0.4 });
   },
@@ -439,5 +453,113 @@ Object.assign(Region.prototype, {
     return this.set({ fill: color });
   },
 });
+
+/** 술어 영역(부등식·합집합·차집합) — 스캔라인 런을 사각형으로 채운다. */
+function predicateIR(c, ctx) {
+  const w = ctx.world || { xmin: -2, xmax: 2, ymin: -2, ymax: 2 };
+  const dom = Array.isArray(c.domain) && Array.isArray(c.domain[0]) ? c.domain : null;
+  const [x0, x1] = dom ? dom[0] : [w.xmin, w.xmax];
+  const [y0, y1] = dom ? dom[1] : [w.ymin, w.ymax];
+  const n = Math.max(20, Math.min(400, c.n || 200));
+  const dx = (x1 - x0) / n,
+    dy = (y1 - y0) / n;
+  const fill = c.fill || 'steelblue';
+  const op = c.opacity ?? 0.4;
+  const out = [];
+  for (let j = 0; j < n; j++) {
+    const yc = y0 + dy * (j + 0.5);
+    let start = null;
+    for (let i = 0; i <= n; i++) {
+      const inside = i < n && !!c.fn(x0 + dx * (i + 0.5), yc);
+      if (inside && start === null) start = i;
+      if ((!inside || i === n) && start !== null) {
+        out.push(
+          node('rect', {
+            x0: x0 + dx * start,
+            x1: x0 + dx * i,
+            y0: yc - dy / 2,
+            y1: yc + dy / 2,
+            fill,
+            opacity: op,
+            style: {},
+          }),
+        );
+        start = null;
+      }
+    }
+  }
+  return out;
+}
+
+/**
+ * 영역 포함 판정(수치) — 부등식/합집합/차집합, 타일링의 기반.
+ * @param {*} r Region
+ * @param {number} x
+ * @param {number} y
+ */
+export function contains(r, x, y) {
+  const c = r && r._conf;
+  if (!c) return false;
+  switch (c.mode) {
+    case 'predicate':
+      return !!c.fn(x, y);
+    case 'below': {
+      const cu = c.curve;
+      const f = cu && typeof cu.eval === 'function' ? (t) => cu.eval(t).cart[1] : toFn(c.fn || cu);
+      const [a, b] = c.domain || [-Infinity, Infinity];
+      return x >= a && x <= b && y <= f(x);
+    }
+    case 'between': {
+      const g = toFn(c.a),
+        h = c.b == null ? () => 0 : toFn(c.b);
+      const [a, b] = c.domain || [-Infinity, Infinity];
+      if (!(x >= a && x <= b)) return false;
+      const p = g(x),
+        q = h(x);
+      return y >= Math.min(p, q) && y <= Math.max(p, q);
+    }
+    case 'betweenX': {
+      const g = toFnVar(c.a, 'y'),
+        h = c.b == null ? () => 0 : toFnVar(c.b, 'y');
+      const [a, b] = c.domain || [-Infinity, Infinity];
+      if (!(y >= a && y <= b)) return false;
+      const p = g(y),
+        q = h(y);
+      return x >= Math.min(p, q) && x <= Math.max(p, q);
+    }
+    case 'inside': {
+      const sh = c.shape;
+      if (sh && typeof sh.center === 'function' && typeof sh.radius === 'function') {
+        const [cx, cy] = sh.center();
+        return Math.hypot(x - cx, y - cy) <= sh.radius();
+      }
+      return false;
+    }
+    case 'intersect':
+      return contains(c.a, x, y) && contains(c.b, x, y);
+    case 'bar':
+      return x >= Math.min(c.x0, c.x1) && x <= Math.max(c.x0, c.x1) && y >= Math.min(0, c.y1) && y <= Math.max(0, c.y1);
+    case 'barH':
+      return (
+        x >= Math.min(c.x0, c.x1) && x <= Math.max(c.x0, c.x1) && y >= Math.min(c.y0, c.y1) && y <= Math.max(c.y0, c.y1)
+      );
+    case 'annulus': {
+      const [cx, cy] = c.O.coords;
+      const d = Math.hypot(x - cx, y - cy);
+      return d >= c.rInner && d <= c.rOuter;
+    }
+    case 'wedge': {
+      const [cx, cy] = c.O.coords;
+      if (Math.hypot(x - cx, y - cy) > c.r) return false;
+      const norm = (v) => ((v % TAU) + TAU) % TAU;
+      const a0 = norm(c.a0),
+        a1 = norm(c.a1),
+        av = norm(Math.atan2(y - cy, x - cx));
+      return a0 <= a1 ? av >= a0 && av <= a1 : av >= a0 || av <= a1;
+    }
+    default:
+      return false;
+  }
+}
 
 export default region;

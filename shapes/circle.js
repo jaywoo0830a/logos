@@ -65,6 +65,33 @@ export const circle = {
   unit() {
     return new Circle({ center: _point(0, 0), radius: 1 });
   },
+  /**
+   * 방접원(傍接圓) — 변 `key` 반대쪽 꼭짓점을 기준으로 한다.
+   * @param {*} tri triangle(연속) 또는 `.vertices` 를 가진 도형
+   * @param {'a'|'b'|'c'|number} key 반대편 꼭짓점(기본 'a')
+   */
+  excircle(tri, key = 'a') {
+    const V = tri.vertices;
+    const i = key === 'b' || key === 1 ? 1 : key === 'c' || key === 2 ? 2 : 0;
+    const A = V[i],
+      B = V[(i + 1) % 3],
+      C = V[(i + 2) % 3];
+    const a = norm2([B.coords[0] - C.coords[0], B.coords[1] - C.coords[1]]);
+    const b = norm2([C.coords[0] - A.coords[0], C.coords[1] - A.coords[1]]);
+    const c = norm2([A.coords[0] - B.coords[0], A.coords[1] - B.coords[1]]);
+    const den = -a + b + c; // 외심 좌표(무게중심형 (−a : b : c))
+    if (Math.abs(den) < 1e-12) return null;
+    const cx = (-a * A.coords[0] + b * B.coords[0] + c * C.coords[0]) / den;
+    const cy = (-a * A.coords[1] + b * B.coords[1] + c * C.coords[1]) / den;
+    const area =
+      Math.abs(
+        (B.coords[0] - A.coords[0]) * (C.coords[1] - A.coords[1]) -
+          (C.coords[0] - A.coords[0]) * (B.coords[1] - A.coords[1]),
+      ) / 2;
+    const s = (a + b + c) / 2;
+    const r = area / Math.max(1e-12, s - a); // r_a = Δ/(s−a)
+    return new Circle({ center: _point(cx, cy), radius: r });
+  },
 };
 
 class CircleBuilder {
