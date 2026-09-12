@@ -3,9 +3,11 @@
 // world 좌표는 그대로 두고 화면 오프셋만 조정하므로 좌표 정확성에 영향이 없다.
 
 const rankOf = (n) => (n.data.z || 0) * 1000;
-// 자동 배치 대상: 라벨/주석(제목·범례·점라벨·캡션)만. 축 눈금(z<0)·그리드는 제외.
+// 자동 배치 대상: 라벨/주석(제목·범례·점라벨·캡션)만. 축 눈금(z<0)은 **움직이지 않는 장애물**로만 쓴다.
 const isText = (n) => (n.kind === 'text' || (n.kind === 'point' && (n.data.label || n.data.labelMath)))
   && ((n.data.z ?? 0) >= 0);
+/** 축 눈금·축 라벨(z<0) — 제자리에 두되, 어노테이션이 피해야 하는 장애물. */
+const isObstacle = (n) => n.kind === 'text' && ((n.data.z ?? 0) < 0) && String(n.data.text ?? '').length > 0;
 
 function measure(d, kind) {
   const font = d.font || (kind === 'point' ? 13 : 13.5);
@@ -37,9 +39,16 @@ function overlap(a, b, pad) {
 export function relayout(nodes, map, W, H, opts = {}) {
   const pad = opts.pad ?? 2;
   const items = [];
+  const fixed = [];   // 눈금/축 라벨 — 옮기지 않지만 피해야 하는 박스
   nodes.forEach((n, i) => {
-    if (!isText(n)) return;
     const d = n.data;
+    if (isObstacle(n)) {
+      const [mx, my] = map(d.x, d.y);
+      const { w, h } = measure(d, n.kind);
+      fixed.push(boxAt(mx + (d.dxPx || 0), my + (d.dyPx || 0), w, h, d.anchor || 'start'));
+      return;
+    }
+    if (!isText(n)) return;
     const [mx, my] = map(d.x, d.y);
     const { w, h } = measure(d, n.kind);
     items.push({
@@ -52,14 +61,15 @@ export function relayout(nodes, map, W, H, opts = {}) {
   items.sort((a, b) => (b.rank - a.rank) || (a.sy - b.sy));
   const placed = [];
   const out = nodes.slice();
+  const hitOf = (bb) => placed.find((p) => overlap(bb, p, pad)) || fixed.find((p) => overlap(bb, p, pad));
   for (const it of items) {
     let bx = boxAt(it.sx, it.sy, it.w, it.h, it.anchor);
     let guard = 0;
-    let hit = placed.find((p) => overlap(bx, p, pad));
+    let hit = hitOf(bx);
     while (hit && guard++ < 40) {
       it.sy = hit.y1 + pad + it.h;          // 충돌 상대 아래로 이동
       bx = boxAt(it.sx, it.sy, it.w, it.h, it.anchor);
-      hit = placed.find((p) => overlap(bx, p, pad));
+      hit = hitOf(bx);
     }
     // 캔버스 안으로 클램프
     it.sy = Math.max(it.h + 2, Math.min(H - 2, it.sy));

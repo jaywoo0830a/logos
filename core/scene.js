@@ -484,6 +484,9 @@ function axesIR(world, cfg, theme, area = world) {
   // y 눈금도 개별로 끌 수 있다 ← matplotlib `ax.set_yticks([])` 대응
   //   `.axes({ x: { label: 'Projected coordinate' }, y: { ticks: false } })`
   const showYTick = (cfg === true || cfg === undefined || cfg === 1 || cfg.y === undefined || cfg.y.ticks === undefined) ? true : !!cfg.y.ticks;
+  // 눈금 라벨 포매터 — 축별 자릿수/포맷 재정의 (axes({ y: { decimals: 3 } }))
+  const xf = tickFmt(cfg && cfg.x, xStep);
+  const yf = tickFmt(cfg && cfg.y, yStep);
 
   // P1-1: 축의 위치를 world 로 정하되, 라벨이 화면 밖으로 나가지 않도록 가장자리에서 안쪽으로 inset.
   const marginY = spanY * 0.06;
@@ -501,7 +504,7 @@ function axesIR(world, cfg, theme, area = world) {
       const nearOrigin = Math.abs(x - axisX) < xStep * 1e-6;
       out.push(node('path', { ops: [{ op: 'M', x, y: axisY - padWorld * 0.6 }, { op: 'L', x, y: axisY + padWorld * 0.6 }], z: -5, style: { color: tcol, stroke: 1 } }));
       // 화면 오프셋은 px(dyPx)로 — world 단위 오프셋 금지(증거 A 재발 방지).
-      if (!nearOrigin) out.push(node('text', { x, y: axisY, dxPx: 0, dyPx: 16, text: fmtTick(x), anchor: 'middle', font: 12, italic: false, color: tcol, z: -5 }));
+      if (!nearOrigin) out.push(node('text', { x, y: axisY, dxPx: 0, dyPx: 16, text: xf(x), anchor: 'middle', font: 12, italic: false, color: tcol, z: -5 }));
     }
   }
   if (xLabel) out.push(node('text', { x: area.xmax, y: axisY, dxPx: 0, dyPx: 18, text: String(xLabel), anchor: 'end', font: 13, italic: true, color: c, z: -4 }));
@@ -513,7 +516,7 @@ function axesIR(world, cfg, theme, area = world) {
       if (y <= area.ymin + spanY * 0.01 || y >= area.ymax - spanY * 0.01) continue; // 경계 라벨 제외(클립 방지)
       const nearOrigin = Math.abs(y - axisY) < yStep * 1e-6;
       out.push(node('path', { ops: [{ op: 'M', x: axisX - padWorld * 0.6, y }, { op: 'L', x: axisX + padWorld * 0.6, y }], z: -5, style: { color: tcol, stroke: 1 } }));
-      if (!nearOrigin) out.push(node('text', { x: axisX, y, dxPx: -8, dyPx: 4, text: fmtTick(y), anchor: 'end', font: 12, italic: false, color: tcol, z: -5 }));
+      if (!nearOrigin) out.push(node('text', { x: axisX, y, dxPx: -8, dyPx: 4, text: yf(y), anchor: 'end', font: 12, italic: false, color: tcol, z: -5 }));
     }
   }
   // 축 라벨은 데이터 영역의 끝(여백과의 경계)에 붙인다 — 여백 안쪽이면 제목과 겹친다.
@@ -553,7 +556,7 @@ function axes3IR(world, project, theme, cfg) {
       if (Math.abs(t) < step * 1e-6) continue;
       const pt = [0, 0, 0]; pt[idx] = t;
       const p = project(pt);
-      out.push(node('text', { x: p[0] + ux * 0.12, y: p[1] - uy * 0.12, text: fmtTick(t), font: 10, color: a.color, z: -5 }));
+      out.push(node('text', { x: p[0] + ux * 0.12, y: p[1] - uy * 0.12, text: fmtTick(t, step), font: 10, color: a.color, z: -5 }));
     }
     // 축 라벨은 끝점 살짝 위 (world 단위)
     out.push(node('text', { x: pp[0] + ux * 0.16, y: pp[1] - uy * 0.16, text: name, font: 13, italic: true, color: a.color, z: -4 }));
@@ -574,12 +577,34 @@ function niceStep(min, max, fixed) {
   else nice = 10;
   return nice * pow;
 }
-function fmtTick(v) {
+/** 눈금 간격에 맞는 소수 자릿수 — 0.2·0.5→1, 0.05→2, 0.002→3, 1 이상→0 */
+function decimalsFor(step) {
+  const s = step && step > 0 ? step : 1;
+  if (s >= 1) return 0;
+  return Math.min(6, Math.max(0, Math.ceil(-Math.log10(s) - 1e-9)));
+}
+
+/** 축별 눈금 포매터 — `axes({ y: { decimals: 3 } })` 또는 `{ y: { format: (v) => … } }` */
+function tickFmt(axisCfg, step) {
+  if (axisCfg && typeof axisCfg.format === 'function') return (v) => String(axisCfg.format(v));
+  const d = axisCfg && Number.isFinite(axisCfg.decimals) ? axisCfg.decimals : undefined;
+  return (v) => fmtTick(v, step, d);
+}
+
+/**
+ * 눈금 라벨 문자열 — step 을 주면 **눈금 간격(step)** 에서 자릿수를 유도한다.
+ * 고정 2자리 반올림이면 좁은 범위(예: y ∈ [2.019, 2.031], step 0.002)에서 모든 눈금이
+ * '2.02' 로 뭉개진다(mathbook 14D1 미분 해석에서 재현).
+ * step 이 없으면 예전과 같은 2자리 반올림(비-등간격 눈금의 정밀도를 깎지 않는다).
+ * `decimals` 로 명시 재정의할 수 있다.
+ */
+function fmtTick(v, step, decimals) {
   if (v === 0) return '0';
   const a = Math.abs(v);
   if (a >= 1e6 || (a > 0 && a < 1e-3)) return v.toExponential(1);
-  const r = Math.round(v * 100) / 100;
-  return String(r % 1 === 0 ? Math.round(r) : r);
+  const d = Number.isFinite(decimals) ? decimals : (step && step > 0 ? decimalsFor(step) : 2);
+  const r = Number(v.toFixed(d));
+  return String(r);
 }
 
 // ── 3D 정사영 프로젝션 ───────────────────────────
