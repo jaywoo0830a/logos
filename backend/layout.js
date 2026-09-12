@@ -57,12 +57,11 @@ export function relayout(nodes, map, W, H, opts = {}) {
       anchor: d.anchor || 'start', rank: rankOf(n),
     });
   });
-  // 우선순위: z(위) 큰 것부터, 같으면 위쪽(y 작은) 먼저
-  items.sort((a, b) => (b.rank - a.rank) || (a.sy - b.sy));
+  // 우선순위: z(위) 큰 것부터, 같으면 위쪽(y 작은) 먼저 — toSorted 로 원본 배열을 건드리지 않는다(A3).
   const placed = [];
   const out = nodes.slice();
   const hitOf = (bb) => placed.find((p) => overlap(bb, p, pad)) || fixed.find((p) => overlap(bb, p, pad));
-  for (const it of items) {
+  for (const it of items.toSorted((a, b) => (b.rank - a.rank) || (a.sy - b.sy))) {
     let bx = boxAt(it.sx, it.sy, it.w, it.h, it.anchor);
     let guard = 0;
     let hit = hitOf(bx);

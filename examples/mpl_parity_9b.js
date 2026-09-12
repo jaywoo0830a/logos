@@ -46,14 +46,13 @@
 // ── 참고 ────────────────────────────────────────────────────────
 //   · `panels()` 는 컴파일된 SceneIR 만 받으므로 `subplots()` 가 자동 컴파일한다.
 //   · 색은 전부 palette 의 hex 로 고정 — 렌더러(브라우저/resvg)에 무관하게 동일.
-import { join, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
 import {
   scene, point, line, circle, ellipse, parabola, hyperbola, curve, polygon, triangle,
   region, annotate, tex, pi, tau, kit,
 } from '../index.js';
 
-const OUT = join(dirname(fileURLToPath(import.meta.url)), '..', 'output', 'parity9b');
+const OUT = join(import.meta.dirname, '..', 'output', 'parity9b');
 
 // 색 팔레트 (matplotlib 'b','r','g','m','orange',…) — kit.palette 에서 한 글자 이름만 벗겨 온다.
 const {

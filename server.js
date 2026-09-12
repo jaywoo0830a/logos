@@ -6,13 +6,12 @@
 //   `npm run examples` 가 output/index.html · parity11a|parity11b|parity12a1|… /index.html 을 만든 뒤 열면 된다.
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
-import { join, dirname, normalize, extname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join, normalize, extname, resolve } from 'node:path';
 
 const PORT = Number(process.env.PORT || 18080);
 const HOST = process.env.HOST || '0.0.0.0'; // 컨테이너 외부 접속 허용
 const ROOT = resolve(
-  process.argv[2] || process.env.LOGOS_ROOT || join(dirname(fileURLToPath(import.meta.url)), 'output'),
+  process.argv[2] || process.env.LOGOS_ROOT || join(import.meta.dirname, 'output'),
 );
 // `/` 로 들어왔을 때 차례로 시도할 갤러리(통합 → 삼각함수 11A/11B → 플러그인 데모 → 3D(9C) → 2D(9B) → 3D+2D(12A2) → 복소수(12A1)).
 const GALLERIES = ['index.html', 'parity11a/index.html', 'parity11b/index.html',

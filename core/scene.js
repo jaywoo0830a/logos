@@ -1,4 +1,5 @@
 // DSL.md §5 씬(Scene) + §12 Scene IR → 다중 백엔드
+import { inspect } from 'node:util';
 import { node } from './node.js';
 import { renderText } from './drawable.js';
 import { registerTarget, themeOf, apply } from './plugin.js';
@@ -68,12 +69,24 @@ export class Scene {
     this._conf.asserts = [...this._conf.asserts];
   }
 
+  /**
+   * 불변 복제 — 바뀐 설정만 덮어쓴 새 Scene 을 돌려준다(B6: 체이닝 자동완성용 `@returns`).
+   * @param {Object} changes
+   * @returns {this}
+   */
   set(changes) {
     const merged = { ...this._conf, ...changes };
     for (const k of ['shapes', 'lights', 'asserts']) {
       if (changes[k]) merged[k] = [...changes[k]];
     }
     return new Scene(merged);
+  }
+
+  /** REPL/로그용 한 줄 요약 — 내부 필드 덤프 대신 (A7). */
+  [inspect.custom]() {
+    const c = this._conf;
+    const dim = c.dim === 3 ? '3D' : (c.dim === 'auto' ? 'auto' : '2D');
+    return `Scene(${dim}, shapes: ${c.shapes.length}, view: ${c.view ? JSON.stringify(c.view) : 'auto'})`;
   }
 
   // ── 좌표계/캔버스 ──────────────────────────────
@@ -126,8 +139,10 @@ export class Scene {
   light(l) { return this.set({ lights: [...this._conf.lights, l] }); }
 
   // ── 도형 ───────────────────────────────────────
-  add(...shapes) { return this.set({ shapes: [...this._conf.shapes, ...shapes] }); }
-  addAll(shapes) { return this.set({ shapes: [...this._conf.shapes, ...shapes] }); }
+  // add: `add(a, b)` 는 물론 `add([a, b])`(배열 통째)도 평탄화해 받는다(B5).
+  //   이전에는 배열이 그대로 IR 에 들어가 "그림이 안 나오는" 조용한 실패를 냈다.
+  add(...shapes) { return this.set({ shapes: [...this._conf.shapes, ...shapes.flat(1)] }); }
+  addAll(shapes) { return this.set({ shapes: [...this._conf.shapes, ...[...shapes].flat(1)] }); }
 
   // ── 검증 ───────────────────────────────────────
   assert(...rules) { return this.set({ asserts: [...this._conf.asserts, ...rules] }); }

@@ -1,6 +1,6 @@
 {
   "name": "@jaywoo0830a/logos",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Matplotlib-parity math figure DSL in pure JavaScript (Node ESM) — one chainable scene emits SVG, PNG, TikZ, Asymptote and JSXGraph.",
   "type": "module",
   "main": "index.js",

@@ -4,7 +4,7 @@ import { Scene } from './core/scene.js';
 import { panels } from './backend/scene-ir.js';
 import { node } from './core/node.js';
 import { Drawable } from './core/drawable.js';
-import { point, Point } from './shapes/point.js';
+import { point, Point, toPoint } from './shapes/point.js';
 import { vector, Vector } from './shapes/vector.js';
 import { line, Line } from './shapes/line.js';
 import { segment, Segment } from './shapes/segment.js';
@@ -27,6 +27,7 @@ import transform from './transform.js';
 import annotate from './annotate.js';
 import { tex } from './symbolic/tex.js';
 import { Sym } from './symbolic/sym.js';
+import { xy, range, view } from './core/template.js';
 import { TAU } from './solver/coords.js';
 import { TYPE as typography } from './backend/fonts.js';
 // ── ADAPT.md 외부엔진 어댑터 ──────────────────────
@@ -51,12 +52,12 @@ export const tau = TAU;
 export const pi = Math.PI;
 export const e = Math.E;
 
-export { Scene, scene, panels, node, point, vector, line, segment, curve, circle, ellipse,
+export { Scene, scene, panels, node, point, toPoint, vector, line, segment, curve, circle, ellipse,
          parabola, hyperbola, polygon, triangle, quad, regular, square, rectangle, region,
          vectorField, vectorField3, sphere, plane, cylinder, cone, surface, polyhedron,
          curve3, arrow3, surfaceParam, axes3, quadrics, circle3, frame3,
          cmapColor, shade, mat, vec, Matrix, cplx, Complex,
-         transform, annotate, tex, Sym, typography };
+         transform, annotate, tex, Sym, typography, xy, range, view };
 
 // 도형 클래스 — 플러그인 대상/`instanceof` 검사용 (`api.extend(Point, …)`)
 export { Point, Vector, Line, Segment, Curve, Circle, Ellipse, Parabola, Hyperbola,
@@ -158,5 +159,5 @@ export default {
   sphere, plane, cylinder, cone, surface, polyhedron,
   curve3, arrow3, surfaceParam, axes3, quadrics, circle3, frame3,
   transform, annotate, tex, tau, pi, e,
-  use, plugins,
+  use, plugins, xy, range, view,
 };

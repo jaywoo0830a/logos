@@ -75,8 +75,36 @@ export class Point extends Drawable {
 setPointFactory(() => ({ point }));
 
 // ── 팩토리(함수 + 네임스페이스) ───────────────────
+/**
+ * 점 생성. `point(1, 2)` 는 물론 `point([1, 2])` · `point({ x: 1, y: 2 })` 도 받는다(B1).
+ * (예전에는 `point([1, 2])` 가 조용히 `[[1, 2]]` 라는 잘못된 좌표가 됐다.)
+ */
 export function point(...args) {
-  return new Point({ system: 'cartesian', cart: args });
+  return new Point({ system: 'cartesian', cart: normalizeArgs(args) });
+}
+/** 단일 배열/`{x,y[,z]}` 인자를 좌표 배열로 편다 */
+function normalizeArgs(args) {
+  if (args.length === 1) {
+    const v = args[0];
+    if (Array.isArray(v)) return v.slice();
+    if (v && typeof v === 'object' && 'x' in v) return (v.z !== undefined) ? [v.x, v.y, v.z] : [v.x, v.y];
+  }
+  return args;
+}
+
+/**
+ * 배열 · `{x, y[, z]}` · 기존 Point 를 Point 로 정규화한다(B1).
+ * 좌표를 받는 모든 진입점(annotate · segment · line · vector …)이 이 함수를 통과한다.
+ * @param {*} v 좌표(배열/객체/Point)
+ * @param {...number} rest 나머지 좌표(예: `toPoint(1, 2)`)
+ * @returns {Point}
+ * @example toPoint([1, 2]) · toPoint({ x: 1, y: 2 }) · toPoint(1, 2)
+ */
+export function toPoint(v, ...rest) {
+  if (v && Array.isArray(v.coords)) return v;
+  if (Array.isArray(v)) return point(...v, ...rest);
+  if (v && typeof v === 'object' && 'x' in v) return (v.z !== undefined) ? point(v.x, v.y, v.z) : point(v.x, v.y);
+  return point(v, ...rest);
 }
 point.origin = (z) => (z === undefined ? point(0, 0) : point(0, 0, z));
 point.xyz = (x, y, z) => point(x, y, z);

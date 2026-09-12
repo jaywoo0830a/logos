@@ -1,13 +1,15 @@
 // DSL.md §4.3 선분 — segment(A, B)
 import { Drawable, renderText } from '../core/drawable.js';
 import { node } from '../core/node.js';
-import { point } from './point.js';
+import { point, toPoint } from './point.js';
 import { line } from './line.js';
 
 export class Segment extends Drawable {
   constructor(conf = {}) { super('segment', { ...conf }); }
   get a() { return this._conf.a; }
   get b() { return this._conf.b; }
+  /** 양 끝점 `[A, B]` — 구조 분해 `const [a, b] = seg.ends` (B2). */
+  get ends() { return [this._conf.a, this._conf.b]; }
   length() {
     const A = this._conf.a.coords, B = this._conf.b.coords;
     return Math.hypot(B[0] - A[0], B[1] - A[1]);
@@ -40,7 +42,7 @@ function pickStyle2(c) {
 }
 
 export function segment(A, B) {
-  return new Segment({ a: A, b: B });
+  return new Segment({ a: toPoint(A), b: toPoint(B) });
 }
 segment.ofLength = (len) => ({
   from: (P) => ({

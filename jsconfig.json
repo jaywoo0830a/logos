@@ -1,11 +1,11 @@
 {
   "compilerOptions": {
     "checkJs": true,
-    "target": "ES2022",
+    "target": "ES2023",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "strict": false,
     "allowJs": true
   },
-  "include": ["index.js", "core/**/*.js", "shapes/**/*.js", "solver/**/*.js", "symbolic/**/*.js", "backend/**/*.js"]
+  "include": ["index.js", "kit.js", "annotate.js", "transform.js", "complex.js", "linalg.js", "sprite.js", "core/**/*.js", "shapes/**/*.js", "solver/**/*.js", "symbolic/**/*.js", "backend/**/*.js", "plugins/**/*.js"]
 }

@@ -8,6 +8,15 @@ import { registerTarget, callPlugin } from './plugin.js';
 
 let ORDER = 0;
 
+// 중첩 설정 키 — 상수(`BOX`, `{ box: … }`) 하나를 여러 그림이 공유할 때
+// 한 곳의 변경이 전부를 오염시키지 않도록 set() 에서 깊은 복사한다(A4).
+const NESTED_KEYS = ['box', 'marker', 'camera', 'labelOff', 'gradient', 'arc'];
+/** plain object/배열만 structuredClone. 클래스 인스턴스·함수는 그대로 둔다(프로토타입 보존). */
+function cloneNested(v) {
+  if (v == null || typeof v !== 'object') return v;
+  try { return structuredClone(v); } catch { return v; }
+}
+
 /**
  * Label 값(문자열 또는 Sym)을 화면에 그릴 문자열로 변환.
  * @param {*} v
@@ -30,14 +39,24 @@ export class Drawable {
     this._order = ORDER++;
   }
 
-  /** 불변 복제 — 모든 프로토콜 메서드의 공통 초석 */
+  /**
+   * 불변 복제 — 모든 프로토콜 메서드의 공통 초석.
+   * 중첩 설정(box·gradient·labelOff …)은 깊은 복사해 **상수 공유 오염**을 막는다(A4).
+   * @param {Object} changes 바꿀 설정
+   * @returns {this} 새 도형(원본 불변)
+   */
   set(changes) {
     const c = Object.create(this.constructor.prototype);
     c._kind = this._kind;
-    c._conf = { ...this._conf, ...changes };
+    const merged = { ...this._conf, ...changes };
+    for (const k of NESTED_KEYS) if (merged[k] && typeof merged[k] === 'object') merged[k] = cloneNested(merged[k]);
+    c._conf = merged;
     c._order = ORDER++;
     return c;
   }
+
+  /** `set()` 의 별칭 — "뮤테이션"처럼 들리는 이름 대신 불변 업데이트임을 드러낸다(B4). */
+  with(changes) { return this.set(changes); }
 
   // ── Drawable 프로토콜 ───────────────────────────────
   color(c) { return this.set({ color: c }); }

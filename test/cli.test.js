@@ -7,10 +7,9 @@ import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync, symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
 
-const REPO = join(dirname(fileURLToPath(import.meta.url)), '..');
+const REPO = join(import.meta.dirname, '..');
 const CLI = join(REPO, 'bin', 'logos.mjs');
 
 /** CLI 실행 — {status, stdout, stderr} */
@@ -236,6 +235,25 @@ test('cli render: 파일 하나만 / 여러 대상(셸이 펼친 glob)을 렌더
     const miss = cli(['render', 'sketches/nope.js', '--out', 'out3'], { cwd: dir });
     assert.equal(miss.status, 2, '없는 파일 → 2');
     assert.match(miss.stderr, /대상이 없습니다/);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('cli render: --recursive 는 하위 폴더를 찾고 `_`·`.` 접두는 건너뛴다', () => {
+  const dir = project({ 'top.js': SKETCH_ONE, '_skip.js': SKETCH_ONE });
+  try {
+    mkdirSync(join(dir, 'sketches', 'sub'), { recursive: true });
+    writeFileSync(join(dir, 'sketches', 'sub', 'nested.js'), SKETCH_TWO);
+
+    const flat = cli(['render', 'sketches', '--out', 'out1', '--no-png', '--dry-run'], { cwd: dir });
+    assert.equal(flat.status, 0, flat.stderr);
+    assert.match(flat.stdout, /top/);
+    assert.ok(!/nested/.test(flat.stdout), '비재귀는 하위 폴더 제외');
+    assert.ok(!/_skip/.test(flat.stdout), '`_` 접두 제외');
+
+    const rec = cli(['render', 'sketches', '--out', 'out2', '--no-png', '--dry-run', '--recursive'], { cwd: dir });
+    assert.equal(rec.status, 0, rec.stderr);
+    assert.match(rec.stdout, /nested/, '재귀는 하위 폴더 포함');
+    assert.ok(!/_skip/.test(rec.stdout), '`_` 접두는 재귀에서도 제외');
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 

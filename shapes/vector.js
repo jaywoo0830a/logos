@@ -2,7 +2,7 @@
 import { Drawable, renderText } from '../core/drawable.js';
 import { node } from '../core/node.js';
 import { cartToPolar } from '../solver/coords.js';
-import { point } from './point.js';
+import { point, toPoint } from './point.js';
 
 export class Vector extends Drawable {
   constructor(conf = {}) {
@@ -30,7 +30,10 @@ export class Vector extends Drawable {
 export function vector(...args) {
   return new Vector({ raw: args });
 }
-vector.between = (A, B) => vector(...B.coords.map((_, i) => B.coords[i] - A.coords[i]));
+vector.between = (A, B) => {
+  const a = toPoint(A), b = toPoint(B);
+  return vector(...b.coords.map((_, i) => b.coords[i] - a.coords[i]));
+};
 vector.unit = (angle) => vector(Math.cos(angle), Math.sin(angle));
 vector.normal = (A, B, C) => {
   const ab = [B.coords[0] - A.coords[0], B.coords[1] - A.coords[1], (B.coords[2] ?? 0) - (A.coords[2] ?? 0)];

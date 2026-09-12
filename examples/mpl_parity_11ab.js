@@ -58,13 +58,12 @@
 //   10 fourier-series             사각파 푸리에 (3×1)
 //   11 identity-family-tree       항등식 계보 그래프
 //   12 law-of-sines-cosines       사인법칙 / 코사인법칙 (1×2)
-import { join, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
 import {
   point, circle, polygon, segment, line, curve, annotate, pi, kit,
 } from '../index.js';
 
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+const ROOT = join(import.meta.dirname, '..');
 const OUT_A = join(ROOT, 'output', 'parity11a');
 const OUT_B = join(ROOT, 'output', 'parity11b');
 

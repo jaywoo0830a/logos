@@ -2,7 +2,7 @@
 import { Drawable, renderText } from './core/drawable.js';
 import { node } from './core/node.js';
 import { norm2, perp2 } from './solver/coords.js';
-import { point as _point } from './shapes/point.js';
+import { point as _point, toPoint } from './shapes/point.js';
 
 export function annotate() { return new _Annotate(); }
 /**
@@ -25,19 +25,19 @@ annotate.angle = (A, B, C) => {
   }
   return new AngleAnno(A, B, C);
 };
-/** 점 또는 `[x, y]` 를 point 로 정규화 */
+/** 점 또는 `[x, y]`·`{x,y}` 를 point 로 정규화 */
 function asPoint(p) {
   if (p && Array.isArray(p.coords)) return p;
-  if (Array.isArray(p) && p.length >= 2) return _point(...p);
+  if (Array.isArray(p) || (p && typeof p === 'object' && 'x' in p)) return toPoint(p);
   throw new Error('annotate.angle: 점(point) 또는 [x, y] 좌표가 필요합니다.');
 }
 annotate.caption = (text) => new CaptionAnno(text);
 annotate.integral = (f) => new IntegralAnno(f);
-annotate.arrow = (A, B) => new ArrowAnno(A, B);
-annotate.dimension = (A, B) => new DimensionAnno(A, B);
-annotate.dot = (P) => new DotAnno(P);
+annotate.arrow = (A, B) => new ArrowAnno(toPoint(A), toPoint(B));
+annotate.dimension = (A, B) => new DimensionAnno(toPoint(A), toPoint(B));
+annotate.dot = (P) => new DotAnno(toPoint(P));
 annotate.tick = (seg) => new TickAnno(seg);
-annotate.text = (P) => new TextAnno(P);
+annotate.text = (P) => new TextAnno(toPoint(P));
 
 class _Annotate extends Drawable { toIR() { return []; } }
 
