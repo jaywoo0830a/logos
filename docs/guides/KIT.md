@@ -1,7 +1,7 @@
 # `logos` 작성 키트 (`kit.js`) — 예제를 쓰는 사람을 위한 안내
 
 > 이 문서는 **그림을 그리는 쪽(예제·스케치·강의자료)** 을 위한 문서입니다.
-> 언어/도형 스펙은 [`DSL.md`](DSL.md), 사용자 코드 미리보기는 [`INTERFACE.md`](INTERFACE.md) 를 보세요.
+> 언어/도형 스펙은 [`DSL.md`](../spec/DSL.md), 사용자 코드 미리보기는 [`INTERFACE.md`](../spec/INTERFACE.md) 를 보세요.
 
 ---
 
@@ -204,7 +204,7 @@ annotate.arrow(point(0,0), point(1,0)).apply(transform.matrix(A));   // 변환�
 ```
 
 > `transform.matrix()` 는 배열과 `mat()` 행렬을 **둘 다** 받습니다(6차에서 `Matrix` 지원 추가).
-> 그림 예시는 [`examples/mpl_parity_12a2.js`](examples/mpl_parity_12a2.js) 참고.
+> 그림 예시는 [`examples/parity/mpl_parity_12a2.js`](../../examples/parity/mpl_parity_12a2.js) 참고.
 
 ### 3.8 `cplx` — 복소수 계산 (`complex.js`)
 
@@ -242,7 +242,7 @@ cplx.matrix(z).rows; // [[3, -2], [2, 3]]  ← a+bi ↔ 회전·확대 행렬
 
 > `cplx.matrix(z)` 는 `[[a, −b], [b, a]]` (`det = |z|²`). 그래서 **12A1(복소수)과 12A2(행렬과 벡터)가
 > 같은 `mat`·`vec` 층을 공유**합니다 — `cplx.mul` 은 이 행렬의 곱과 같습니다.
-> 그림 예시는 [`examples/mpl_parity_12a1.js`](examples/mpl_parity_12a1.js) 참고.
+> 그림 예시는 [`examples/parity/mpl_parity_12a1.js`](../../examples/parity/mpl_parity_12a1.js) 참고.
 
 ---
 
@@ -359,14 +359,15 @@ annotate.text(point(1, 1)).label('벌려 쓰기').letterSpacing(1.2); // 자간(
 
 | 파일                                                     | 내용                                                                                                | 실행                  | 출력                                     |
 | -------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | --------------------- | ---------------------------------------- |
-| `examples/mpl_parity_11ab.js`                            | 11AB · **삼각함수 31 figure**(11A 19 + 11B 12, `example5.py` 재현)                                  | `npm run parity11ab`  | `output/parity11a/`, `output/parity11b/` |
-| `examples/mpl_parity_9b.js`                              | Session 9B · **2D 기하 25 figure** (`example1.py` 재현)                                             | `npm run parity9b`    | `output/parity9b/`                       |
-| `examples/mpl_parity_9c.js`                              | Session 9C · **3D 기하 35 figure** (`example2.py` 재현)                                             | `npm run parity9c`    | `output/parity9c/`                       |
-| `examples/mpl_parity_12a2.js`                            | 12A2 · **행렬과 벡터 20 figure** (`example3.py` 재현)                                               | `npm run parity12a2`  | `output/parity12a2/`                     |
-| `examples/mpl_parity_12a1.js`                            | 12A1 · **복소수 12 figure** (`example4.py` 재현)                                                    | `npm run parity12a1`  | `output/parity12a1/`                     |
-| `examples/plugin_demo.js` + `plugins/geometry-extras.js` | **플러그인 데모 4 figure** — `ray`·`arc.circular`·`hatch` IR 노드·체이닝 확장·테마·훅 (코어 수정 0) | `npm run plugin-demo` | `output/plugin-demo/`                    |
+| `examples/parity/mpl_parity_11ab.js`                            | 11AB · **삼각함수 31 figure**(11A 19 + 11B 12, `example5.py` 재현)                                  | `npm run parity11ab`  | `output/parity11a/`, `output/parity11b/` |
+| `examples/parity/mpl_parity_9b.js`                              | Session 9B · **2D 기하 25 figure** (`example1.py` 재현)                                             | `npm run parity9b`    | `output/parity9b/`                       |
+| `examples/parity/mpl_parity_9c.js`                              | Session 9C · **3D 기하 35 figure** (`example2.py` 재현)                                             | `npm run parity9c`    | `output/parity9c/`                       |
+| `examples/parity/mpl_parity_12a2.js`                            | 12A2 · **행렬과 벡터 20 figure** (`example3.py` 재현)                                               | `npm run parity12a2`  | `output/parity12a2/`                     |
+| `examples/parity/mpl_parity_12a1.js`                            | 12A1 · **복소수 12 figure** (`example4.py` 재현)                                                    | `npm run parity12a1`  | `output/parity12a1/`                     |
+| `examples/plugin/plugin_demo.js` + `plugins/geometry-extras.js` | **플러그인 데모 4 figure** — `ray`·`arc.circular`·`hatch` IR 노드·체이닝 확장·테마·훅 (코어 수정 0) | `npm run plugin-demo` | `output/plugin-demo/`                    |
 | `examples/workflow/`                                     | **워크플로우 예제 프로젝트** — `sketches/` 3개 → 7 figure (설치→작성→실행→렌더 · 도커+배시)         | `npm run workflow`    | `examples/workflow/out/`                 |
-| 여섯 다                                                  | —                                                                                                   | `npm run examples`    | `*/*.svg`, `*/*.png`, `*/index.html`     |
+| `examples/clean-code/`                                   | **API별 최소 예제 30개**(`01-point-and-coords.js` … `30-plugins-extend.js`) + 러너(`run-all.js`)    | `npm run clean-code`  | `output/clean-code/`                     |
+| 여섯 묶음                                                | —                                                                                                   | `npm run examples`    | `*/*.svg`, `*/*.png`, `*/index.html`     |
 
 여섯 스크립트는 라이브러리의 **회귀 기준**입니다. 즉 “matplotlib 급 그림을 정말 그릴 수 있는가”를
 사람이 눈으로(갤러리) 그리고 기계가(`npm test`) 확인합니다.
@@ -482,7 +483,7 @@ scene()
 ```
 
 `1/z`(반전+반사)·`zⁿ`(드무아브르)·n제곱근(정n각형)은 `cplx.div`·`z.pow`·`cplx.unity` 로 좌표를
-얻은 뒤 그대로 그리면 됩니다 — [`examples/mpl_parity_12a1.js`](examples/mpl_parity_12a1.js) 참고.
+얻은 뒤 그대로 그리면 됩니다 — [`examples/parity/mpl_parity_12a1.js`](../../examples/parity/mpl_parity_12a1.js) 참고.
 
 **Q. 제목이 눈금 라벨과 겹쳐 보여요.**
 7차에서 고쳤습니다. 제목/축 라벨은 데이터 영역 **바깥** 여백에 들어가는데, 예전에는 눈금 라벨과
@@ -516,7 +517,7 @@ annotate.angle({ from: a, vertex: proj, to: vec.add(proj, vec.unit(b)) }).arc({ 
 
 연장선을 그리기 싫으면 **두 선이 모두 그려진 쪽 각**(예: 벡터가 있는 쪽 `to: [0, 0]`)을
 표시하는 방법도 있습니다. 다만 그 쪽은 화살촉이 차지하고 있어 표식과 겹쳐 보일 수 있습니다.
-실제 예는 [`examples/mpl_parity_12a2.js`](examples/mpl_parity_12a2.js) 11번(정사영) 참고.
+실제 예는 [`examples/parity/mpl_parity_12a2.js`](../../examples/parity/mpl_parity_12a2.js) 11번(정사영) 참고.
 
 ---
 
@@ -524,7 +525,7 @@ annotate.angle({ from: a, vertex: proj, to: vec.add(proj, vec.unit(b)) }).arc({ 
 
 ### 8.1 7차 요청 (2026-09-11) — 복소수 예제(12A1) + 복소수 계산 계층 `cplx`
 
-- **예제 추가**: `examples/mpl_parity_12a1.js` (`example4.py` 재현, **12 figure**).
+- **예제 추가**: `examples/parity/mpl_parity_12a1.js` (`example4.py` 재현, **12 figure**).
   복소평면·극형식 · i 의 거듭제곱 · 켤레 · 덧셈 · 곱(회전+확대) · a+bi ↔ 회전·확대 행렬 ·
   드무아브르 나선 · 1 의 n제곱근 · 1/z 반전+반사 · 이차방정식의 복소근 · 편각의 덧셈 · 복소평면 요약.
 - **`complex.js` 신설**: `cplx()`/`Complex` (re·im, `abs`·`arg`·`argDeg`·`conj`·`toPolar`,
@@ -552,7 +553,7 @@ matrix/conj/abs/arg/round`. `index.js` 에서 `cplx`·`Complex` export.
 
 ### 8.2 6차 요청 (2026-09-11) — 행렬과 벡터 예제(12A2) + 선형대수 계산 계층
 
-- **예제 추가**: `examples/mpl_parity_12a2.js` (`example3.py` 재현, **20 figure**).
+- **예제 추가**: `examples/parity/mpl_parity_12a2.js` (`example3.py` 재현, **20 figure**).
   회전/반사/전단/합성/역행렬 · 내적·정사영·외적 · 3D 부피 · 연립방정식 ·
   행렬 거듭제곱 · 차원 축소 · 격자 변형.
 - **`linalg.js` 신설**: `mat()` (apply·det·inv·pow·mul·t·col·map + identity/rotation/
@@ -587,4 +588,4 @@ matrix/conj/abs/arg/round`. `index.js` 에서 `cplx`·`Complex` export.
 - **`panels()` 셀 크기 자동화**: `cell` 미지정 시 figure `.size()` 최댓값 사용.
 - **타이포그래피**: `TYPE = { lineHeight: 1.32, letterSpacing: 0.01 }` +
   `Drawable.lineHeight()/letterSpacing()` (기본 행간 1.15 → 1.32).
-- **문서**: 이 `KIT.md` 신설, `README.md` 신설, `0911-PLAN.md` §7 · `test/COVERAGE.md` 갱신.
+- **문서**: 이 `KIT.md` 신설, `README.md` 신설, `docs/process/0911-PLAN.md` §7 · `docs/testing/COVERAGE.md` 갱신.

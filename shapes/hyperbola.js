@@ -1,4 +1,4 @@
-// SENARIOS C3 — 쌍곡선 (hyperbola.center(O).semi(a,b)) : x²/a² − y²/b² = 1 둘(branch)
+// SCENARIOS C3 — 쌍곡선 (hyperbola.center(O).semi(a,b)) : x²/a² − y²/b² = 1 둘(branch)
 import { Drawable } from '../core/drawable.js';
 import { node } from '../core/node.js';
 

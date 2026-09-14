@@ -1,4 +1,4 @@
-// 1.md #48 — 기울기장(slope field): vectorField((x,y)=>[dx,dy]).on(region)
+// docs/testing/TEXTBOOK.md #48 — 기울기장(slope field): vectorField((x,y)=>[dx,dy]).on(region)
 import { Drawable } from '../core/drawable.js';
 import { node } from '../core/node.js';
 

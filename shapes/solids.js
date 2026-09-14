@@ -1,4 +1,4 @@
-// DSL.md §4.8 3D 입체 — cube / prism / pyramid / torus / polyhedron.vertices / surface.of·implicit·ruled
+// docs/spec/DSL.md §4.8 3D 입체 — cube / prism / pyramid / torus / polyhedron.vertices / surface.of·implicit·ruled
 //
 //   · 면(face)을 투영해 깊이 정렬된 polygon 으로 방출한다(가림은 백엔드의 z 정렬이 처리).
 //   · 기존 `polyhedron.platonic`(모서리+점)과 달리, 사용자가 정한 꼭짓점/면을 그대로 그린다.

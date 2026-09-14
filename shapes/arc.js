@@ -1,4 +1,4 @@
-// DSL.md §4.5 원호 · 부채꼴 · 반직선 — arc / sector / ray
+// docs/spec/DSL.md §4.5 원호 · 부채꼴 · 반직선 — arc / sector / ray
 //
 //   플러그인도 같은 이름을 등록할 수 있다(index.js 의 dispatch/ns 가 플러그인을 우선).
 //   여기 구현은 **플러그인 없이도** 문서대로 동작하게 하는 코어 기본값이다.

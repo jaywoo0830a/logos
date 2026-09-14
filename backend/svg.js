@@ -1,4 +1,4 @@
-// DSL.md §12 렌더러 파이프라인 — SVG emitter (clip / gradient / math label)
+// docs/spec/DSL.md §12 렌더러 파이프라인 — SVG emitter (clip / gradient / math label)
 import { applyTransforms } from '../transform.js';
 import { katexRender, latexToText } from './katex.js';
 import { STIX_STACK, svgFontStyle, TYPE } from './fonts.js';

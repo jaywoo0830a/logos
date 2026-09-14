@@ -1,4 +1,4 @@
-// ADAPT.md §2계층 — JSXGraph 인터랙티브 백엔드
+// docs/extend/ADAPT.md §2계층 — JSXGraph 인터랙티브 백엔드
 // IR을 인터랙티브 HTML(<div>+JSXGraph JS)로 변환. CDN 기반, 외부 의존 최소.
 // 각 도형이 JSXGraph 생성자 호출로 매핑된다.
 

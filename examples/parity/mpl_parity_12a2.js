@@ -1,4 +1,4 @@
-// examples/mpl_parity_12a2.js — example3.py (12A2 · 행렬과 벡터) 재현 — logos 만 사용
+// examples/parity/mpl_parity_12a2.js — example3.py (12A2 · 행렬과 벡터) 재현 — logos 만 사용
 //
 // ── 무엇을 하는가 ────────────────────────────────────────────────
 //   matplotlib 로 그린 "행렬과 벡터" 교재 그림 20개(12A2 세션)를 logos DSL **만으로**
@@ -8,7 +8,7 @@
 //   12A2 세션 전 그림을 커버하는 **대표 예제 3** 이다.
 //
 // ── 실행 ────────────────────────────────────────────────────────
-//   node examples/mpl_parity_12a2.js   →  output/parity12a2/*.svg + *.png + index.html
+//   node examples/parity/mpl_parity_12a2.js   →  output/parity12a2/*.svg + *.png + index.html
 //   npm run parity12a2                 (동일)
 //
 // ── mpl 대응 규칙 (이 예제가 지키는 관례) ────────────────────────
@@ -76,9 +76,9 @@ import {
   frame3,
   kit,
   transform,
-} from '../index.js';
+} from '../../index.js';
 
-const OUT = join(import.meta.dirname, '..', 'output', 'parity12a2');
+const OUT = join(import.meta.dirname, '..', '..', 'output', 'parity12a2');
 
 // ── 색 — mpl 원본이 쓴 hex 그대로 ────────────────────────────────
 const TEAL = '#4ecdc4',

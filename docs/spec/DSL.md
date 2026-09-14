@@ -134,7 +134,7 @@ circle
 ### 3.1 확장 — 코어를 고치지 않는 체이너블 플러그인
 
 프로토콜은 **닫힌 목록이 아니다.** 사용자가 새 메서드·새 도형·새 IR 노드를 붙일 수 있고,
-그것도 코어 파일 수정 없이 된다 → [`PLUGIN.md`](PLUGIN.md).
+그것도 코어 파일 수정 없이 된다 → [`PLUGIN.md`](../extend/PLUGIN.md).
 
 ```js
 import { point, use } from '@jaywoo0830a/logos';
@@ -807,7 +807,7 @@ fig.toSVG();
 7. **IR 하나로 다중 백엔드** — TikZ(논문) · SVG(웹) · PDF(인쇄) · PNG(미리보기)
 8. **품질은 기본값** — `theme('textbook')` 하나로 출판 수준
 9. **코어는 훅만, 기능은 플러그인** — 없는 기능은 코어를 고치지 않고 `use(plugin)` 으로 붙인다.
-   새 도형·체이닝 메서드·IR 노드·테마·백엔드 emitter 가 모두 등록 대상이다 ([`PLUGIN.md`](PLUGIN.md)).
+   새 도형·체이닝 메서드·IR 노드·테마·백엔드 emitter 가 모두 등록 대상이다 ([`PLUGIN.md`](../extend/PLUGIN.md)).
 
 ---
 

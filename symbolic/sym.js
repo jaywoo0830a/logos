@@ -1,4 +1,4 @@
-// DSL.md §7 심볼릭 — @cortex-js/compute-engine 어댑터
+// docs/spec/DSL.md §7 심볼릭 — @cortex-js/compute-engine 어댑터
 import { ComputeEngine } from '@cortex-js/compute-engine';
 
 const ce = new ComputeEngine();

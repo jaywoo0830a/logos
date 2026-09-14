@@ -111,7 +111,7 @@ export const figures = [['fig-c', () => panels([a, b], { cols: 2 }), '두 장 �
 | 예외 발생     | 그 figure 만 실패로 집계(`manifest.errors`)하고 **나머지는 렌더** · 종료코드 1 |
 | `-r`          | 하위 폴더까지 검색(`node_modules` 제외)                                        |
 
-**코어 수정이 필요한 기능은 플러그인으로** 붙입니다 — [`PLUGIN.md`](PLUGIN.md).
+**코어 수정이 필요한 기능은 플러그인으로** 붙입니다 — [`PLUGIN.md`](../extend/PLUGIN.md).
 패키지에 동봉된 플러그인은 subpath 로 바로 씁니다.
 
 ```js
@@ -252,4 +252,4 @@ bash scripts/render.sh -s sketches -o out --json | jq -e '.fail == 0'
   `--dry-run`·`--clean`(사용자 파일 보존), 스크립트 `--help`/문법.
 - 수동 확인(리눅스) — `scripts/render.sh`(도커) 7 figure,
   산출물 소유권 `user:user`, SVG `NaN` 0, `scripts/serve.sh` → `GET /` 200 · `GET /hello.svg` 200.
-- 예제 프로젝트 [`examples/workflow/`](examples/workflow/) 가 이 4단계를 그대로 재현합니다.
+- 예제 프로젝트 [`examples/workflow/`](../../examples/workflow/) 가 이 4단계를 그대로 재현합니다.

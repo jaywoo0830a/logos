@@ -465,7 +465,7 @@ import { scene, point, vector, line, segment, ray,
 - **`annotate`** — 주석
 - **`tex`** — 심볼릭 수식 (LaTeX 그대로)
 
-> 예제를 처음 쓴다면 [`KIT.md`](KIT.md) 부터 보세요 — 프리셋·저장·타이포그래피(행간/자간)까지
+> 예제를 처음 쓴다면 [`KIT.md`](../guides/KIT.md) 부터 보세요 — 프리셋·저장·타이포그래피(행간/자간)까지
 > 실제로 그림을 "만드는" 쪽 이야기가 정리돼 있습니다.
 
 ---
@@ -529,5 +529,5 @@ scene()
 | 파이프라인 끼어들기       | `api.hook('svg', (svg) => …)`                         |
 | 기존 동작 보강            | `api.around('scene', 'title', (orig, t) => …)`        |
 
-전체 목록과 좌표 변환 규칙은 [`PLUGIN.md`](PLUGIN.md), 실제 8종 예시는
+전체 목록과 좌표 변환 규칙은 [`PLUGIN.md`](../extend/PLUGIN.md), 실제 8종 예시는
 `plugins/geometry-extras.js`(`npm run plugin-demo` → `output/plugin-demo/`)에 있습니다.

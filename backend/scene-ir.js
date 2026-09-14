@@ -176,7 +176,7 @@ export class SceneIR {
     return apply('tikz', tikz, { ir: this }) || tikz;
   }
 
-  // ── ADAPT.md 외부엔진 어댑터 백엔드 ──────────────
+  // ── docs/extend/ADAPT.md 외부엔진 어댑터 백엔드 ──────────────
   /** Asymptote 소스 생성 (2D) — ADAPT §2·3 */
   toAsymptote(opts = {}) {
     return irToAsymptote(this.o.nodes, opts);

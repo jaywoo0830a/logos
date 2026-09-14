@@ -346,7 +346,7 @@ bash "$(npm root)/${PKG_NAME}/scripts/render.sh" -p . -s . -o out
 
 스케치 파일은 \`export default\` 로 그림 하나를 내보내거나,
 \`export const figures = { 이름: 그림, … }\` 로 여러 장을 낼 수 있습니다.
-자세한 규칙은 [\`WORKFLOW.md\`](https://github.com/jaywoo0830a/logos/blob/main/WORKFLOW.md) 와
+자세한 규칙은 [\`docs/guides/WORKFLOW.md\`](https://github.com/jaywoo0830a/logos/blob/main/docs/guides/WORKFLOW.md) 와
 \`npx logos --help\` 를 보세요.
 `;
 

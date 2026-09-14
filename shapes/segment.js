@@ -1,4 +1,4 @@
-// DSL.md §4.3 선분 — segment(A, B)
+// docs/spec/DSL.md §4.3 선분 — segment(A, B)
 import { Drawable, renderText } from '../core/drawable.js';
 import { node } from '../core/node.js';
 import { point, toPoint } from './point.js';

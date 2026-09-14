@@ -1,4 +1,4 @@
-// examples/mpl_parity_9b.js — example1.py (Session 9B · 2D 기하) 재현 — logos 만 사용
+// examples/parity/mpl_parity_9b.js — example1.py (Session 9B · 2D 기하) 재현 — logos 만 사용
 //
 // ── 무엇을 하는가 ────────────────────────────────────────────────
 //   matplotlib 로 그린 2D 기하 교재 그림 25개(Session 9B)를 logos DSL **만으로**
@@ -6,7 +6,7 @@
 //   눈과 기계(불변식 테스트/스냅샷)로 확인하는 **대표 예제 1** 이다.
 //
 // ── 실행 ────────────────────────────────────────────────────────
-//   node examples/mpl_parity_9b.js   →  output/parity9b/*.svg + *.png + index.html
+//   node examples/parity/mpl_parity_9b.js   →  output/parity9b/*.svg + *.png + index.html
 //   npm run parity9b                 (동일)
 //
 // ── 공용 헬퍼 (logos/kit.js) ────────────────────────────────────
@@ -64,9 +64,9 @@ import {
   pi,
   tau,
   kit,
-} from '../index.js';
+} from '../../index.js';
 
-const OUT = join(import.meta.dirname, '..', 'output', 'parity9b');
+const OUT = join(import.meta.dirname, '..', '..', 'output', 'parity9b');
 
 // 색 팔레트 (matplotlib 'b','r','g','m','orange',…) — kit.palette 에서 한 글자 이름만 벗겨 온다.
 const {

@@ -1,4 +1,4 @@
-// test/dx.test.js — FEEDBACK.md(A·B 항목) 적용 회귀 테스트
+// test/dx.test.js — docs/process/FEEDBACK.md(A·B 항목) 적용 회귀 테스트
 //   A4 중첩 설정 깊은 복사 · A7 이터레이터/요약 · B1 toPoint · B2 게터 ·
 //   B3 태그드 템플릿 · B4 with() · B5 add 평탄화
 import { test } from 'node:test';

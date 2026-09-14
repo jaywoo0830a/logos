@@ -1,4 +1,4 @@
-// SENARIOS C2 — 포물선 (parabola = 초점 F 와 준선 d 로 정의)
+// SCENARIOS C2 — 포물선 (parabola = 초점 F 와 준선 d 로 정의)
 import { Drawable } from '../core/drawable.js';
 import { node } from '../core/node.js';
 import { curve } from './curve.js';

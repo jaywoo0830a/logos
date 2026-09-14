@@ -1,4 +1,4 @@
-// 1.md — 수학 원서 50개: v0.1 필수 30개 + v0.2 다수 통과 검증
+// docs/testing/TEXTBOOK.md — 수학 원서 50개: v0.1 필수 30개 + v0.2 다수 통과 검증
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {

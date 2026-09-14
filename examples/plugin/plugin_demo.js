@@ -1,4 +1,4 @@
-// examples/plugin_demo.js — 플러그인 아키텍처 데모(코어 수정 0)
+// examples/plugin/plugin_demo.js — 플러그인 아키텍처 데모(코어 수정 0)
 //
 // 무엇을 보여주나
 //   `plugins/geometry-extras.js` 하나를 `use()` 한 것만으로 **코어 파일을 전혀 고치지 않고**
@@ -11,11 +11,11 @@
 //     · 훅 / 래핑            SVG 워터마크 · scene.title 접두어([draft])
 //
 // 실행
-//   node examples/plugin_demo.js        →  output/plugin-demo/*.svg|png + index.html
+//   node examples/plugin/plugin_demo.js        →  output/plugin-demo/*.svg|png + index.html
 //   npm run plugin-demo
-import { scene, point, circle, segment, curve, annotate, use, plugins, tex, tau } from '../index.js';
-import { kit } from '../index.js';
-import geometryExtras, { chalkTheme } from '../plugins/geometry-extras.js';
+import { scene, point, circle, segment, curve, annotate, use, plugins, tex, tau } from '../../index.js';
+import { kit } from '../../index.js';
+import geometryExtras, { chalkTheme } from '../../plugins/geometry-extras.js';
 
 // ── 플러그인 설치 (이 한 줄이 전부다) ──────────────────────
 use(geometryExtras, { watermark: true, stampTitle: false });

@@ -1,4 +1,4 @@
-// 1.md #45 — 이항분포 막대: rectangle.on([x0,x1],[y0,y1])
+// docs/testing/TEXTBOOK.md #45 — 이항분포 막대: rectangle.on([x0,x1],[y0,y1])
 import { Drawable } from '../core/drawable.js';
 import { node } from '../core/node.js';
 

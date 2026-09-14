@@ -1,4 +1,4 @@
-// ADAPT.md §2·3계층 — Asymptote 백엔드 (출판 품질)
+// docs/extend/ADAPT.md §2·3계층 — Asymptote 백엔드 (출판 품질)
 // IR 노드 → `.asy` 소스 생성, CLI(`asy -f svg`)로 컴파일.
 // 공식 API(로컬 asy 2.85 검증):
 //   draw(pair..pair), draw(circle(pair,r), pen), dot(pair, pen),

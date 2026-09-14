@@ -1,6 +1,6 @@
 // examples/workflow/sketches/plugin.js — 워크플로우 안에서 플러그인 쓰기
 //
-//   플러그인은 **코어 수정 없이** 문법을 늘린다 → PLUGIN.md
+//   플러그인은 **코어 수정 없이** 문법을 늘린다 → docs/extend/PLUGIN.md
 //   여기서는 패키지에 동봉된 `plugins/geometry-extras.js` 를 그대로 사용한다.
 //   (외부 프로젝트: `import extras from '@jaywoo0830a/logos/plugins/geometry-extras.js'`)
 import { scene, point, circle, use, plugins, annotate } from '@jaywoo0830a/logos';

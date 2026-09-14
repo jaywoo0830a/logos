@@ -1,4 +1,4 @@
-// DSL.md §7 심볼릭 — 태그드 템플릿 `tex`가 LaTeX를 입구로 삼는다.
+// docs/spec/DSL.md §7 심볼릭 — 태그드 템플릿 `tex`가 LaTeX를 입구로 삼는다.
 import { Sym } from './sym.js';
 
 export function tex(strings, ...values) {

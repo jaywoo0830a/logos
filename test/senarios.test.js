@@ -1,4 +1,4 @@
-// SENARIOS.md — v0.1 필수 시나리오(A1-A4, B1-B3, C1, D1-D3, F1, G1-G4, H1-H2, I1-I2, I4, J1, J5, K1-K2, K5)
+// docs/testing/SCENARIOS.md — v0.1 필수 시나리오(A1-A4, B1-B3, C1, D1-D3, F1, G1-G4, H1-H2, I1-I2, I4, J1, J5, K1-K2, K5)
 // 실행: npm run test:svg
 import { test } from 'node:test';
 import assert from 'node:assert/strict';

@@ -39,4 +39,4 @@ bash scripts/render.sh -p examples/workflow -s sketches -o /tmp/report
 | `export const name` / `title`                    | 파일명/표시 이름 덮어쓰기                                |
 
 렌더 결과는 항상 `out/` 안에 `<이름>.svg` · `<이름>.png` · `index.html`(갤러리) ·
-`manifest.json`(기계 판독용 요약)로 나옵니다. 자세한 내용은 [`WORKFLOW.md`](../../WORKFLOW.md).
+`manifest.json`(기계 판독용 요약)로 나옵니다. 자세한 내용은 [`WORKFLOW.md`](../../docs/guides/WORKFLOW.md).

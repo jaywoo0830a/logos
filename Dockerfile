@@ -17,7 +17,7 @@ ENV NPM_CONFIG_UPDATE_NOTIFIER=false \
 # ── 렌더/서빙: 텍스트(PNG 래스터) 폰트 + CA 번들 ───────────────
 #   · fonts-nanum                          — 한글(NanumGothic/Myeongjo). 없으면 라벨이 □(tofu)로 깨진다.
 #   · fonts-dejavu-core / fonts-liberation — 라틴·그리스·수학 기호 기본
-# ── 개발/테스트: ADAPT.md 외부엔진 ─────────────────────────────
+# ── 개발/테스트: docs/extend/ADAPT.md 외부엔진 ─────────────────────────────
 #   · python3 + python3-sympy — 심볼릭 폴백(없으면 테스트가 skip)
 #   · asymptote + dvisvgm + lmodern — 2D/3D 출판 SVG/PDF
 #   (BuildKit cache mount 를 쓰지 않는다 — buildx 없는 환경에서도 빌드되도록)

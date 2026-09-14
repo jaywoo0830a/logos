@@ -1,4 +1,4 @@
-// DSL.md §4.2 벡터
+// docs/spec/DSL.md §4.2 벡터
 import { Drawable, renderText } from '../core/drawable.js';
 import { node } from '../core/node.js';
 import { cartToPolar } from '../solver/coords.js';

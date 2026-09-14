@@ -1,4 +1,4 @@
-// 0911-PLAN Phase 0-3 — 골든 SVG 스냅샷 (SENARIOS §L)
+// 0911-PLAN Phase 0-3 — 골든 SVG 스냅샷 (SCENARIOS §L)
 // 갱신: npm run snap:update   (test/fixtures/ 는 .gitignore 대상 → 로컬 전용)
 //
 // 정책: fixtures 가 없으면(=fresh clone) 조용히 통과하지 않고 skip 한다.

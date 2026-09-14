@@ -1,4 +1,4 @@
-// DSL.md §4.4 곡선 — curve.fn / parametric / polar / implicit / piecewise / spline / ode / taylor
+// docs/spec/DSL.md §4.4 곡선 — curve.fn / parametric / polar / implicit / piecewise / spline / ode / taylor
 import { Drawable, renderText } from '../core/drawable.js';
 import { node } from '../core/node.js';
 import { TAU, polarToCart } from '../solver/coords.js';

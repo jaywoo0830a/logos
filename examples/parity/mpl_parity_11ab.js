@@ -1,4 +1,4 @@
-// examples/mpl_parity_11ab.js — example5.py (11A · 11B 삼각함수) 재현 — logos 만 사용
+// examples/parity/mpl_parity_11ab.js — example5.py (11A · 11B 삼각함수) 재현 — logos 만 사용
 //
 // ── 무엇을 하는가 ────────────────────────────────────────────────
 //   matplotlib 로 그린 "삼각함수" 교재 그림 31개(11A 19 + 11B 12)를 logos DSL **만으로**
@@ -9,7 +9,7 @@
 //   오일러 공식 · 체비쇼프 · 삼각법 3근 · 푸리에 사각파 · 항등식 계보 · 사인/코사인 법칙.
 //
 // ── 실행 ────────────────────────────────────────────────────────
-//   node examples/mpl_parity_11ab.js  →  output/parity11a/* + output/parity11b/*
+//   node examples/parity/mpl_parity_11ab.js  →  output/parity11a/* + output/parity11b/*
 //   npm run parity11ab                (동일)
 //
 // ── mpl 대응 규칙 (이 예제가 지키는 관례) ────────────────────────
@@ -59,9 +59,9 @@
 //   11 identity-family-tree       항등식 계보 그래프
 //   12 law-of-sines-cosines       사인법칙 / 코사인법칙 (1×2)
 import { join } from 'node:path';
-import { point, circle, polygon, segment, line, curve, annotate, pi, kit } from '../index.js';
+import { point, circle, polygon, segment, line, curve, annotate, pi, kit } from '../../index.js';
 
-const ROOT = join(import.meta.dirname, '..');
+const ROOT = join(import.meta.dirname, '..', '..');
 const OUT_A = join(ROOT, 'output', 'parity11a');
 const OUT_B = join(ROOT, 'output', 'parity11b');
 

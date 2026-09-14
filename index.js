@@ -1,4 +1,4 @@
-// `logos` 공개 API — DSL.md §14 구조의 진입점
+// `logos` 공개 API — docs/spec/DSL.md §14 구조의 진입점
 // 구현된 모듈과, 아직 미구현(스텁) 모듈을 함께 노출한다.
 import { Scene } from './core/scene.js';
 import { panels } from './backend/scene-ir.js';
@@ -49,7 +49,7 @@ import { Sym } from './symbolic/sym.js';
 import { xy, range, view } from './core/template.js';
 import { TAU } from './solver/coords.js';
 import { TYPE as typography } from './backend/fonts.js';
-// ── ADAPT.md 외부엔진 어댑터 ──────────────────────
+// ── docs/extend/ADAPT.md 외부엔진 어댑터 ──────────────────────
 import { SymPyAdapter, SageAdapter, createSymbolicAdapter, defaultAdapter } from './symbolic/adapter.js';
 import irToAsymptote from './backend/asymptote.js';
 import { tikzToSVG } from './backend/tikzjax.js';
@@ -163,7 +163,7 @@ export { renderText } from './core/drawable.js';
 //   사용: `import { kit } from '@jaywoo0830a/logos'; const { plot3d, palette } = kit;`
 export * as kit from './kit.js';
 
-// ── ADAPT.md 외부엔진 어댑터 API ───────────────────
+// ── docs/extend/ADAPT.md 외부엔진 어댑터 API ───────────────────
 export const adapt = {
   asymmetric: { SymPyAdapter, SageAdapter, createSymbolicAdapter, defaultAdapter },
   asymptote: irToAsymptote,
@@ -179,7 +179,7 @@ scene.cartesian = () => new Scene();
 
 // ── 확장 지점: 플러그인이 우선, 없으면 코어 기본 구현 ──────────────
 //   `ray`/`arc`/`sector`/`torus`/`cube`/`prism`/`pyramid` 는 **코어 기본 구현**을 가진다
-//   (DSL.md 대로 동작). 플러그인이 `api.define('ray', …)` 로 등록하면 그쪽이 우선되고,
+//   (docs/spec/DSL.md 대로 동작). 플러그인이 `api.define('ray', …)` 로 등록하면 그쪽이 우선되고,
 //   `arc.semicircle` 처럼 코어에 없는 하위 이름은 아래 힌트와 함께 등록을 안내한다.
 /** 코어에도 플러그인에도 없는 이름의 힌트 — 등록 안내에 함께 실린다 */
 const TODO_HINT = {

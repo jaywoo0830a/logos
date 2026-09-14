@@ -1,4 +1,4 @@
-// examples/mpl_parity_9c.js — example2.py (Session 9C · 3D 기하) 재현 — logos 만 사용
+// examples/parity/mpl_parity_9c.js — example2.py (Session 9C · 3D 기하) 재현 — logos 만 사용
 //
 // ── 무엇을 하는가 ────────────────────────────────────────────────
 //   matplotlib(mplot3d) 로 그린 3D 기하 교재 그림 35개를 logos DSL **만으로**
@@ -6,7 +6,7 @@
 //   9C 세션의 전 그림을 커버하는 **대표 예제 2** 다.
 //
 // ── 실행 ────────────────────────────────────────────────────────
-//   node examples/mpl_parity_9c.js   →  output/parity9c/*.svg + *.png + index.html
+//   node examples/parity/mpl_parity_9c.js   →  output/parity9c/*.svg + *.png + index.html
 //   npm run parity9c                 (동일)
 //
 // ── mplot3d 대응 규칙 (이 예제가 지키는 관례) ───────────────────
@@ -81,9 +81,9 @@ import {
   circle3,
   frame3,
   kit,
-} from '../index.js';
+} from '../../index.js';
 
-const OUT = join(import.meta.dirname, '..', 'output', 'parity9c');
+const OUT = join(import.meta.dirname, '..', '..', 'output', 'parity9c');
 
 // 색 팔레트 — matplotlib 한 글자 이름만 벗겨 온다(값은 hex 로 고정).
 const {

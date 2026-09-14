@@ -1,4 +1,4 @@
-// DSL.md §4.1 점 — point / point.origin / point.polar / point.spherical … / point.intersect
+// docs/spec/DSL.md §4.1 점 — point / point.origin / point.polar / point.spherical … / point.intersect
 import { Drawable, renderText } from '../core/drawable.js';
 import { node } from '../core/node.js';
 import {

@@ -1,4 +1,4 @@
-// SENARIOS.md — v0.2 시나리오(B4–B6, C2–C3, D4, E1–E4, F2–F3, G5, H3, I3, I5, J2–J4, J6, K3–K4)
+// docs/testing/SCENARIOS.md — v0.2 시나리오(B4–B6, C2–C3, D4, E1–E4, F2–F3, G5, H3, I3, I5, J2–J4, J6, K3–K4)
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {

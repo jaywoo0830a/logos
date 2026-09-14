@@ -1,4 +1,4 @@
-// DSL.md 에 문서화됐지만 비어 있던 API 들의 회귀 테스트.
+// docs/spec/DSL.md 에 문서화됐지만 비어 있던 API 들의 회귀 테스트.
 //   (curve 유틸 / 원뿔곡선 / 직선 / 영역 / 주석 / 3D 입체·곡면 / 원호·반직선 / 벡터·점)
 import { test } from 'node:test';
 import assert from 'node:assert/strict';

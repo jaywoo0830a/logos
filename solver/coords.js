@@ -1,4 +1,4 @@
-// DSL.md §1 「좌표계는 1급 시민」 — 좌표계 변환 · 각도 파싱
+// docs/spec/DSL.md §1 「좌표계는 1급 시민」 — 좌표계 변환 · 각도 파싱
 
 export const TAU = Math.PI * 2;
 

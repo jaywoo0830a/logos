@@ -106,7 +106,7 @@ test('PNG: resvg 폰트 옵션에 시스템 폰트 dirs 포함 (CJK 라벨 tofu 
   assert.ok(svg.includes('한글 라벨'), 'CJK 라벨 텍스트 보존');
 });
 
-test('adapt 네임스페이스 노출 (ADAPT.md)', () => {
+test('adapt 네임스페이스 노출 (docs/extend/ADAPT.md)', () => {
   assert.ok(adapt && adapt.katex && typeof adapt.katex.katexRender === 'function');
   assert.ok(typeof adapt.asymptote === 'function');
 });

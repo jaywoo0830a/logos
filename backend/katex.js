@@ -1,4 +1,4 @@
-// ADAPT.md §4계층 — KaTeX 수식 조판 (빠르고 가벼운 기본 수식 엔진)
+// docs/extend/ADAPT.md §4계층 — KaTeX 수식 조판 (빠르고 가벼운 기본 수식 엔진)
 // tex`...` LaTeX 문자열을 HTML(<span>…) 로 조판한다.
 import katex from 'katex';
 

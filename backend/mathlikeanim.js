@@ -1,4 +1,4 @@
-// ADAPT.md §3계층 — MathLikeAnim-rs (Rust → WASM) 백엔드
+// docs/extend/ADAPT.md §3계층 — MathLikeAnim-rs (Rust → WASM) 백엔드
 // Manim 스타일의 인터랙티브 3D/함수 플로팅. @mathlikeanim-rs/renderer 로 WASM 로딩.
 // WASM 바이너리가 브라우저/Node 에 로드돼야 하므로 async.
 //

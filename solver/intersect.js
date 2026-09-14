@@ -1,4 +1,4 @@
-// DSL.md §12 Geometry Solver — 교점 · 접점 · 파라메트릭 샘플링
+// docs/spec/DSL.md §12 Geometry Solver — 교점 · 접점 · 파라메트릭 샘플링
 import { TAU, norm2 } from './coords.js';
 
 /** 두 2D 직선(line.through 형태)의 교점 → Point 또는 null(평행) */

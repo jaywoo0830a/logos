@@ -1,4 +1,4 @@
-// DSL.md §12 렌더러 파이프라인 — TikZ emitter (논문/책 삽입용)
+// docs/spec/DSL.md §12 렌더러 파이프라인 — TikZ emitter (논문/책 삽입용)
 // IR 노드를 TikZ(standalone) 문서로 방출. 좌표는 사용자 좌표계 그대로.
 import { applyTransforms } from '../transform.js';
 import { nodeEmitter } from '../core/plugin.js';

@@ -1,4 +1,4 @@
-// SENARIOS C1 · DSL 원뿔곡선 — 타원 (ellipse.center(O).semi(a, b))
+// SCENARIOS C1 · DSL 원뿔곡선 — 타원 (ellipse.center(O).semi(a, b))
 import { Drawable, renderText } from '../core/drawable.js';
 import { node } from '../core/node.js';
 

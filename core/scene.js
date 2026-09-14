@@ -1,4 +1,4 @@
-// DSL.md §5 씬(Scene) + §12 Scene IR → 다중 백엔드
+// docs/spec/DSL.md §5 씬(Scene) + §12 Scene IR → 다중 백엔드
 import { inspect } from 'node:util';
 import { node } from './node.js';
 import { renderText } from './drawable.js';

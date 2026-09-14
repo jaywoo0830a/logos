@@ -1,5 +1,5 @@
 // 불변 AST 노드 — 모든 도형은 결국 이 IR 노드들로 컴파일된다.
-// DSL.md §12 「IR 하나로 다중 백엔드」 — SVG / TikZ 백엔드가 이 노드를 소비한다.
+// docs/spec/DSL.md §12 「IR 하나로 다중 백엔드」 — SVG / TikZ 백엔드가 이 노드를 소비한다.
 
 let NODE_ID = 0;
 

@@ -1,4 +1,4 @@
-// examples/mpl_parity_12a1.js — example4.py (12A1 · 복소수) 재현 — logos 만 사용
+// examples/parity/mpl_parity_12a1.js — example4.py (12A1 · 복소수) 재현 — logos 만 사용
 //
 // ── 무엇을 하는가 ────────────────────────────────────────────────
 //   matplotlib 로 그린 "복소수" 교재 그림 12개(12A1 세션)를 logos DSL **만으로**
@@ -8,7 +8,7 @@
 //   편각의 덧셈 · 복소평면 요약 — 12A1 세션 전 그림을 커버하는 **대표 예제 4** 다.
 //
 // ── 실행 ────────────────────────────────────────────────────────
-//   node examples/mpl_parity_12a1.js   →  output/parity12a1/*.svg + *.png + index.html
+//   node examples/parity/mpl_parity_12a1.js   →  output/parity12a1/*.svg + *.png + index.html
 //   npm run parity12a1                 (동일)
 //
 // ── mpl 대응 규칙 (이 예제가 지키는 관례) ────────────────────────
@@ -44,9 +44,9 @@
 //   · 색은 mpl 원본이 쓴 hex 그대로 고정 — 두 그림을 눈으로 비교할 수 있다.
 //   · mpl 원본의 표기/수치 문제는 주석 `mpl 대비` 로 표시하고 고쳤다.
 import { join } from 'node:path';
-import { point, circle, polygon, segment, curve, annotate, cplx, cmapColor, tex, kit } from '../index.js';
+import { point, circle, polygon, segment, curve, annotate, cplx, cmapColor, tex, kit } from '../../index.js';
 
-const OUT = join(import.meta.dirname, '..', 'output', 'parity12a1');
+const OUT = join(import.meta.dirname, '..', '..', 'output', 'parity12a1');
 
 // ── 색 — mpl 원본이 쓴 hex 그대로 ────────────────────────────────
 const RED = '#e74c3c',

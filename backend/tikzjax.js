@@ -1,4 +1,4 @@
-// ADAPT.md §4계층 — node-tikzjax (WASM) 백엔드
+// docs/extend/ADAPT.md §4계층 — node-tikzjax (WASM) 백엔드
 // 순수 WASM 으로 TikZ 를 SVG 로 렌더링. LaTeX 툴체인 불필요.
 // 주의: 한 번에 하나의 인스턴스만 실행해야 한다(전역 단일 큐).
 // node-tikzjax 1.x 의 실제 API: import 후 `await load()`, 그다음 `tex(input)`.

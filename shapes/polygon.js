@@ -1,4 +1,4 @@
-// DSL.md §4.7 다각형 — polygon / triangle / regular …
+// docs/spec/DSL.md §4.7 다각형 — polygon / triangle / regular …
 import { Drawable, renderText } from '../core/drawable.js';
 import { node } from '../core/node.js';
 import { point as _point } from './point.js';
@@ -165,7 +165,7 @@ function inRegion(region, x, y) {
   return true;
 }
 
-// 1.md #24 — square.on(segment(A,B)): 변을 한 변으로 하는 정사각형
+// docs/testing/TEXTBOOK.md #24 — square.on(segment(A,B)): 변을 한 변으로 하는 정사각형
 export const square = {
   on(seg) {
     const A = seg.a.coords,

@@ -1,4 +1,4 @@
-// DSL.md §4.10 주석 — annotate.angle / caption / integral / arrow / dimension
+// docs/spec/DSL.md §4.10 주석 — annotate.angle / caption / integral / arrow / dimension
 import { Drawable, renderText } from './core/drawable.js';
 import { node } from './core/node.js';
 import { norm2, perp2 } from './solver/coords.js';
@@ -495,7 +495,7 @@ function pickStyle(c) {
   for (const k of ['color', 'stroke', 'dash', 'opacity']) if (c[k] !== undefined) s[k] = c[k];
   return s;
 }
-// ── brace / shade / limit / legend (DSL.md §4.10) ───────────────
+// ── brace / shade / limit / legend (docs/spec/DSL.md §4.10) ───────────────
 
 /** 영역 채움 — region 을 주석처럼 색/투명도만 바꿔 그린다. */
 class ShadeAnno extends Drawable {

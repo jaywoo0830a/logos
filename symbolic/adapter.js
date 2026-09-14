@@ -1,4 +1,4 @@
-// ADAPT.md §1계층(심볼릭 레이어)
+// docs/extend/ADAPT.md §1계층(심볼릭 레이어)
 // 외부 CAS(SageMath 1순위, SymPy fallback)를 어댑터로 감싼다.
 // 사용자는 여전히 logos의 tex`...` 만 쓴다.
 //

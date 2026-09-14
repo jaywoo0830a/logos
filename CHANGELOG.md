@@ -11,7 +11,7 @@
 
 ### Added
 
-- **문서화됐지만 비어 있던 API 구현** (DSL.md 기준 — 코어 기본값, 플러그인은 그대로 우선):
+- **문서화됐지만 비어 있던 API 구현** (docs/spec/DSL.md 기준 — 코어 기본값, 플러그인은 그대로 우선):
   - 곡선: `curve.piecewise` · `curve.spline().tension()` · `curve.ode()` (RK4, 심볼릭 `dy` 지원) ·
     `curve.taylor()` · `curve.tangentAt/normalAt/arcLength/curvature` · `curve.cylindrical/spherical`
   - 원뿔곡선: `ellipse.semiMajor/eccentricity` · `ellipse.foci().major()` · `ellipse.directrix().eccentricity()` ·
@@ -111,7 +111,7 @@
 
 ## [0.2.0] — 2026-09-12
 
-`FEEDBACK.md`(모던 JS 기반 구문·DX 제안)의 **A·B 항목**을 반영하고, 아직 배포되지 않았던
+`docs/process/FEEDBACK.md`(모던 JS 기반 구문·DX 제안)의 **A·B 항목**을 반영하고, 아직 배포되지 않았던
 눈금 라벨 정밀도·축 눈금 길이 수정·CLI 다중 대상까지 함께 담은 마이너 릴리즈입니다.
 출력은 결정적 그대로이며(스냅샷 123 figure 포함 전체 테스트 통과), 새 문법은 모두 기존 API 위의
 얇은 별칭입니다. C(실험)·D(비권장) 항목은 반영하지 않았습니다.
@@ -168,7 +168,7 @@ mathbook(`math/graph/phase2` — 미분 해석) 실사용에서 올라온 피드
 ## [0.1.0] — 2026-09-11
 
 첫 공개 배포. `example1.py` ~ `example5.py`(2D 기하 · 3D 기하 · 행렬과 벡터 · 복소수 · 삼각함수)
-재현 123 figure 와 검증 시나리오 A–L · 1.md 를 회귀 기준으로 삼았습니다.
+재현 123 figure 와 검증 시나리오 A–L · docs/testing/TEXTBOOK.md 를 회귀 기준으로 삼았습니다.
 
 ### Added
 
@@ -189,9 +189,9 @@ mathbook(`math/graph/phase2` — 미분 해석) 실사용에서 올라온 피드
 - **워크플로우(도커+배시, 리눅스)** `scripts/`(`install.sh` · `render.sh` · `serve.sh` ·
   `build-image.sh`) + `Dockerfile.render`(슬림 이미지 · 한글/수학 폰트 · resvg · ENTRYPOINT=`logos`)
   - `docker-compose.yml` 서비스. 설치 → 작성 → 실행 → 렌더 4단계.
-- **문서** — `README.md` · `KIT.md`(그림 작성 가이드) · `DSL.md`(언어 스펙) · `INTERFACE.md` ·
-  `PLUGIN.md` · `WORKFLOW.md`.
-- **테스트 194개** (`node --test`) — 단위 · 시나리오(SENARIOS A–L · 1.md · py 재현) · 기하 불변식 ·
+- **문서** — `README.md` · `docs/guides/KIT.md`(그림 작성 가이드) · `docs/spec/DSL.md`(언어 스펙) · `docs/spec/INTERFACE.md` ·
+  `docs/extend/PLUGIN.md` · `docs/guides/WORKFLOW.md`.
+- **테스트 194개** (`node --test`) — 단위 · 시나리오(SCENARIOS A–L · docs/testing/TEXTBOOK.md · py 재현) · 기하 불변식 ·
   백엔드 정합 · 플러그인 17 · CLI 8 · 골든 SVG 스냅샷.
 
 ### Fixed

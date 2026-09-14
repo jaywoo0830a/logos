@@ -37,7 +37,7 @@ services:
       - .:/opt/logos
       - /opt/logos/node_modules
 
-  # ── 렌더 워크플로우 (리눅스 전용 · WORKFLOW.md) ─────────────
+  # ── 렌더 워크플로우 (리눅스 전용 · docs/guides/WORKFLOW.md) ─────────────
   #   기본 경로는 bash 스크립트입니다(scripts/render.sh). compose 를 쓰는 환경에서는 아래를.
   #     UID=$(id -u) GID=$(id -g) docker compose run --rm render -s sketches -o out
   #     docker compose up render-serve      # → http://localhost:18080/
