@@ -41,22 +41,22 @@ docs/
   process/  0911-PLAN.md · FEEDBACK.md  ← 작업 이력 · DX 제안 (비-스펙)
 ```
 
-| 문서                                                                 | 무엇을 담고 있나                                                                                |
-| -------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| **`README.md`** (이 문서)                                            | 저장소 안내 — 실행 방법·구조·검증                                                               |
-| [`docs/guides/KIT.md`](docs/guides/KIT.md)                           | **예제/그림 작성 가이드** — `kit.js`, 3D 도우미, `linalg`(행렬·벡터), 타이포그래피(행간·자간)   |
-| [`docs/guides/WORKFLOW.md`](docs/guides/WORKFLOW.md)                 | **워크플로우(도커+배시, 리눅스 전용)** — 설치 → 작성 → 실행 → 렌더 4단계, CLI/스크립트 레퍼런스 |
-| [`docs/spec/DSL.md`](docs/spec/DSL.md)                               | 언어 스펙 — Scene/도형/주석/영역, IR, 백엔드 파이프라인                                         |
-| [`docs/spec/INTERFACE.md`](docs/spec/INTERFACE.md)                   | 사용자 코드 미리보기(읽히는 코드 모음)                                                          |
-| [`docs/extend/PLUGIN.md`](docs/extend/PLUGIN.md)                     | **플러그인(체이너블 확장) 아키텍처** — 코어 수정 없이 기능을 붙이는 8가지 확장 지점             |
-| [`docs/extend/ADAPT.md`](docs/extend/ADAPT.md)                       | 외부엔진 어댑터 — SymPy · Asymptote · TikZJax · JSXGraph · KaTeX                                |
-| [`docs/testing/SCENARIOS.md`](docs/testing/SCENARIOS.md)             | 검증 시나리오 A–L (초·중·고 / 미적분 / 3D)                                                      |
-| [`docs/testing/TEXTBOOK.md`](docs/testing/TEXTBOOK.md)               | 수학 원서 50 시나리오 (Stewart / Strang / Ross / Serra …)                                       |
-| [`docs/testing/COVERAGE.md`](docs/testing/COVERAGE.md)               | 테스트 커버리지 매트릭스                                                                        |
-| [`docs/process/0911-PLAN.md`](docs/process/0911-PLAN.md)             | 작업 계획·이력(무엇을 왜 바꿨는지)                                                              |
-| [`docs/process/FEEDBACK.md`](docs/process/FEEDBACK.md)               | 구문·DX 제안(코드 변경 없는 제안 모음)                                                          |
-| [`CHANGELOG.md`](CHANGELOG.md)                                       | 버전별 변경 이력 (Keep a Changelog)                                                             |
-| [`LICENSE`](LICENSE)                                                 | MIT                                                                                             |
+| 문서                                                     | 무엇을 담고 있나                                                                                |
+| -------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| **`README.md`** (이 문서)                                | 저장소 안내 — 실행 방법·구조·검증                                                               |
+| [`docs/guides/KIT.md`](docs/guides/KIT.md)               | **예제/그림 작성 가이드** — `kit.js`, 3D 도우미, `linalg`(행렬·벡터), 타이포그래피(행간·자간)   |
+| [`docs/guides/WORKFLOW.md`](docs/guides/WORKFLOW.md)     | **워크플로우(도커+배시, 리눅스 전용)** — 설치 → 작성 → 실행 → 렌더 4단계, CLI/스크립트 레퍼런스 |
+| [`docs/spec/DSL.md`](docs/spec/DSL.md)                   | 언어 스펙 — Scene/도형/주석/영역, IR, 백엔드 파이프라인                                         |
+| [`docs/spec/INTERFACE.md`](docs/spec/INTERFACE.md)       | 사용자 코드 미리보기(읽히는 코드 모음)                                                          |
+| [`docs/extend/PLUGIN.md`](docs/extend/PLUGIN.md)         | **플러그인(체이너블 확장) 아키텍처** — 코어 수정 없이 기능을 붙이는 8가지 확장 지점             |
+| [`docs/extend/ADAPT.md`](docs/extend/ADAPT.md)           | 외부엔진 어댑터 — SymPy · Asymptote · TikZJax · JSXGraph · KaTeX                                |
+| [`docs/testing/SCENARIOS.md`](docs/testing/SCENARIOS.md) | 검증 시나리오 A–L (초·중·고 / 미적분 / 3D)                                                      |
+| [`docs/testing/TEXTBOOK.md`](docs/testing/TEXTBOOK.md)   | 수학 원서 50 시나리오 (Stewart / Strang / Ross / Serra …)                                       |
+| [`docs/testing/COVERAGE.md`](docs/testing/COVERAGE.md)   | 테스트 커버리지 매트릭스                                                                        |
+| [`docs/process/0911-PLAN.md`](docs/process/0911-PLAN.md) | 작업 계획·이력(무엇을 왜 바꿨는지)                                                              |
+| [`docs/process/FEEDBACK.md`](docs/process/FEEDBACK.md)   | 구문·DX 제안(코드 변경 없는 제안 모음)                                                          |
+| [`CHANGELOG.md`](CHANGELOG.md)                           | 버전별 변경 이력 (Keep a Changelog)                                                             |
+| [`LICENSE`](LICENSE)                                     | MIT                                                                                             |
 
 ---
 
@@ -89,6 +89,9 @@ export const figures = [
 - PNG 출력은 선택입니다 — `@resvg/resvg-js`(선택 의존성)가 설치돼 있으면 자동으로 켜집니다
   (`--no-png` 로 끌 수 있습니다). SVG 는 의존성 없이 항상 나옵니다.
 - 플러그인은 `@jaywoo0830a/logos/plugins/geometry-extras.js` 처럼 하위 경로로 가져옵니다.
+- **에디터 자동완성** — 패키지에 타입 정의(`types/`, JSDoc 에서 생성)가 포함돼 있어
+  VS Code 등에서 `kit.` · `circle.` · `annotate.` 뒤에 붙을 메서드가 툴팁과 함께
+  자동완성으로 보입니다. TS 프로젝트는 물론 순수 JS(`checkJs` 없이)에서도 동작합니다.
 
 ### 2.2 리포지토리에서 (개발 · 예제 재현 · 도커 워크플로)
 
@@ -102,21 +105,21 @@ npm run workflow      # 워크플로우 4단계(도커+배시) → examples/work
 npm run serve         # http://localhost:18080/  (렌더 갤러리 · 도커)
 ```
 
-| 스크립트                                                      | 설명                                                                                                                             |
-| ------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `npm test`                                                    | **도커에서** 단위 + 시나리오 + 불변식 + 스냅샷 + 백엔드 + 플러그인 + CLI (총 210) · 호스트에서 돌리려면 `npm run test:unit`      |
-| `npm run format`                                              | prettier 3.9.6 로 전체 포맷 (`format:check` 는 검사만)                                                                           |
-| `npm run parity11ab`                                          | 삼각함수 **31 figure**(11A 19 + 11B 12) 재현 — `output/parity11a`, `output/parity11b`                                            |
-| `npm run parity9b` / `parity9c` / `parity12a2` / `parity12a1` | 2D 기하 25 / 3D 기하 35 / 행렬과 벡터 20 / 복소수 12 figure 재현                                                                 |
-| `npm run plugin-demo`                                         | **플러그인 데모 4 figure**(코어 수정 0 — `ray`·`arc.circular`·`hatch` 노드·체이닝 확장) — `output/plugin-demo`                   |
-| `npm run clean-code`                                          | **API별 최소 예제 30개**(`examples/clean-code/` · 각 예제는 별도 프로세스) — `output/clean-code/<예제이름>/`                      |
+| 스크립트                                                      | 설명                                                                                                                                         |
+| ------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm test`                                                    | **도커에서** 단위 + 시나리오 + 불변식 + 스냅샷 + 백엔드 + 플러그인 + CLI (총 210) · 호스트에서 돌리려면 `npm run test:unit`                  |
+| `npm run format`                                              | prettier 3.9.6 로 전체 포맷 (`format:check` 는 검사만)                                                                                       |
+| `npm run parity11ab`                                          | 삼각함수 **31 figure**(11A 19 + 11B 12) 재현 — `output/parity11a`, `output/parity11b`                                                        |
+| `npm run parity9b` / `parity9c` / `parity12a2` / `parity12a1` | 2D 기하 25 / 3D 기하 35 / 행렬과 벡터 20 / 복소수 12 figure 재현                                                                             |
+| `npm run plugin-demo`                                         | **플러그인 데모 4 figure**(코어 수정 0 — `ray`·`arc.circular`·`hatch` 노드·체이닝 확장) — `output/plugin-demo`                               |
+| `npm run clean-code`                                          | **API별 최소 예제 30개**(`examples/clean-code/` · 각 예제는 별도 프로세스) — `output/clean-code/<예제이름>/`                                 |
 | `npm run workflow`                                            | **워크플로우 4단계**(도커+배시 · 리눅스) — `examples/workflow/sketches` → `examples/workflow/out` ([`WORKFLOW.md`](docs/guides/WORKFLOW.md)) |
-| `npm run render`                                              | `bash scripts/render.sh` (스케치 폴더 → 원하는 출력 디렉토리)                                                                    |
-| `npm run serve:out`                                           | `bash scripts/serve.sh out 18080` (렌더 결과를 브라우저로)                                                                       |
-| `npm run examples`                                            | 위 여섯을 연속 실행                                                                                                              |
-| `npm run snap:update`                                         | 골든 SVG 스냅샷 재생성(`test/fixtures/`, 로컬 전용)                                                                              |
-| `npm run serve`                                               | `output/` 정적 서버(갤러리 + SVG/PNG · 도커)                                                                                     |
-| `npm run test:svg`                                            | SCENARIOS SVG 문자열 회귀만                                                                                                       |
+| `npm run render`                                              | `bash scripts/render.sh` (스케치 폴더 → 원하는 출력 디렉토리)                                                                                |
+| `npm run serve:out`                                           | `bash scripts/serve.sh out 18080` (렌더 결과를 브라우저로)                                                                                   |
+| `npm run examples`                                            | 위 여섯을 연속 실행                                                                                                                          |
+| `npm run snap:update`                                         | 골든 SVG 스냅샷 재생성(`test/fixtures/`, 로컬 전용)                                                                                          |
+| `npm run serve`                                               | `output/` 정적 서버(갤러리 + SVG/PNG · 도커)                                                                                                 |
+| `npm run test:svg`                                            | SCENARIOS SVG 문자열 회귀만                                                                                                                  |
 
 Docker(선택): **이미지 하나**로 전부 처리합니다 — `docker compose up web`(갤러리 서버),
 `docker compose run --rm logos`(테스트), `docker compose run --rm render`(렌더).

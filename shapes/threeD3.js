@@ -405,6 +405,7 @@ export const surfaceParam = (fn) => new ParamSurface({ fn });
  * @param {number}   [o.ratio=0.06]      머리 길이 비율. 축은 길어서 기본값을 `arrow3`(0.12)보다
  *                                       작게 잡는다(머리만 커 보이는 것 방지). `null` 이면 0.12.
  * @param {number}   [o.labelFont=12]    라벨 글자 크기
+ * @param {number[]} [o.labelOffset]     라벨 오프셋(선택)
  * @returns {Arrow3[]} `.add(...)` 에 펼칠 수 있는 도형 배열
  * @example
  *   scene().dim(3).camera({ elev: 20, azim: -50 }).axes(false)

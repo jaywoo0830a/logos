@@ -235,6 +235,10 @@ code{display:block;padding:8px 14px;font-size:11px;color:#6b7280;background:#faf
  * 두 점을 지나는 선 — 2D 좌표면 `line.through`(**직선**), z 가 있으면
  * `curve3.through`(두 점을 잇는 선분)로 자동 분기한다.
  * 2D 선분이 필요하면 logos 의 `segment(A, B)` 를 쓰세요.
+ * @param {import('./shapes/point.js').Point|number[]} A 시작 점 (Point 또는 `[x, y]`/`[x, y, z]`)
+ * @param {import('./shapes/point.js').Point|number[]} B 끝 점 (Point 또는 `[x, y]`/`[x, y, z]`)
+ * @param {{ color?: string, stroke?: number, dash?: number[]|string, opacity?: number }} [o]
+ *   스타일 — 모두 선택. `dash` 는 `[4, 3]` 형태 또는 CSS 문자열
  * @example seg(point(0,0), point(3,4), { color: palette.blue, stroke: 2 })
  */
 export function seg(A, B, { color, stroke = 2, dash, opacity } = {}) {
@@ -256,6 +260,9 @@ export function seg(A, B, { color, stroke = 2, dash, opacity } = {}) {
 
 /**
  * 3D 폴리라인 (꺾은선) — `curve3.through` 의 얇은 래퍼.
+ * @param {number[][]} points `[x, y, z]` 점들의 배열
+ * @param {{ color?: string, stroke?: number, dash?: number[]|string, opacity?: number }} [o]
+ *   스타일 — 모두 선택. `dash` 는 `[4, 3]` 형태 또는 CSS 문자열
  * @example poly3([[0,0,0],[3,2,4]], { color: '#000', stroke: 0.8, dash: [4,3] })
  */
 export function poly3(points, { color, stroke = 1, dash, opacity } = {}) {

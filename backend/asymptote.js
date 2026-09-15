@@ -158,6 +158,10 @@ export function irToAsymptote(nodes, opts = {}) {
   return lines.join('\n');
 }
 // ── CLI: .asy → SVG (결과 SVG 문자열도 함께 반환) ──
+/**
+ * @param {string} asySource .asy 소스
+ * @param {{ format?: string, cwd?: string }} [o] `format`: svg/pdf/png … · `cwd`: 작업 디렉터리(기본 임시)
+ */
 export async function compileAsymptote(asySource, { format = 'svg', cwd } = {}) {
   const dir = cwd || mkdtempSync(join(tmpdir(), 'logos-asy-'));
   const file = join(dir, 'fig.asy');

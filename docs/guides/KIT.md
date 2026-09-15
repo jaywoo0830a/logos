@@ -357,17 +357,17 @@ annotate.text(point(1, 1)).label('벌려 쓰기').letterSpacing(1.2); // 자간(
 
 ## 6. 대표 예제 — `examples/`
 
-| 파일                                                     | 내용                                                                                                | 실행                  | 출력                                     |
-| -------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | --------------------- | ---------------------------------------- |
+| 파일                                                            | 내용                                                                                                | 실행                  | 출력                                     |
+| --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | --------------------- | ---------------------------------------- |
 | `examples/parity/mpl_parity_11ab.js`                            | 11AB · **삼각함수 31 figure**(11A 19 + 11B 12, `example5.py` 재현)                                  | `npm run parity11ab`  | `output/parity11a/`, `output/parity11b/` |
 | `examples/parity/mpl_parity_9b.js`                              | Session 9B · **2D 기하 25 figure** (`example1.py` 재현)                                             | `npm run parity9b`    | `output/parity9b/`                       |
 | `examples/parity/mpl_parity_9c.js`                              | Session 9C · **3D 기하 35 figure** (`example2.py` 재현)                                             | `npm run parity9c`    | `output/parity9c/`                       |
 | `examples/parity/mpl_parity_12a2.js`                            | 12A2 · **행렬과 벡터 20 figure** (`example3.py` 재현)                                               | `npm run parity12a2`  | `output/parity12a2/`                     |
 | `examples/parity/mpl_parity_12a1.js`                            | 12A1 · **복소수 12 figure** (`example4.py` 재현)                                                    | `npm run parity12a1`  | `output/parity12a1/`                     |
 | `examples/plugin/plugin_demo.js` + `plugins/geometry-extras.js` | **플러그인 데모 4 figure** — `ray`·`arc.circular`·`hatch` IR 노드·체이닝 확장·테마·훅 (코어 수정 0) | `npm run plugin-demo` | `output/plugin-demo/`                    |
-| `examples/workflow/`                                     | **워크플로우 예제 프로젝트** — `sketches/` 3개 → 7 figure (설치→작성→실행→렌더 · 도커+배시)         | `npm run workflow`    | `examples/workflow/out/`                 |
-| `examples/clean-code/`                                   | **API별 최소 예제 30개**(`01-point-and-coords.js` … `30-plugins-extend.js`) + 러너(`run-all.js`)    | `npm run clean-code`  | `output/clean-code/`                     |
-| 여섯 묶음                                                | —                                                                                                   | `npm run examples`    | `*/*.svg`, `*/*.png`, `*/index.html`     |
+| `examples/workflow/`                                            | **워크플로우 예제 프로젝트** — `sketches/` 3개 → 7 figure (설치→작성→실행→렌더 · 도커+배시)         | `npm run workflow`    | `examples/workflow/out/`                 |
+| `examples/clean-code/`                                          | **API별 최소 예제 30개**(`01-point-and-coords.js` … `30-plugins-extend.js`) + 러너(`run-all.js`)    | `npm run clean-code`  | `output/clean-code/`                     |
+| 여섯 묶음                                                       | —                                                                                                   | `npm run examples`    | `*/*.svg`, `*/*.png`, `*/index.html`     |
 
 여섯 스크립트는 라이브러리의 **회귀 기준**입니다. 즉 “matplotlib 급 그림을 정말 그릴 수 있는가”를
 사람이 눈으로(갤러리) 그리고 기계가(`npm test`) 확인합니다.

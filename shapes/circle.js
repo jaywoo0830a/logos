@@ -14,6 +14,7 @@ export class Circle extends Drawable {
   radius() {
     return this._conf.radius;
   }
+  /** 라벨 달기 — @param {string} l 텍스트 @param {Object} [off] 오프셋(생략 가능) */
   label(l, off) {
     return this.set({ label: l, labelOff: off });
   }

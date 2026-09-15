@@ -19,6 +19,8 @@
 //   scene().add(ray(point(0, 0), point(2, 1))).compile().toSVG();
 import { Drawable, node, point, transform, renderText } from '../index.js';
 
+/** @typedef {import('../shapes/point.js').Point} Point */
+
 const RAD = Math.PI / 180;
 
 /** 코어 도형과 같은 관례의 스타일 키 추출 */

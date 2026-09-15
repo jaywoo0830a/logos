@@ -4,6 +4,8 @@ package-lock.json
 
 # 생성 산출물
 output
+# tsc 가 생성하는 선언 파일 — 재생성됨 (npm run types)
+types
 out
 coverage
 test/fixtures

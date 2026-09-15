@@ -25,6 +25,10 @@ export class Sym {
     return new Sym(d.toLatex());
   }
 
+  /**
+   * 정적분 — 적분 구간을 주면 정적분값, 아니면 부정적분.
+   * @param {{ from?: number, to?: number, var?: string }} [o] `from`/`to`: 적분 구간 · `var`: 변수(기본 'x')
+   */
   integrate({ from, to, var: v = 'x' } = {}) {
     const cmd =
       from !== undefined ? ['Integrate', this.ast.json, ['Tuple', v, from, to]] : ['Integrate', this.ast.json, v];

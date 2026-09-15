@@ -4,27 +4,71 @@
   "description": "Matplotlib-parity math figure DSL in pure JavaScript (Node ESM) — one chainable scene emits SVG, PNG, TikZ, Asymptote and JSXGraph.",
   "type": "module",
   "main": "index.js",
+  "types": "./types/index.d.ts",
   "bin": {
     "logos": "bin/logos.mjs"
   },
   "exports": {
-    ".": "./index.js",
-    "./kit.js": "./kit.js",
-    "./linalg.js": "./linalg.js",
-    "./complex.js": "./complex.js",
-    "./annotate.js": "./annotate.js",
-    "./transform.js": "./transform.js",
-    "./sprite.js": "./sprite.js",
-    "./server.js": "./server.js",
-    "./core/*.js": "./core/*.js",
-    "./shapes/*.js": "./shapes/*.js",
-    "./solver/*.js": "./solver/*.js",
-    "./symbolic/*.js": "./symbolic/*.js",
-    "./backend/*.js": "./backend/*.js",
-    "./plugins/*.js": "./plugins/*.js",
+    ".": {
+      "types": "./types/index.d.ts",
+      "default": "./index.js"
+    },
+    "./kit.js": {
+      "types": "./types/kit.d.ts",
+      "default": "./kit.js"
+    },
+    "./linalg.js": {
+      "types": "./types/linalg.d.ts",
+      "default": "./linalg.js"
+    },
+    "./complex.js": {
+      "types": "./types/complex.d.ts",
+      "default": "./complex.js"
+    },
+    "./annotate.js": {
+      "types": "./types/annotate.d.ts",
+      "default": "./annotate.js"
+    },
+    "./transform.js": {
+      "types": "./types/transform.d.ts",
+      "default": "./transform.js"
+    },
+    "./sprite.js": {
+      "types": "./types/sprite.d.ts",
+      "default": "./sprite.js"
+    },
+    "./server.js": {
+      "types": "./types/server.d.ts",
+      "default": "./server.js"
+    },
+    "./core/*.js": {
+      "types": "./types/core/*.d.ts",
+      "default": "./core/*.js"
+    },
+    "./shapes/*.js": {
+      "types": "./types/shapes/*.d.ts",
+      "default": "./shapes/*.js"
+    },
+    "./solver/*.js": {
+      "types": "./types/solver/*.d.ts",
+      "default": "./solver/*.js"
+    },
+    "./symbolic/*.js": {
+      "types": "./types/symbolic/*.d.ts",
+      "default": "./symbolic/*.js"
+    },
+    "./backend/*.js": {
+      "types": "./types/backend/*.d.ts",
+      "default": "./backend/*.js"
+    },
+    "./plugins/*.js": {
+      "types": "./types/plugins/*.d.ts",
+      "default": "./plugins/*.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [
+    "types",
     "index.js",
     "core",
     "shapes",
@@ -58,9 +102,10 @@
   ],
   "scripts": {
     "test": "bash scripts/test.sh",
+    "types": "tsc -p tsconfig.types.json",
     "test:unit": "node --test test/*.test.js",
     "prepublishOnly": "npm test",
-    "prepack": "node -e \"const p=require('./package.json');if(!/^@[a-z0-9-]+\\//.test(p.name))throw new Error('publishable name required: '+p.name)\"",
+    "prepack": "npm run types && node -e \"const p=require('./package.json');if(!/^@[a-z0-9-]+\\//.test(p.name))throw new Error('publishable name required: '+p.name)\"",
     "test:svg": "node --test test/senarios.test.js",
     "snap:update": "UPDATE=1 node --test test/snapshots.test.js",
     "format": "prettier --write .",
@@ -123,6 +168,7 @@
     "access": "public"
   },
   "devDependencies": {
-    "prettier": "3.9.6"
+    "prettier": "3.9.6",
+    "typescript": "^5.9.2"
   }
 }

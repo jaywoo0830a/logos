@@ -23,6 +23,7 @@ export class Segment extends Drawable {
       B = this._conf.b.coords;
     return Math.hypot(B[0] - A[0], B[1] - A[1]);
   }
+  /** 라벨 달기 — @param {string} l 텍스트 @param {Object} [off] 오프셋(생략 가능) */
   label(l, off) {
     return this.set({ label: l, labelOff: off });
   }

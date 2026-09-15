@@ -5,6 +5,18 @@
 
 ## [Unreleased]
 
+### Added
+
+- **타입 정의(`.d.ts`) 배포** — 에디터 자동완성·툴팁 지원. `package.json` 의 `types` 필드와 모든
+  subpath exports 에 `types` 조건을 연결하고, `npm run types`(`tsc -p tsconfig.types.json`)로
+  소스 JSDoc 에서 `types/` 를 재생성한다(`prepack` 에서 자동 실행).
+  - 소스 JSDoc 보강 — `kit.seg`/`kit.poly3` 옵션 객체, `label()` 계열 12곳의 `off` 선택 인자,
+    `compileAsymptote`/`axes3`/`Sym.integrate` 파라미터, `plugins/geometry-extras.js` 의
+    `Point` 타입 참조(`@typedef`)를 명시해 추론 품질을 높였다.
+  - 알려진 한계 — `Point.z` 접근자(좌표)와 `Drawable.z()` 메서드(z-order)의 TS 구조 충돌 때문에
+    `skipLibCheck: false` 로 쓰는 TS 프로젝트에서 `types/shapes/point.d.ts` 에 경고 1건이 보일 수
+    있다. 런타임 동작과 무관하며, `skipLibCheck: true`(`tsc --init` 기본)에서는 나타나지 않는다.
+
 ## [0.4.1] — 2026-09-12
 
 **문서에 있던 API 를 실제로 구현**하고, 래스터(PNG)의 하드 크래시와 심볼릭 계산의 조용한 오답을 고쳤습니다.
