@@ -2,7 +2,7 @@
 //
 //   플러그인도 같은 이름을 등록할 수 있다(index.js 의 dispatch/ns 가 플러그인을 우선).
 //   여기 구현은 **플러그인 없이도** 문서대로 동작하게 하는 코어 기본값이다.
-import { Drawable, renderText } from '../core/drawable.js';
+import { Drawable, renderText, isMathText } from '../core/drawable.js';
 import { node } from '../core/node.js';
 import { TAU } from '../solver/coords.js';
 import { point as _point, toPoint } from './point.js';
@@ -72,6 +72,7 @@ export class ArcShape extends Drawable {
           text: renderText(c.label),
           anchor: 'start',
           color: c.color,
+          math: isMathText(c.label),
         }),
       );
     }
@@ -181,6 +182,7 @@ export class RayShape extends Drawable {
           text: renderText(c.label),
           anchor: 'start',
           color: c.color,
+          math: isMathText(c.label),
         }),
       );
     }

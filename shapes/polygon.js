@@ -1,5 +1,5 @@
 // docs/spec/DSL.md §4.7 다각형 — polygon / triangle / regular …
-import { Drawable, renderText } from '../core/drawable.js';
+import { Drawable, renderText, isMathText } from '../core/drawable.js';
 import { node } from '../core/node.js';
 import { point as _point } from './point.js';
 import { contains } from './region.js';
@@ -35,6 +35,7 @@ export class Polygon extends Drawable {
         transforms: c.transforms,
         style: pickStyle(c),
         label: renderText(c.label),
+        labelMath: isMathText(c.label),
         marker: c.markers ? c.markers : !!c.dot,
       }),
     ];

@@ -1,5 +1,5 @@
 // docs/spec/DSL.md §4.10 주석 — annotate.angle / caption / integral / arrow / dimension
-import { Drawable, renderText } from './core/drawable.js';
+import { Drawable, renderText, isMathText } from './core/drawable.js';
 import { node } from './core/node.js';
 import { norm2, perp2 } from './solver/coords.js';
 import { point as _point, toPoint } from './shapes/point.js';
@@ -372,7 +372,15 @@ export class DimensionAnno extends Drawable {
         color: c.color,
       }),
       ...(label
-        ? [node('text', { x: mx + ox * off * 0.7, y: my + oy * off * 0.7, text: label, anchor: 'middle' })]
+        ? [
+            node('text', {
+              x: mx + ox * off * 0.7,
+              y: my + oy * off * 0.7,
+              text: label,
+              anchor: 'middle',
+              math: isMathText(c.label),
+            }),
+          ]
         : []),
     ];
   }
@@ -587,6 +595,7 @@ class BraceAnno extends Drawable {
           text: renderText(c.label),
           anchor: 'middle',
           color: c.color,
+          math: isMathText(c.label),
         }),
       );
     }
@@ -633,6 +642,7 @@ class LimitAnno extends Drawable {
           text: renderText(c.label),
           anchor: 'start',
           color: c.color,
+          math: isMathText(c.label),
         }),
       );
     }

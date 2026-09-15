@@ -1,5 +1,5 @@
 // docs/spec/DSL.md §4.2 벡터
-import { Drawable, renderText } from '../core/drawable.js';
+import { Drawable, renderText, isMathText } from '../core/drawable.js';
 import { node } from '../core/node.js';
 import { cartToPolar } from '../solver/coords.js';
 import { point, toPoint } from './point.js';
@@ -32,6 +32,7 @@ export class Vector extends Drawable {
         x2: from[0] + x,
         y2: from[1] + y,
         label: renderText(c.label),
+        labelMath: isMathText(c.label),
         color: c.color,
         stroke: c.stroke,
         dash: c.dash,

@@ -1,5 +1,5 @@
 // docs/spec/DSL.md §4.5 원 — circle.center(O).radius(r) / through / inscribed …
-import { Drawable, renderText } from '../core/drawable.js';
+import { Drawable, renderText, isMathText } from '../core/drawable.js';
 import { node } from '../core/node.js';
 import { norm2 } from '../solver/coords.js';
 import { point as _point, triangleCenter } from './point.js';
@@ -35,6 +35,7 @@ export class Circle extends Drawable {
         gradient: c.gradient,
         transforms: c.transforms,
         label: renderText(c.label),
+        labelMath: isMathText(c.label),
         style: pickStyle(c),
       }),
     ];

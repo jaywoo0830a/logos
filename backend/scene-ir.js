@@ -30,7 +30,12 @@ function expandLegend(nodes, world) {
     if (!label) continue;
     const color = n.data.color || n.data.style?.color || n.data.fill || '#333';
     if (entries.some((e) => e.label === label)) continue; // 같은 라벨은 한 번만
-    entries.push({ label: String(label), color });
+    // labelMath 플래그가 있으면 그걸 쓰고, 없으면 LaTeX 흔적으로 추정(하위호환)
+    entries.push({
+      label: String(label),
+      color,
+      labelMath: n.data.labelMath ?? /\\|\^|_/.test(String(label)),
+    });
   }
   if (!entries.length) return nodes.filter((n) => n.kind !== 'legend');
   const w = world || { xmin: -1, xmax: 1, ymin: -1, ymax: 1 };
@@ -82,7 +87,7 @@ function expandLegend(nodes, world) {
         font: 12,
         anchor: 'start',
         color: '#222',
-        math: /\\|\^|_/.test(e.label),
+        math: e.labelMath,
       },
     });
   });
@@ -198,18 +203,19 @@ export class SceneIR {
     const { katexRender, katexify } = katexNs;
     const { map } = this._map();
     const rows = [];
-    const renderText = (v) => (typeof v?.toLatex === 'function' ? katexRender(v.toLatex()) : katexify(v));
+    const renderText = (v, math) =>
+      math ? katexRender(String(v)) : typeof v?.toLatex === 'function' ? katexRender(v.toLatex()) : katexify(v);
     for (const nd of this.o.nodes) {
       const d = nd.data;
       if (nd.kind === 'text') {
         const [x, y] = map(d.x, d.y);
         rows.push(
-          `<div class="logos-text" style="position:absolute;left:${(x + (d.dxPx || 0)).toFixed(1)}px;top:${(y + (d.dyPx || 0)).toFixed(1)}px">${renderText(d.text)}</div>`,
+          `<div class="logos-text" style="position:absolute;left:${(x + (d.dxPx || 0)).toFixed(1)}px;top:${(y + (d.dyPx || 0)).toFixed(1)}px">${renderText(d.text, d.math)}</div>`,
         );
       } else if (nd.kind === 'point' && d.label) {
         const [x, y] = map(d.x, d.y);
         rows.push(
-          `<div class="logos-label" style="position:absolute;left:${x.toFixed(1)}px;top:${y.toFixed(1)}px">${renderText(d.label)}</div>`,
+          `<div class="logos-label" style="position:absolute;left:${x.toFixed(1)}px;top:${y.toFixed(1)}px">${renderText(d.label, d.labelMath)}</div>`,
         );
       }
     }

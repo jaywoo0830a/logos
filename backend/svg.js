@@ -411,6 +411,32 @@ function cullOffscreen(list, o) {
 }
 
 /**
+ * 노드 옆 라벨 — point · circle · ellipse · polygon 이 공유한다.
+ * `labelMath`(Sym 라벨)면 KaTeX foreignObject, 테마가 math:'text' 면 유니코드 <text> 폴백.
+ * @param {Object} d  IR 노드 data (label · labelMath · dxPx · dyPx · color)
+ * @param {number} x  앵커 화면 x
+ * @param {number} y  앵커 화면 y
+ * @param {Object} t  테마
+ * @returns {string[]}
+ */
+function labelParts(d, x, y, t) {
+  const ldx = d.dxPx ?? 7,
+    ldy = d.dyPx ?? -7;
+  if (d.labelMath) {
+    if (t.math === 'text')
+      return [
+        `<text x="${x + ldx}" y="${y + ldy}" font-size="13" font-style="normal" fill="${d.color || t.labelColor}">${esc(latexToText(String(d.label)))}</text>`,
+      ];
+    return [
+      `<foreignObject x="${x + ldx}" y="${y + (d.dyPx ?? -24)}" width="300" height="44"><div xmlns="http://www.w3.org/1999/xhtml">${katexRender(String(d.label))}</div></foreignObject>`,
+    ];
+  }
+  return [
+    `<text x="${x + ldx}" y="${y + ldy}" font-size="13" font-style="italic" fill="${d.color || t.labelColor}">${esc(d.label)}</text>`,
+  ];
+}
+
+/**
  * 텍스트 배경 상자 (matplotlib bbox 대응) — 텍스트 폭을 근사 추정.
  * 높이는 실제 행간(`d.lineHeight ?? TYPE.lineHeight`)을 써서 글자와 상자가 어긋나지 않게 한다.
  */
@@ -578,8 +604,14 @@ function renderNode(n, m, scaleX, scaleY, t, gradId, box) {
         if (clipped) return clipped;
       }
       const pts = raw.map((p) => p.join(',')).join(' ');
-      // 점선 다각형(테두리)도 지원 — path/circle 과 동일하게 dasharray 를 방출한다.
-      return `<polygon points="${pts}" fill="${d.fill || 'none'}" stroke="${st.stroke}" stroke-width="${st['stroke-width']}" stroke-dasharray="${st.dash || 'none'}" stroke-linejoin="round" opacity="${st.opacity}"/>`;
+      // 라벨 — 다각형 무게중심에 붙인다(point 라벨과 같은 수식 처리).
+      let polySvg = `<polygon points="${pts}" fill="${d.fill || 'none'}" stroke="${st.stroke}" stroke-width="${st['stroke-width']}" stroke-dasharray="${st.dash || 'none'}" stroke-linejoin="round" opacity="${st.opacity}"/>`;
+      if (d.label) {
+        const gx = raw.reduce((a, p) => a + p[0], 0) / raw.length;
+        const gy = raw.reduce((a, p) => a + p[1], 0) / raw.length;
+        polySvg += labelParts(d, gx, gy, t).join('\n');
+      }
+      return polySvg;
     }
     case 'circle': {
       const [cx, cy] = m(d, d.cx, d.cy);
@@ -592,8 +624,9 @@ function renderNode(n, m, scaleX, scaleY, t, gradId, box) {
         ry = d.r * scaleY;
       // 캔버스를 크게 벗어나는 원은 폴리라인 근사 후 **정확히** 잘라낸다(보이는 호는 동일).
       const R = Math.max(Math.abs(rx), Math.abs(ry));
+      let out;
       if (cx - R < box.x0 || cx + R > box.x1 || cy - R < box.y0 || cy + R > box.y1) {
-        return clipToPaths(sampleEllipse(cx, cy, rx, ry, 180), box, {
+        out = clipToPaths(sampleEllipse(cx, cy, rx, ry, 180), box, {
           fill,
           stroke: st.stroke,
           strokeWidth: st['stroke-width'],
@@ -601,11 +634,17 @@ function renderNode(n, m, scaleX, scaleY, t, gradId, box) {
           opacity: st.opacity,
           closed: true,
         });
+      } else {
+        const common = `fill="${fill}" stroke="${st.stroke}" stroke-width="${st['stroke-width']}" stroke-dasharray="${st.dash || 'none'}" opacity="${st.opacity}"`;
+        // equal 스케일일 때만 진짜 원, 아니면 타원으로 방출(비등방 스케일 보존).
+        out =
+          Math.abs(rx - ry) < 1e-9
+            ? `<circle cx="${cx}" cy="${cy}" r="${rx}" ${common}/>`
+            : `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" ${common}/>`;
       }
-      const common = `fill="${fill}" stroke="${st.stroke}" stroke-width="${st['stroke-width']}" stroke-dasharray="${st.dash || 'none'}" opacity="${st.opacity}"`;
-      // equal 스케일일 때만 진짜 원, 아니면 타원으로 방출(비등방 스케일 보존).
-      if (Math.abs(rx - ry) < 1e-9) return `<circle cx="${cx}" cy="${cy}" r="${rx}" ${common}/>`;
-      return `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" ${common}/>`;
+      // 라벨 — 원 위쪽에 붙인다(point 라벨과 같은 수식 처리).
+      if (d.label) out += labelParts(d, cx, cy - Math.abs(ry), t).join('\n');
+      return out;
     }
     case 'fillcircle': {
       const [cx, cy] = m(d, d.cx, d.cy);
@@ -673,7 +712,10 @@ function renderNode(n, m, scaleX, scaleY, t, gradId, box) {
         });
       }
       const ang = d.angle != null ? ` transform="rotate(${(d.angle * 180) / Math.PI} ${cx} ${cy})"` : '';
-      return `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${d.fill || 'none'}" stroke="${st.stroke}" stroke-width="${st['stroke-width']}" opacity="${st.opacity}"${ang}/>`;
+      let out = `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${d.fill || 'none'}" stroke="${st.stroke}" stroke-width="${st['stroke-width']}" opacity="${st.opacity}"${ang}/>`;
+      // 라벨 — 타원 위쪽에 붙인다(point 라벨과 같은 수식 처리).
+      if (d.label) out += labelParts(d, cx, cy - Math.abs(ry), t).join('\n');
+      return out;
     }
     case 'point': {
       const [cx, cy] = m(d, d.x, d.y);
@@ -682,21 +724,7 @@ function renderNode(n, m, scaleX, scaleY, t, gradId, box) {
       const parts = [markerSvg(d, cx, cy, base, t)];
       if (d.label) {
         const [lx, ly] = m(d, d.x, d.y);
-        const ldx = d.dxPx ?? 7,
-          ldy = d.dyPx ?? -7;
-        if (d.labelMath) {
-          if (t.math === 'text')
-            parts.push(
-              `<text x="${lx + ldx}" y="${ly + (d.dyPx ?? -7)}" font-size="13" font-style="normal" fill="${d.color || t.labelColor}">${esc(latexToText(String(d.label)))}</text>`,
-            );
-          else
-            parts.push(
-              `<foreignObject x="${lx + ldx}" y="${ly + (d.dyPx ?? -24)}" width="300" height="44"><div xmlns="http://www.w3.org/1999/xhtml">${katexRender(String(d.label))}</div></foreignObject>`,
-            );
-        } else
-          parts.push(
-            `<text x="${lx + ldx}" y="${ly + ldy}" font-size="13" font-style="italic" fill="${d.color || t.labelColor}">${esc(d.label)}</text>`,
-          );
+        parts.push(...labelParts(d, lx, ly, t));
       }
       return parts.join('\n');
     }

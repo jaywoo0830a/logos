@@ -1,5 +1,5 @@
 // SCENARIOS C1 · DSL 원뿔곡선 — 타원 (ellipse.center(O).semi(a, b))
-import { Drawable, renderText } from '../core/drawable.js';
+import { Drawable, renderText, isMathText } from '../core/drawable.js';
 import { node } from '../core/node.js';
 
 export class Ellipse extends Drawable {
@@ -42,6 +42,7 @@ export class Ellipse extends Drawable {
         opacity: c.opacity,
         transforms: c.transforms,
         label: renderText(c.label),
+        labelMath: isMathText(c.label),
         style: pickStyle(c),
       }),
     ];

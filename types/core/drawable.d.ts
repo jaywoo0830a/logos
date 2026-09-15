@@ -4,6 +4,13 @@
  * @returns {string|null}
  */
 export function renderText(v: any): string | null;
+/**
+ * v 가 수식 객체(Sym 등 — toLatex 보유)인지. IR 노드의 `math`/`labelMath` 플래그를
+ * 만들 때 쓴다 — 플래그가 있어야 백엔드가 LaTeX 원문을 KaTeX 로 조판한다(평문과 구분).
+ * @param {*} v
+ * @returns {boolean}
+ */
+export function isMathText(v: any): boolean;
 export class Drawable {
     /**
      * @param {string} kind  IR 종류

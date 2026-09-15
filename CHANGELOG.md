@@ -11,6 +11,18 @@
 
 ### Added
 
+- **모든 라벨 지점에 tex(Sym) 적용** — Sym(`tex`…`` 태그드 템플릿)을 라벨로 넘기면 어디에서도
+  LaTeX 원문이 텍스트로 노출되지 않고 KaTeX 로 조판된다:
+  - math 플래그가 누락돼 원문이 그대로 나오던 지점 수정 — `annotate.brace` · `annotate.limit` ·
+    `annotate.dimension` · `arc`/`sector` 라벨
+  - 도형 라벨이 SVG 에 **아예 안 그려지던** 버그 수정 — `circle` · `ellipse` · `polygon` 은 이제
+    도형 옆에 라벨이 그려진다(point 라벨과 동일한 `labelMath` 처리), `vector`(arrow) 라벨도 수식으로
+  - 범례(`annotate.legend`)는 이제 `labelMath` 플래그를 우선 쓰고, 없으면 기존대로 LaTeX 흔적 추정
+  - HTML 백엔드(`toHTML`)도 `math`/`labelMath` 플래그를 존중
+  - 새 헬퍼 `isMathText(v)` (core/drawable.js) — IR 의 `math`/`labelMath` 플래그 생성용
+  - PNG(래스터) 경로의 `math:'text'` 유니코드 폴백은 모든 지점에 동일 적용
+  - 테스트 `test/tex-label.test.js` (5개) · 알려진 한계 — TikZ·Asymptote·JSXGraph 는 여전히
+    도형 자체 라벨을 그리지 않는다(point 라벨만 지원, 기존 동작 유지)
 - **조용한 덮어쓰기 방지 장치** (core/plugin.js) — 플러그인이 이미 존재하는 것을 같은 이름으로
   덮으면 `plugins.info(name).warnings` 에 기록되고 콘솔(`console.warn`)로 경고가 나갑니다.
   throw 하지는 않습니다(non-breaking) — 의도적 덮어쓰기는 `{ overwrite: true }` 로 밝히면
