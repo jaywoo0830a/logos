@@ -3,7 +3,6 @@ export const tau: number;
 export const pi: number;
 export const e: number;
 export { renderText } from "./core/drawable.js";
-export * as kit from "./kit.js";
 export namespace adapt {
     export namespace asymmetric {
         export { SymPyAdapter };
@@ -74,6 +73,8 @@ declare namespace _default {
     export { xy };
     export { range };
     export { view };
+    export { help };
+    export { api };
 }
 export default _default;
 import { use } from './core/plugin.js';
@@ -154,6 +155,101 @@ import { Surface } from './shapes/threeD2.js';
 import { Polyhedron } from './shapes/threeD2.js';
 import { Curve3 } from './shapes/threeD3.js';
 import { Drawable } from './core/drawable.js';
+export const kit: {
+    plot2d(xr: number[], yr: number[], { size, grid, axes, equal }?: any): Scene;
+    plot3d({ elev, azim, aspect, size, axes }?: any): Scene;
+    subplots(figures: (Scene | any)[], opts?: any): {
+        width: number;
+        height: number;
+        toSVG(so?: {}): string;
+        toTikZ(): string;
+        toPNG(o?: {}): Promise<any>;
+    };
+    saveFigure(fig: any, { dir, name, svg, png, scale, math, log }?: any): Promise<{
+        svg: string | null;
+        png: string | null;
+    }>;
+    saveFigures(figures: any[], { dir, png, scale, math, log, index, title }?: any): Promise<{
+        ok: number;
+        fail: number;
+        dir: string;
+        entries: any[];
+    }>;
+    writeGallery(dir: any, entries: any, { title, file }?: {
+        title?: string;
+        file?: string;
+    }): any;
+    seg(A: import("./shapes/point.js").Point | number[], B: import("./shapes/point.js").Point | number[], { color, stroke, dash, opacity }?: {
+        color?: string;
+        stroke?: number;
+        dash?: number[] | string;
+        opacity?: number;
+    }): Line | {
+        _ref: any;
+        direction(d: any): Line;
+        slope(m: any): Line;
+        through(p: any): Line;
+        perpendicular(): {
+            through: (p: any) => Line;
+            direction: (d: any) => Line;
+        };
+        parallel(): {
+            through: (p: any) => Line;
+        };
+    } | Curve3;
+    poly3(points: number[][], { color, stroke, dash, opacity }?: {
+        color?: string;
+        stroke?: number;
+        dash?: number[] | string;
+        opacity?: number;
+    }): Curve3;
+    palette: {
+        blue: string;
+        red: string;
+        green: string;
+        magenta: string;
+        orange: string;
+        yellow: string;
+        cyan: string;
+        black: string;
+        white: string;
+        gray: string;
+        navy: string;
+        purple: string;
+        darkgreen: string;
+        darkred: string;
+        crimson: string;
+        steel: string;
+        skyblue: string;
+        coral: string;
+        wheat: string;
+        orangead: string;
+        b: string;
+        r: string;
+        g: string;
+        m: string;
+        y: string;
+        c: string;
+        k: string;
+        w: string;
+        o: string;
+        tab: {
+            blue: string;
+            orange: string;
+            green: string;
+            red: string;
+            purple: string;
+            brown: string;
+            pink: string;
+            gray: string;
+            olive: string;
+            cyan: string;
+        };
+        tab10: string[];
+    };
+};
+import { help } from './core/help.js';
+import { api } from './core/help.js';
 import { SymPyAdapter } from './symbolic/adapter.js';
 import { SageAdapter } from './symbolic/adapter.js';
 import { createSymbolicAdapter } from './symbolic/adapter.js';
@@ -164,4 +260,4 @@ import { irToJSXGraph } from './backend/jsxgraph.js';
 import { buildJSXGraphHTML } from './backend/jsxgraph.js';
 import { katexRender } from './backend/katex.js';
 import { katexify } from './backend/katex.js';
-export { use, plugins, PluginError, Scene, panels, node, point, toPoint, vector, line, segment, curve, circle, ellipse, parabola, hyperbola, polygon, triangle, quad, regular, square, rectangle, region, vectorField, vectorField3, sphere, plane, cylinder, cone, surface, polyhedron, curve3, arrow3, surfaceParam, axes3, quadrics, circle3, frame3, cmapColor, shade, mat, vec, Matrix, cplx, Complex, transform, annotate, tex, Sym, typography, xy, range, view, Point, Vector, Line, Segment, Curve, Circle, Ellipse, Parabola, Hyperbola, Polygon, Rectangle, Region, VectorField, Sphere, Plane, Cylinder, Cone, Surface, Polyhedron, Curve3, Drawable };
+export { use, plugins, PluginError, Scene, panels, node, point, toPoint, vector, line, segment, curve, circle, ellipse, parabola, hyperbola, polygon, triangle, quad, regular, square, rectangle, region, vectorField, vectorField3, sphere, plane, cylinder, cone, surface, polyhedron, curve3, arrow3, surfaceParam, axes3, quadrics, circle3, frame3, cmapColor, shade, mat, vec, Matrix, cplx, Complex, transform, annotate, tex, Sym, typography, xy, range, view, Point, Vector, Line, Segment, Curve, Circle, Ellipse, Parabola, Hyperbola, Polygon, Rectangle, Region, VectorField, Sphere, Plane, Cylinder, Cone, Surface, Polyhedron, Curve3, Drawable, help, api };

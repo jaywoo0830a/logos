@@ -16,6 +16,18 @@
   - 알려진 한계 — `Point.z` 접근자(좌표)와 `Drawable.z()` 메서드(z-order)의 TS 구조 충돌 때문에
     `skipLibCheck: false` 로 쓰는 TS 프로젝트에서 `types/shapes/point.d.ts` 에 경고 1건이 보일 수
     있다. 런타임 동작과 무관하며, `skipLibCheck: true`(`tsc --init` 기본)에서는 나타나지 않는다.
+- **런타임 셀프 문서화 — `help()` · `api()`** (core/help.js, 의존성 0). 공개 API 가 있는데도
+  없는 줄 알고 플러그인·헬퍼를 재발명하는 일을 런타임에서 막는다.
+  - `help()` — 개요: 빠른 시작 · 모듈 지도 · 지금 설치된 확장 · **재발명 대조표**
+    ("색 팔레트 직접 정의 → `kit.palette`" 등 9개)
+  - `help('circle')` · `help('kit')` — 이름별 조회: 한 줄 설명 · 정적/멤버(레지스트리에서
+    동적 나열) · 체이닝 · 확장 지점
+  - `help('없는이름')` — 편집거리 기반 근접 추천("혹시 circle?") + 플러그인 등록 안내
+  - `api()` — 같은 상태를 객체로(프로그래밍 조회, `core/plugin.js` help() 위임)
+  - `kit` 을 네임스페이스로 등록 — `api.static('kit', '이름', fn)` 확장 가능. 모듈
+    네임스페이스는 불변이라 **가변 복사본**을 공개하도록 변경(`kit.default` 는 named export
+    와 중복이라 제외), `unknownFeature` 힌트가 `help()` 로 연결됨.
+  - 테스트 `test/help.test.js` (10개)
 
 ## [0.4.1] — 2026-09-12
 

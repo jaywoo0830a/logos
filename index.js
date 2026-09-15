@@ -161,7 +161,16 @@ export { renderText } from './core/drawable.js';
 // ── 예제/스케치 공용 작성 키트 (kit.js) ─────────────
 //   palette · plot2d · plot3d · subplots · saveFigure · saveFigures · writeGallery · seg · poly3
 //   사용: `import { kit } from '@jaywoo0830a/logos'; const { plot3d, palette } = kit;`
-export * as kit from './kit.js';
+//   모듈 네임스페이스 객체는 불변이라 플러그인 정적(api.static('kit', …))을 붙일 수 없다 —
+//   그래서 **가변 복사본**을 공개한다(default 는 named export 와 중복이라 제외).
+import * as kitModule from './kit.js';
+const { default: _kitDefault, ...kit } = kitModule;
+export { kit };
+
+// ── 런타임 셀프 문서화 (core/help.js) ───────────────
+//   help() — 개요 · help('circle') — 이름별 조회 · api() — 프로그래밍 조회
+import { help, api } from './core/help.js';
+export { help, api };
 
 // ── docs/extend/ADAPT.md 외부엔진 어댑터 API ───────────────────
 export const adapt = {
@@ -295,6 +304,7 @@ for (const [n, f] of Object.entries({
   transform,
   annotate,
   tex,
+  kit,
 }))
   registerNamespaceObject(n, f);
 
@@ -367,4 +377,6 @@ export default {
   xy,
   range,
   view,
+  help,
+  api,
 };

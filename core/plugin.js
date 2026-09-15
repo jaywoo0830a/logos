@@ -261,6 +261,17 @@ export function registerNamespaceObject(name, obj) {
   return NAMESPACES.get(name).obj;
 }
 
+/** 등록된 네임스페이스 이름들 — help·안내용 */
+export function namespaceNames() {
+  return [...NAMESPACES.keys()];
+}
+
+/** 네임스페이스 객체 조회(없으면 null) — help 등 문서화 용도. 멤버 나열에 쓴다 */
+export function namespaceOf(name) {
+  const n = NAMESPACES.get(name);
+  return n ? n.obj : null;
+}
+
 /**
  * 팩토리/네임스페이스에 정적을 붙인다 — `point.hex(x, y)`, `annotate.newThing(P)`.
  * @param {string} plugin
@@ -330,6 +341,7 @@ export function unknownFeature(name, hint = '') {
       `    api.define('${name}', (...args) => new MyShape(...args), { ctor: MyShape });\n` +
       `    api.node('mynode', { svg: (n, ctx) => '<path .../>' });\n` +
       `  } });\n` +
+      `  등록된 이름 전체 보기: import { help } from '@jaywoo0830a/logos'; help()\n` +
       `  등록된 이름: ${factoryNames().join(', ') || '없음'}`,
   );
   return e;

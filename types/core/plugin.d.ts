@@ -46,6 +46,10 @@ export function apply(event: string, value: any, ctx?: any): any;
 export function emit(event: any, payload?: {}): void;
 /** 네임스페이스 객체를 등록한다(`annotate`, `kit`, `point` …) */
 export function registerNamespaceObject(name: any, obj: any): any;
+/** 등록된 네임스페이스 이름들 — help·안내용 */
+export function namespaceNames(): string[];
+/** 네임스페이스 객체 조회(없으면 null) — help 등 문서화 용도. 멤버 나열에 쓴다 */
+export function namespaceOf(name: any): any;
 /** 최상위 빌더 조회 (`logos.ray` 가 내부적으로 사용) */
 export function lookupFactory(name: any): Function;
 /** 등록된 빌더 이름들 */
