@@ -5,8 +5,28 @@
 
 ## [Unreleased]
 
+## [0.5.0] — 2026-09-15
+
+**플러그인이 코어 기본값을 조용히 덮어쓰던 문제를 막는 안전 장치**를 넣었습니다. 여기에 타입 정의 배포와 런타임 셀프 문서화(`help()`)가 함께 들어갑니다.
+
 ### Added
 
+- **조용한 덮어쓰기 방지 장치** (core/plugin.js) — 플러그인이 이미 존재하는 것을 같은 이름으로
+  덮으면 `plugins.info(name).warnings` 에 기록되고 콘솔(`console.warn`)로 경고가 나갑니다.
+  throw 하지는 않습니다(non-breaking) — 의도적 덮어쓰기는 `{ overwrite: true }` 로 밝히면
+  경고 문구가 "명시된 덮어쓰기"로 바뀌어 기록에 남습니다. 감지 대상:
+  - 코어 기본 구현이 있는 빌더 — `ray`·`arc.*`·`sector.*`·`torus.*`·`cube.*`·`prism.*`·`pyramid.*`
+    (index.js 가 `reserveCoreNames` 로 예약. 이전에는 `api.define('ray', …)` 가 코어 `rayCore` 를
+    무음으로 가렸다)
+  - 코어 정적 — `api.static('point', 'byDeg', …)` 처럼 네임스페이스의 기존 프로퍼티
+  - 코어 체이닝 메서드 — `api.chain('drawable', { color: … })` 처럼 프로토타입 메서드 실루엣
+  - 다른 플러그인의 메서드·정적 (팩토리 이름 충돌은 기존대로 `PluginError`)
+- `plugins.info(name).warnings` 와 `warn()` 이 항상 콘솔로 나가도록 정리 — `api.node` 덮어쓰기
+  경고도 이제 조용히 기록만 되지 않습니다.
+- 동봉 플러그인 `plugins/geometry-extras.js` — 코어 기본값(`ray` · `arc.circular` · `point.byDeg`)을
+  의도적으로 덮는 자리에 `{ overwrite: true }` 표기를 추가(문서화된 예시).
+- 테스트 `test/plugin-guard.test.js` (8개) — 경고 기록·콘솔 출력·`{ overwrite: true }` 표기·
+  uninstall 시 코어 기본 구현 복원을 검증.
 - **타입 정의(`.d.ts`) 배포** — 에디터 자동완성·툴팁 지원. `package.json` 의 `types` 필드와 모든
   subpath exports 에 `types` 조건을 연결하고, `npm run types`(`tsc -p tsconfig.types.json`)로
   소스 JSDoc 에서 `types/` 를 재생성한다(`prepack` 에서 자동 실행).
@@ -28,6 +48,8 @@
     네임스페이스는 불변이라 **가변 복사본**을 공개하도록 변경(`kit.default` 는 named export
     와 중복이라 제외), `unknownFeature` 힌트가 `help()` 로 연결됨.
   - 테스트 `test/help.test.js` (10개)
+- 문서 — `docs/extend/PLUGIN.md` §5.1 "조용한 덮어쓰기 방지(0.5.0)" 추가.
+- 이미지 태그 `logos:0.5.0` (docker-compose 기본 태그 갱신).
 
 ## [0.4.1] — 2026-09-12
 

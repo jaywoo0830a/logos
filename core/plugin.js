@@ -53,6 +53,8 @@ const HOOKS = new Map();
 const RECORDS = [];
 /** @type {Map<string, Object>} 설치된 플러그인 이름 → 정보 */
 const INSTALLED = new Map();
+/** @type {Set<string>} 코어 기본 구현이 있는 빌더 이름('ray', 'arc.circular' …) — index.js 가 reserveCoreNames 로 채운다 */
+const CORE_DEFAULTS = new Set();
 
 let SEQ = 0;
 
@@ -89,6 +91,20 @@ export function targets() {
   return [...TARGETS.keys()];
 }
 
+/**
+ * 코어 기본 구현이 있는 빌더 이름을 예약한다(index.js 가 호출 — 코어→플러그인 방향).
+ * 예약된 이름을 `api.define` 으로 등록하면 코어 기본 구현을 덮어쓰므로 경고를 남긴다(0.5.0 장치).
+ * @param {string[]} names `'ray'` · `'arc.circular'` 처럼 하위 이름은 점으로
+ */
+export function reserveCoreNames(names) {
+  for (const n of names || []) if (n) CORE_DEFAULTS.add(n);
+}
+
+/** 코어 기본 구현이 예약된 이름들 (help·문서화용) */
+export function coreDefaultNames() {
+  return [...CORE_DEFAULTS];
+}
+
 // ── ① 체이닝 메서드 ────────────────────────────────────────
 /**
  * 반환값을 체이닝 가능한 값으로 정규화한다(헤더 규칙 ①②③).
@@ -107,7 +123,7 @@ function toChainable(self, out) {
   return self; // 원시값(숫자 등) → 체인 유지
 }
 
-function installMethods(plugin, target, methods, { conf = false } = {}) {
+function installMethods(plugin, target, methods, { conf = false, overwrite = false } = {}) {
   const rt = resolveTarget(target);
   const dest = rt.proto || rt.obj;
   if (!rt.proto) {
@@ -121,6 +137,11 @@ function installMethods(plugin, target, methods, { conf = false } = {}) {
     if (typeof fn !== 'function') continue;
     const had = Object.prototype.hasOwnProperty.call(dest, name);
     const prev = dest[name];
+    // 조용한 덮어쓰기 방지(0.5.0) — 코어 메서드(프로토타입 체인 포함)나 다른 플러그인
+    // 메서드를 같은 이름으로 실루엣하면 경고를 남긴다. 기존 메서드 보강은 api.around().
+    const prevOwner = prev && prev.pluginOf;
+    if (prev !== undefined && prevOwner !== plugin)
+      warnOverride(plugin, conf ? 'chain' : 'extend', name, prevOwner || 'core', overwrite);
     // 선언형(chain): (conf, ...args) => patch — this.set 을 몰라도 체이닝 유지
     // 명령형(extend): 일반 메서드처럼 this 사용, 패치 객체를 돌려주면 자동 set
     const wrapped = conf
@@ -243,6 +264,9 @@ function defineFactory(plugin, name, factory, opts = {}) {
   const exists = FACTORIES.get(name);
   if (exists && exists.__plugin !== plugin)
     throw new PluginError(`plugin(${plugin}): 최상위 이름 '${name}' 는 이미 등록되어 있습니다.`);
+  // 조용한 덮어쓰기 방지(0.5.0) — 코어 기본 구현이 있는 이름(index.js 가 reserveCoreNames 로
+  // 예약: ray · arc.circular · sector.ofCircle …)을 등록하면 코어 구현이 가려진다. 경고를 남긴다.
+  if (!exists && CORE_DEFAULTS.has(name)) warnOverride(plugin, 'define', name, 'core', opts.overwrite === true);
   if (opts.ctor) factory.__ctor = opts.ctor;
   factory.__plugin = plugin;
   FACTORIES.set(name, factory);
@@ -279,13 +303,24 @@ export function namespaceOf(name) {
  * @param {string} name
  * @param {Function} fn
  */
-function installStatic(plugin, target, name, fn) {
+function installStatic(plugin, target, name, fn, { overwrite = false } = {}) {
   const obj =
     target && typeof target === 'object'
       ? registerNamespaceObject(target.__nsName || `ns${++SEQ}`, target)
       : resolveNamespace(target);
   const had = Object.prototype.hasOwnProperty.call(obj, name);
   const prev = obj[name];
+  // 조용한 덮어쓰기 방지(0.5.0) — 코어/다른 플러그인이 이미 둔 정적을 같은 이름으로 덮으면 경고
+  const prevOwner = prev && prev.pluginOf;
+  if (prev !== undefined && prevOwner !== plugin)
+    warnOverride(
+      plugin,
+      'static',
+      `${typeof target === 'string' ? target : target.__nsName || 'ns'}.${name}`,
+      prevOwner || 'core',
+      overwrite,
+    );
+  Object.defineProperty(fn, 'pluginOf', { value: plugin, enumerable: false });
   obj[name] = fn;
   RECORDS.push({ kind: 'static', ns: obj, name, prev, had, plugin });
   return fn;
@@ -387,8 +422,26 @@ export function help() {
 
 function warn(plugin, msg) {
   const p = INSTALLED.get(plugin);
+  const line = `[logos plugin:${plugin}] ${msg}`;
   if (p) p.warnings.push(msg);
-  else console.warn(`[logos plugin:${plugin}] ${msg}`);
+  console.warn(line); // 기록 여부와 무관하게 콘솔로 눈에 띄게(조용한 덮어쓰기 방지)
+}
+
+/**
+ * 코어 기본 구현·다른 확장을 덮어쓸 때의 경고(0.5.0 장치).
+ * throw 하지는 않는다 — 의도적 덮어쓰기는 합법이고, `{ overwrite: true }` 로 표시할 뿐이다.
+ * @param {string} plugin 플러그인 이름
+ * @param {string} what 등록 API 이름 ('define' · 'extend' · 'chain' · 'static')
+ * @param {string} label 덮어쓴 이름 ('ray' · 'point.byDeg' …)
+ * @param {'core'|string} owner 원래 소유자 — 'core' 또는 다른 플러그인 이름
+ * @param {boolean} explicit `{ overwrite: true }` 로 의도를 밝혔는가
+ */
+function warnOverride(plugin, what, label, owner, explicit) {
+  const who = owner === 'core' ? '코어 기본 구현' : `다른 확장(${owner})`;
+  const tail = explicit
+    ? '— { overwrite: true } 로 명시된 덮어쓰기'
+    : '— 의도라면 { overwrite: true } 를 주세요. 아니면 다른 이름·api.around() 를 쓰세요';
+  warn(plugin, `${what}('${label}') 가 ${who} 을/를 덮어씁니다 ${tail}`);
 }
 
 /**
@@ -472,14 +525,14 @@ function makeApi(plugin, opts) {
   return {
     name: plugin,
     opts,
-    /** 명령형 체이닝 메서드 — `this` 사용, 패치 객체 반환 시 자동 set */
-    extend: (target, methods) => installMethods(plugin, target, methods, { conf: false }),
-    /** 선언형 체이닝 메서드 — `(conf, ...args) => patch` */
-    chain: (target, methods) => installMethods(plugin, target, methods, { conf: true }),
+    /** 명령형 체이닝 메서드 — `this` 사용, 패치 객체 반환 시 자동 set. { overwrite: true } 로 의도 표시 */
+    extend: (target, methods, o) => installMethods(plugin, target, methods, { conf: false, ...o }),
+    /** 선언형 체이닝 메서드 — `(conf, ...args) => patch`. { overwrite: true } 로 의도 표시 */
+    chain: (target, methods, o) => installMethods(plugin, target, methods, { conf: true, ...o }),
     /** 새 빌더 등록 — `logos.<name>` / `plugins.<name>` 으로 즉시 사용 가능 */
     define: (name, factory, o) => defineFactory(plugin, name, factory, o),
     /** 팩토리·네임스페이스 정적 — `point.hex`, `annotate.newThing`, `kit.newThing` */
-    static: (target, name, fn) => installStatic(plugin, target, name, fn),
+    static: (target, name, fn, o) => installStatic(plugin, target, name, fn, o),
     /** 네임스페이스 객체를 등록(만든 객체를 그대로 돌려준다) */
     ns: (name, obj = {}) => registerNamespaceObject(name, obj),
     /** 새 IR 노드 + 백엔드 emitter — 백엔드 수정 없이 새 그림 종류 추가 */
@@ -514,11 +567,11 @@ PLUGIN_NS.emit = emit;
 PLUGIN_NS.factoryNames = factoryNames;
 /** 즉석 등록(플러그인 파일 없이) — `plugins.define('ray', …)` */
 PLUGIN_NS.define = (name, factory, o) => defineFactory('inline', name, factory, o);
-PLUGIN_NS.extend = (target, methods) => installMethods('inline', target, methods, { conf: false });
-PLUGIN_NS.chain = (target, methods) => installMethods('inline', target, methods, { conf: true });
+PLUGIN_NS.extend = (target, methods, o) => installMethods('inline', target, methods, { conf: false, ...o });
+PLUGIN_NS.chain = (target, methods, o) => installMethods('inline', target, methods, { conf: true, ...o });
 PLUGIN_NS.node = (kind, emitters) => registerNode('inline', kind, emitters);
 PLUGIN_NS.theme = (name, tokens) => registerTheme('inline', name, tokens);
-PLUGIN_NS.static = (target, name, fn) => installStatic('inline', target, name, fn);
+PLUGIN_NS.static = (target, name, fn, o) => installStatic('inline', target, name, fn, o);
 
 /**
  * `plugins.<name>` 으로 등록된 빌더를 부를 수 있게 하는 Proxy.

@@ -163,7 +163,7 @@ export const kit: {
         height: number;
         toSVG(so?: {}): string;
         toTikZ(): string;
-        toPNG(o?: {}): Promise<any>;
+        toPNG(o?: {}): Promise<Buffer>;
     };
     saveFigure(fig: any, { dir, name, svg, png, scale, math, log }?: any): Promise<{
         svg: string | null;

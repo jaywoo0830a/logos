@@ -16,6 +16,14 @@ export function registerTarget(name: any, ctor: any): any;
 /** 등록된 대상 이름들 */
 export function targets(): string[];
 /**
+ * 코어 기본 구현이 있는 빌더 이름을 예약한다(index.js 가 호출 — 코어→플러그인 방향).
+ * 예약된 이름을 `api.define` 으로 등록하면 코어 기본 구현을 덮어쓰므로 경고를 남긴다(0.5.0 장치).
+ * @param {string[]} names `'ray'` · `'arc.circular'` 처럼 하위 이름은 점으로
+ */
+export function reserveCoreNames(names: string[]): void;
+/** 코어 기본 구현이 예약된 이름들 (help·문서화용) */
+export function coreDefaultNames(): string[];
+/**
  * 반환값을 체이닝 가능한 값으로 정규화한다(헤더 규칙 ①②③).
  * `around` 래퍼 안에서 체이닝을 원할 때 직접 쓴다: `return api.chainable(this, patch)`.
  * @param {Object} self 인스턴스(this)
@@ -139,11 +147,11 @@ export namespace plugins {
     export { factoryNames };
     /** 즉석 등록(플러그인 파일 없이) — `plugins.define('ray', …)` */
     export function define(name: any, factory: any, o: any): any;
-    export function extend(target: any, methods: any): string[];
-    export function chain(target: any, methods: any): string[];
+    export function extend(target: any, methods: any, o: any): string[];
+    export function chain(target: any, methods: any, o: any): string[];
     export function node(kind: any, emitters: any): string;
     export function theme(name: any, tokens: any): any;
-    function _static(target: any, name: any, fn: any): Function;
+    function _static(target: any, name: any, fn: any, o: any): Function;
     export { _static as static };
 }
 declare namespace _default {

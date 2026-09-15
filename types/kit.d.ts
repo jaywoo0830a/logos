@@ -29,7 +29,7 @@ export function subplots(figures: (Scene | any)[], opts?: any): {
     height: number;
     toSVG(so?: {}): string;
     toTikZ(): string;
-    toPNG(o?: {}): Promise<any>;
+    toPNG(o?: {}): Promise<Buffer>;
 };
 /**
  * figure 하나를 파일로 저장한다(SVG, 그리고 가능하면 PNG).

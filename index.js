@@ -67,6 +67,7 @@ import {
   lookupFactory,
   registerNamespaceObject,
   registerTarget,
+  reserveCoreNames,
 } from './core/plugin.js';
 
 export { use, plugins, PluginError };
@@ -254,6 +255,26 @@ export const torus = ns('torus', TODO_HINT.torus, torusCore);
 export const cube = ns('cube', TODO_HINT.cube, cubeCore);
 export const prism = ns('prism', TODO_HINT.prism, prismCore);
 export const pyramid = ns('pyramid', TODO_HINT.pyramid, pyramidCore);
+
+// 코어 기본 구현이 있는 이름을 플러그인 레지스트리에 예약(0.5.0 장치).
+// 플러그인이 api.define 으로 같은 이름을 등록하면 코어 구현이 가려지므로,
+// core/plugin.js 가 warnings 기록 + 콘솔 경고를 남긴다(의도면 { overwrite: true }).
+reserveCoreNames([
+  'ray',
+  ...Object.keys(rayCore).map((k) => `ray.${k}`),
+  'arc',
+  ...Object.keys(arcCore).map((k) => `arc.${k}`),
+  'sector',
+  ...Object.keys(sectorCore).map((k) => `sector.${k}`),
+  'torus',
+  ...Object.keys(torusCore).map((k) => `torus.${k}`),
+  'cube',
+  ...Object.keys(cubeCore).map((k) => `cube.${k}`),
+  'prism',
+  ...Object.keys(prismCore).map((k) => `prism.${k}`),
+  'pyramid',
+  ...Object.keys(pyramidCore).map((k) => `pyramid.${k}`),
+]);
 
 // 코어 기본값으로 문서 API 를 채운다(플러그인이 등록하면 그쪽이 우선한다).
 Object.assign(surface, surfaceExtra); // surface.of / surface.ruled / surface.implicit

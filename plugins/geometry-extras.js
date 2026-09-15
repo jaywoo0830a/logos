@@ -1,8 +1,9 @@
 // plugins/geometry-extras.js — logos **플러그인 예시**: 코어에 없는 기능을 코어 수정 없이 붙인다.
 //
 // 이 파일은 `core/`·`shapes/`·`backend/` 를 **전혀 고치지 않는다**. `use()` 한 번으로:
-//   ① 새 빌더        ray(반직선)                       api.define('ray', …, { ctor: Ray })
-//   ② 스텁 채우기     arc.circular(원호)                api.define('arc.circular', …)
+//   ① 새 빌더        ray(반직선)                       api.define('ray', …, { ctor: Ray, overwrite: true })
+//                     (코어 기본 구현 rayCore 를 의도적으로 덮어쓴다 — 경고가 남는다)
+//   ② 스텁 채우기     arc.circular(원호)                api.define('arc.circular', …, { overwrite: true })
 //                     (index.js 의 `arc` 스텁이 등록 즉시 살아난다 — 코어 수정 0)
 //   ③ 새 IR 노드      hatch(사선 음영 사각형)           api.node('hatch', { svg, tikz })
 //                     → svg.js/tikz.js 를 고치지 않고 새 그림 종류가 두 백엔드로 나간다
@@ -328,12 +329,15 @@ const geometryExtras = {
    */
   install(api, opts = {}) {
     // ① 새 빌더 — `ray(...)` / `plugins.ray(...)` 즉시 사용 가능
-    api.define('ray', ray, { ctor: Ray });
+    //    (0.4.1 에 코어 기본 구현 rayCore 가 생겼다 — 이 플러그인이 **의도적으로** 덮어쓴다)
+    api.define('ray', ray, { ctor: Ray, overwrite: true });
     // ② 네임스페이스 스텁 채우기 — index.js 의 `arc` Proxy 가 이 이름을 찾는다
-    api.define('arc.circular', arcCircular, { ctor: Arc });
+    //    (코어에도 arcCore.circular 가 있다 — 의도적 덮어쓰기)
+    api.define('arc.circular', arcCircular, { ctor: Arc, overwrite: true });
     api.define('hatch', hatch, { ctor: Hatched });
     // ⑤ 정적 — 기존/새 팩토리에 이름을 붙인다
-    api.static('point', 'byDeg', pointByDeg);
+    //    (point.byDeg 는 0.4.1 부터 코어에도 있다 — 의도적 덮어쓰기)
+    api.static('point', 'byDeg', pointByDeg, { overwrite: true });
     api.static('ray', 'deg', rayDeg);
     // ④ 체이닝 메서드 — 모든 도형(Drawable 하위 전부)에 붙는다
     api.chain('drawable', chainables); // 선언형(패치 객체 → 자동 set)

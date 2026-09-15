@@ -91,7 +91,8 @@ api.extend(target, { name(...args) { return this.set({...}); } });   // 명령�
 api.chain(target,  { name(conf, ...args) { return {...}; } });       // 선언형 (패치 반환)
 ```
 
-- 같은 이름을 다시 설치하면 **코어 메서드까지 덮어쓸 수 있습니다**(되돌리기 가능).
+- 같은 이름을 다시 설치하면 **코어 메서드까지 덮어쓸 수 있습니다**(되돌리기 가능). 0.5.0 부터
+  코어 메서드나 다른 플러그인 메서드를 덮으면 **경고가 기록·출력**됩니다(아래 §5.1).
 - 설치된 메서드에는 `fn.pluginOf = '플러그인 이름'` 메타가 붙습니다.
 
 ### ③ 새 빌더
@@ -101,8 +102,10 @@ api.define('ray', (O, P, conf) => new Ray(O, P, conf), { ctor: Ray, aliases: ['h
 ```
 
 - `ctor` 를 주면 나중에 `api.extend('ray', {…})` 로 그 클래스만 확장할 수 있습니다.
-- **`index.js` 의 미구현 스텁(`ray`·`arc`·`sector`·`torus`·`cube`·`prism`·`pyramid`)은
-  그 이름을 등록하는 순간 살아납니다.** 예: `api.define('arc.circular', fn)` → `arc.circular(C, r, 0, 90)`.
+- 0.4.1 부터 `ray`·`arc`·`sector`·`torus`·`cube`·`prism`·`pyramid` 에는 **코어 기본 구현**이 있습니다.
+  같은 이름을 `api.define` 으로 등록하면 코어 구현 대신 플러그인 것이 쓰이는데, 0.5.0 부터 이때
+  **경고가 기록·출력**됩니다. 의도한 덮어쓰기라면 `{ overwrite: true }` 로 밝히세요(경고 문구가 바뀝니다).
+- 코어에 정말 없는 이름(예: `api.define('arc.semicircle', fn)`)은 등록 즉시 살아납니다.
 
 ### ④ 새 IR 노드 + emitter (백엔드 무수정)
 
@@ -182,6 +185,25 @@ plugins.ray(…)         // 코어 export 목록을 고치지 않고도 호출 �
 
 `api.extend` 로 설치한 메서드가 코어 메서드를 **의도치 않게 덮었는지**는
 `plugins.info(name).warnings` 와 `api.node` 덮어쓰기 경고로 확인할 수 있습니다.
+
+### 5.1 조용한 덮어쓰기 방지 (0.5.0)
+
+플러그인이 이미 존재하는 것을 같은 이름으로 덮으면 **조용히 통과하지 않습니다** —
+`plugins.info(name).warnings` 에 기록되고 콘솔(`console.warn`)로도 나갑니다.
+
+| 덮어쓰기                   | 감지 방법                            | 예                                                       |
+| -------------------------- | ------------------------------------ | -------------------------------------------------------- |
+| 코어 기본 구현이 있는 빌더 | `index.js` 가 예약한 이름 레지스트리 | `api.define('ray', …)` · `api.define('arc.circular', …)` |
+| 코어 정적                  | 네임스페이스의 기존 프로퍼티         | `api.static('point', 'byDeg', …)`                        |
+| 코어 체이닝 메서드         | 프로토타입 체인 조회                 | `api.chain('drawable', { color: … })`                    |
+| 다른 플러그인의 확장       | `fn.pluginOf` 메타                   | 팩토리 이름은 그대로 `PluginError`, 메서드·정적은 경고   |
+
+- throw 하지는 않습니다(non-breaking) — 의도적 덮어쓰기는 합법입니다.
+- 의도를 밝히려면 옵션을 주세요: `api.define('ray', fn, { overwrite: true })`,
+  `api.static('point', 'byDeg', fn, { overwrite: true })`, `api.chain('drawable', {…}, { overwrite: true })`.
+  경고 문구가 "명시된 덮어쓰기"로 바뀌어 기록에 남습니다.
+- 동봉 플러그인 `plugins/geometry-extras.js` 가 이 표기를 하는 예시입니다
+  (`ray` · `arc.circular` · `point.byDeg` 를 코어 기본값 위에 의도적으로 얹습니다).
 
 ---
 

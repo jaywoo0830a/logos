@@ -13,7 +13,7 @@ export function panels(figures: SceneIR[], opts?: any): {
     height: number;
     toSVG(so?: {}): string;
     toTikZ(): string;
-    toPNG(o?: {}): Promise<any>;
+    toPNG(o?: {}): Promise<Buffer>;
 };
 export class SceneIR {
     constructor(o: any);
@@ -52,7 +52,7 @@ export class SceneIR {
      * P0-4: SVG → PNG 래스터화. `@resvg/resvg-js` 가 설치돼 있으면 동작한다.
      * (없으면 명확히 안내). math 기본값은 폰트 비의존 'text' — foreignObject 는 래스터에서 소실되므로.
      */
-    toPNG(opts?: {}): Promise<any>;
+    toPNG(opts?: {}): Promise<Buffer>;
     toPDF(): void;
     toCanvas(): void;
     /** IR 노드 순회 — `[...ir]` · `for (const n of ir)` 로 노드에 바로 접근한다(A7). */
